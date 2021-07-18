@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>JETBRAINS_ANNOTATIONS;TRACE</DefineConstants>
+    <LangVersion>latest</LangVersion>
+    <Authors>Read Stanton (Decimation)</Authors>
+    <Company>Read Stanton (Decimation)</Company>
+    <NoWarn>
+      HAA0601
+      HAA0601,
+      HAA0602,
+      HAA0603,
+      HAA0604,
+      HAA0501,
+      HAA0502,
+      HAA0503,
+      HAA0504,
+      HAA0505,
+      HAA0506,
+      HAA0301,
+      HAA0302,
+      HAA0303,
+      HAA0101,
+      CS1591,
+    </NoWarn>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AngleSharp" Version="0.16.0" />
+    <PackageReference Include="AngleSharp.Io" Version="0.16.0" />
+    <PackageReference Include="AngleSharp.Js" Version="0.15.0" />
+    <PackageReference Include="AngleSharp.XPath" Version="1.1.7" />
+    <PackageReference Include="JetBrains.Annotations" Version="2021.1.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="RestSharp" Version="106.12.0" />
+    <PackageReference Include="System.Json" Version="4.7.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kantan\Kantan.csproj" />
+  </ItemGroup>
+
+</Project>

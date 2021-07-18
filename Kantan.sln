@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31410.357
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kantan", "Kantan\Kantan.csproj", "{EFEFA5E1-EC3F-439A-915D-564185937136}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kantan.Net", "Kantan.Net\Kantan.Net.csproj", "{0A9DEC3D-BF50-4660-9D3E-B85099476372}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{9BE557A3-9158-4DB4-B56E-E3BCCAE5F747}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EFEFA5E1-EC3F-439A-915D-564185937136}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFEFA5E1-EC3F-439A-915D-564185937136}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFEFA5E1-EC3F-439A-915D-564185937136}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFEFA5E1-EC3F-439A-915D-564185937136}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A9DEC3D-BF50-4660-9D3E-B85099476372}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A9DEC3D-BF50-4660-9D3E-B85099476372}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A9DEC3D-BF50-4660-9D3E-B85099476372}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A9DEC3D-BF50-4660-9D3E-B85099476372}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9BE557A3-9158-4DB4-B56E-E3BCCAE5F747}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9BE557A3-9158-4DB4-B56E-E3BCCAE5F747}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9BE557A3-9158-4DB4-B56E-E3BCCAE5F747}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9BE557A3-9158-4DB4-B56E-E3BCCAE5F747}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E3B6ED90-EDC0-43DE-B5E2-58C2788E4B39}
+	EndGlobalSection
+EndGlobal
