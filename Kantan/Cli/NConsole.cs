@@ -59,6 +59,12 @@ namespace Kantan.Cli
 		 * https://github.com/ZacharyPatten/Towel
 		 */
 
+
+		/*
+		 * TODO: this design isn't great
+		 */
+
+
 		public static void Init()
 		{
 			//Console.OutputEncoding = Encoding.Unicode;
@@ -85,9 +91,11 @@ namespace Kantan.Cli
 
 		public static int BufferLimit { get; set; } = Console.BufferWidth - 10;
 
-		private static readonly Color ColorHeader  = Color.Red;
-		private static readonly Color ColorOptions = Color.Aquamarine;
-		private static readonly Color ColorError   = Color.Red;
+		private static readonly Color    ColorHeader  = Color.Red;
+		private static readonly Color    ColorOptions = Color.Aquamarine;
+		private static readonly Color    ColorError   = Color.Red;
+
+		private static          TimeSpan PauseTime { get; set; } = TimeSpan.FromSeconds(1);
 
 
 		#region Write
@@ -546,7 +554,7 @@ namespace Kantan.Cli
 				if (isInvalid) {
 					errPrompt ??= "Invalid input";
 					Console.WriteLine(errPrompt.AddColor(ColorError));
-					Thread.Sleep(TimeSpan.FromSeconds(1));
+					Thread.Sleep(PauseTime);
 					//Console.Write(new string('\r',7));
 					ClearLastLine();
 					//Console.CursorTop--;

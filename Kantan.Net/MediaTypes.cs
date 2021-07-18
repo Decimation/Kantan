@@ -40,7 +40,7 @@ namespace Kantan.Net
 		/// </summary>
 		public static string? Identify(string url)
 		{
-			var res = Network.GetQueryResponse(url);
+			var res = Network.GetMetaResponse(url);
 
 			return res?.ContentType;
 		}
@@ -191,7 +191,7 @@ namespace Kantan.Net
 		Audio
 	}
 
-	public class MimeTypeInfo
+	public sealed class MimeTypeInfo
 	{
 		public MimeTypeInfo()
 		{

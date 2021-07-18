@@ -1,9 +1,16 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Web;
 using Kantan.Model;
 using RestSharp;
+using RestSharp.Extensions;
+
+#pragma warning disable 8602
 
 #pragma warning disable 8600
 #pragma warning disable 8604
@@ -26,6 +33,7 @@ namespace Kantan.Net
 	/// <seealso cref="WebUtilities"/>
 	/// <seealso cref="Dns"/>
 	/// <seealso cref="IPAddress"/>
+	/// <seealso cref="HttpUtility"/>
 	public static class Network
 	{
 		private const long TimeoutMS = 3000;
@@ -98,22 +106,6 @@ namespace Kantan.Net
 			return GetHostAddress(s).ToString();
 		}
 
-		//public static bool IsAlive(Uri u, long ms = TimeoutMS) =>
-		//	IsAlive(GetAddress(u.ToString()), ms);
-
-		//public static bool IsAlive(string hostOrIP, long ms = TimeoutMS)
-		//{
-		//	/*
-		//	 * This approach is about .7 sec faster than using a web request
-		//	 */
-
-		//	PingReply r = Ping(hostOrIP, ms);
-
-		//	//return !(r.Status != IPStatus.Success || r.Status == IPStatus.TimedOut);
-
-		//	return r.Status == IPStatus.Success;
-		//}
-
 		public static PingReply Ping(Uri u, long ms = TimeoutMS) =>
 			Ping(GetAddress(u.ToString()), ms);
 
@@ -130,24 +122,28 @@ namespace Kantan.Net
 			return r;
 		}
 
-
-		public static bool IsAlive(Uri u, long span = TimeoutMS)
+		public static bool IsType(string u2, string t, long span = TimeoutMS)
 		{
 			try {
-				var request = (HttpWebRequest) WebRequest.Create(u);
+				if (!IsUri(u2, out var u)) {
+					return false;
+				}
 
-				request.Timeout           = (int) span;
-				request.AllowAutoRedirect = false; // find out if this site is up and don't follow a redirector
-				request.Method            = "HEAD";
+				using var response = GetMetaResponse(u.ToString(), span);
 
-				using var response = (HttpWebResponse) request.GetResponse();
-				
-				return true;
+				if (response == null) {
+					return false;
+				}
+
+				return response.ContentType.StartsWith(t);
+
 			}
 			catch (WebException) {
 				return false;
 			}
 		}
+
+		public static bool IsAlive(Uri u, long span = TimeoutMS) => GetMetaResponse(u.ToString(),"GET", span) != null;
 
 		public static string? GetFinalRedirect(string url)
 		{
@@ -166,10 +162,8 @@ namespace Kantan.Net
 				HttpWebResponse? resp = null;
 
 				try {
-					var req = (HttpWebRequest) WebRequest.Create(url);
-					req.Method            = "HEAD";
-					req.AllowAutoRedirect = false;
-					resp                  = (HttpWebResponse) req.GetResponse();
+
+					resp = GetMetaResponse(url);
 
 					switch (resp.StatusCode) {
 						case HttpStatusCode.OK:
@@ -213,6 +207,31 @@ namespace Kantan.Net
 			return newUrl;
 		}
 
+		public static HttpWebResponse? GetMetaResponse(string u, long span = TimeoutMS) =>
+			GetMetaResponse(u, "HEAD", span);
+
+		public static HttpWebResponse? GetMetaResponse(string u, string m, long span = TimeoutMS)
+		{
+			try {
+				var request = (HttpWebRequest) WebRequest.Create(u);
+
+				request.Timeout           = (int) span;
+				request.AllowAutoRedirect = false; // find out if this site is up and don't follow a redirector
+				request.Method            = m;
+				request.Proxy             = null;
+
+				var response = (HttpWebResponse) request.GetResponse();
+				
+				return response;
+			}
+			catch (WebException e) {
+				/*if (e.Response is HttpWebResponse r && r.StatusCode == HttpStatusCode.MethodNotAllowed) {
+					
+				}*/
+				return null;
+			}
+		}
+
 		public static IRestResponse GetResponse(string url)
 		{
 			var client  = new RestClient();
@@ -222,10 +241,11 @@ namespace Kantan.Net
 			return restRes;
 		}
 
-		public static IRestResponse? GetQueryResponse(string s)
+		/*public static IRestResponse? GetQueryResponse(string s)
 		{
 			var req    = new RestRequest(s, Method.HEAD);
 			var client = new RestClient();
+			
 
 			//client.FollowRedirects = true;
 
@@ -236,7 +256,7 @@ namespace Kantan.Net
 			}
 
 			return res;
-		}
+		}*/
 
 		public static void DumpResponse(IRestResponse response)
 		{
@@ -246,6 +266,19 @@ namespace Kantan.Net
 			ct.AddRow("Successful", response.IsSuccessful);
 			ct.AddRow("Status code", response.StatusCode);
 			ct.AddRow("Error message", response.ErrorMessage);
+
+			var str = ct.ToString();
+
+			Trace.WriteLine(str);
+		}
+
+		public static void DumpResponse(HttpWebResponse response)
+		{
+			var ct = new ConsoleTable("-", "Value");
+
+			ct.AddRow("Uri", response.ResponseUri);
+			ct.AddRow("Status code", response.StatusCode);
+			ct.AddRow("Status message", response.StatusDescription);
 
 			var str = ct.ToString();
 

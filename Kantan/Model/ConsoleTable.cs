@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+// ReSharper disable PropertyCanBeMadeInitOnly.Local
 
 // ReSharper disable UnusedMember.Global
 
@@ -16,11 +17,14 @@ namespace Kantan.Model
 	/// </summary>
 	public class ConsoleTable
 	{
-		public IList<object>   Columns { get; set; }
-		public IList<object[]> Rows    { get; protected set; }
+		public IList<object> Columns { get; set; }
 
-		public ConsoleTableOptions Options     { get; protected set; }
-		public Type[]              ColumnTypes { get; private set; }
+		public IList<object[]> Rows { get; protected set; }
+
+		public ConsoleTableOptions Options { get; protected set; }
+
+		public Type[] ColumnTypes { get; private set; }
+
 
 		public static HashSet<Type> NumericTypes = new()
 		{
