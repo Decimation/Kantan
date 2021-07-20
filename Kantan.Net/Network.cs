@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Web;
 using Kantan.Model;
+using Newtonsoft.Json;
 using RestSharp;
 using RestSharp.Extensions;
+using Formatting = System.Xml.Formatting;
 
 #pragma warning disable 8602
 
@@ -36,7 +38,9 @@ namespace Kantan.Net
 	/// <seealso cref="HttpUtility"/>
 	public static class Network
 	{
-		private const long TimeoutMS = 3000;
+		private const int TimeoutMS = 3000;
+
+		#region URI
 
 		public static Uri GetHostUri(Uri u)
 		{
@@ -74,9 +78,22 @@ namespace Kantan.Net
 			return result;
 		}
 
-		public static IPGeolocation Identify(IPAddress ip) => Identify(ip.ToString());
+		#endregion
 
-		public static IPGeolocation Identify(string hostOrIP)
+		#region IP
+
+		public static IPAddress GetExternalIP()
+		{
+			using var client = new WebClient();
+
+			var s = client.DownloadString("https://icanhazip.com/").Trim();
+
+			return IPAddress.Parse(s);
+		}
+
+		public static IPGeolocation GetAddressLocation(IPAddress ip) => GetAddressLocation(ip.ToString());
+
+		public static IPGeolocation GetAddressLocation(string hostOrIP)
 		{
 			var rc = new RestClient("https://freegeoip.app/{format}/{host}");
 			var r  = new RestRequest();
@@ -91,26 +108,26 @@ namespace Kantan.Net
 
 		public static IPAddress GetHostAddress(string hostOrIP) => Dns.GetHostAddresses(hostOrIP)[0];
 
-		public static string GetAddress(string u)
+		public static string GetAddress(string hostOrIP)
 		{
 			string s = null;
 
-			if (IPAddress.TryParse(u, out var ip)) {
+			if (IPAddress.TryParse(hostOrIP, out var ip)) {
 				s = ip.ToString();
 			}
 
-			if (IsUri(u, out var ux)) {
+			if (IsUri(hostOrIP, out var ux)) {
 				s = GetHostComponent(ux);
 			}
 
 			return GetHostAddress(s).ToString();
 		}
 
-		public static PingReply Ping(Uri u, long ms = TimeoutMS) =>
+		public static PingReply Ping(Uri u, int ms = TimeoutMS) =>
 			Ping(GetAddress(u.ToString()), ms);
 
 
-		public static PingReply Ping(string hostOrIP, long ms = TimeoutMS)
+		public static PingReply Ping(string hostOrIP, int ms = TimeoutMS)
 		{
 			var ping = new Ping();
 
@@ -122,28 +139,20 @@ namespace Kantan.Net
 			return r;
 		}
 
-		public static bool IsType(string u2, string t, long span = TimeoutMS)
+		#endregion
+
+		public static bool IsType(string url, string type, int ms = TimeoutMS)
 		{
-			try {
-				if (!IsUri(u2, out var u)) {
-					return false;
-				}
-
-				using var response = GetMetaResponse(u.ToString(), span);
-
-				if (response == null) {
-					return false;
-				}
-
-				return response.ContentType.StartsWith(t);
-
-			}
-			catch (WebException) {
+			if (!IsUri(url, out var u)) {
 				return false;
 			}
+
+			var response = GetResponse(u.ToString(), ms, Method.HEAD);
+
+			return response.IsSuccessful && response.ContentType.StartsWith(type);
 		}
 
-		public static bool IsAlive(Uri u, long span = TimeoutMS) => GetMetaResponse(u.ToString(),"GET", span) != null;
+		public static bool IsAlive(Uri u, int ms = TimeoutMS) => GetResponse(u.ToString(), ms).IsSuccessful;
 
 		public static string? GetFinalRedirect(string url)
 		{
@@ -159,11 +168,10 @@ namespace Kantan.Net
 			string? newUrl = url;
 
 			do {
-				HttpWebResponse? resp = null;
 
 				try {
 
-					resp = GetMetaResponse(url);
+					IRestResponse resp = GetResponse(url, TimeoutMS, Method.HEAD);
 
 					switch (resp.StatusCode) {
 						case HttpStatusCode.OK:
@@ -173,7 +181,7 @@ namespace Kantan.Net
 						case HttpStatusCode.MovedPermanently:
 						case HttpStatusCode.RedirectKeepVerb:
 						case HttpStatusCode.RedirectMethod:
-							newUrl = resp.Headers["Location"];
+							newUrl = (string) resp.Headers.First(x => x.Name == "Location").Value;
 
 							if (newUrl == null)
 								return url;
@@ -200,63 +208,32 @@ namespace Kantan.Net
 					return null;
 				}
 				finally {
-					resp?.Close();
+					//....
 				}
 			} while (maxRedirCount-- > 0);
 
 			return newUrl;
 		}
 
-		public static HttpWebResponse? GetMetaResponse(string u, long span = TimeoutMS) =>
-			GetMetaResponse(u, "HEAD", span);
 
-		public static HttpWebResponse? GetMetaResponse(string u, string m, long span = TimeoutMS)
+		public static IRestResponse GetResponse(string url, int ms = TimeoutMS, Method method = Method.GET)
 		{
-			try {
-				var request = (HttpWebRequest) WebRequest.Create(u);
+			var client = new RestClient
+			{
+				FollowRedirects = false,
+				Proxy           = null
+			};
 
-				request.Timeout           = (int) span;
-				request.AllowAutoRedirect = false; // find out if this site is up and don't follow a redirector
-				request.Method            = m;
-				request.Proxy             = null;
+			var request = new RestRequest(url)
+			{
+				Method  = method,
+				Timeout = ms
+			};
 
-				var response = (HttpWebResponse) request.GetResponse();
-				
-				return response;
-			}
-			catch (WebException e) {
-				/*if (e.Response is HttpWebResponse r && r.StatusCode == HttpStatusCode.MethodNotAllowed) {
-					
-				}*/
-				return null;
-			}
+			var response = client.Execute(request);
+
+			return response;
 		}
-
-		public static IRestResponse GetResponse(string url)
-		{
-			var client  = new RestClient();
-			var restReq = new RestRequest(url);
-			var restRes = client.Execute(restReq);
-
-			return restRes;
-		}
-
-		/*public static IRestResponse? GetQueryResponse(string s)
-		{
-			var req    = new RestRequest(s, Method.HEAD);
-			var client = new RestClient();
-			
-
-			//client.FollowRedirects = true;
-
-			var res = client.Execute(req);
-
-			if (res.StatusCode == HttpStatusCode.NotFound) {
-				return null;
-			}
-
-			return res;
-		}*/
 
 		public static void DumpResponse(IRestResponse response)
 		{
@@ -283,46 +260,6 @@ namespace Kantan.Net
 			var str = ct.ToString();
 
 			Trace.WriteLine(str);
-		}
-	}
-
-	public sealed class IPGeolocation
-	{
-		public string IP { get; internal set; }
-
-		public string CountryCode { get; internal set; }
-
-		public string CountryName { get; internal set; }
-
-		public string RegionCode { get; internal set; }
-
-		public string RegionName { get; internal set; }
-
-		public string City { get; internal set; }
-
-		public string ZipCode { get; internal set; }
-
-		public string TimeZone { get; internal set; }
-
-		public double Latitude { get; internal set; }
-
-		public double Longitude { get; internal set; }
-
-		public int MetroCode { get; internal set; }
-
-		public override string ToString()
-		{
-			return $"{nameof(IP)}: {IP}\n"                   +
-			       $"{nameof(CountryCode)}: {CountryCode}\n" +
-			       $"{nameof(CountryName)}: {CountryName}\n" +
-			       $"{nameof(RegionCode)}: {RegionCode}\n"   +
-			       $"{nameof(RegionName)}: {RegionName}\n"   +
-			       $"{nameof(City)}: {City}\n"               +
-			       $"{nameof(ZipCode)}: {ZipCode}\n"         +
-			       $"{nameof(TimeZone)}: {TimeZone}\n"       +
-			       $"{nameof(Latitude)}: {Latitude}\n"       +
-			       $"{nameof(Longitude)}: {Longitude}\n"     +
-			       $"{nameof(MetroCode)}: {MetroCode}";
 		}
 	}
 }

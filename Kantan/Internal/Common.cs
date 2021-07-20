@@ -1,10 +1,12 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.CompilerServices;
 
 // ReSharper disable UnusedMember.Global
 
 [assembly: InternalsVisibleTo("Novus")]
 [assembly: InternalsVisibleTo("Kantan.Net")]
+[assembly: InternalsVisibleTo("Test")]
 
 namespace Kantan.Internal
 {
@@ -25,5 +27,22 @@ namespace Kantan.Internal
 		/// Common integer value representing an invalid value, error, etc.
 		/// </summary>
 		internal const int INVALID = -1;
+
+		private const string Kantan = "Kantan";
+
+		internal static string AppFolder
+		{
+			get
+			{
+				var commonAppData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+				var appFolder     = Path.Combine(commonAppData, Kantan);
+
+				if (!Directory.Exists(appFolder)) {
+					Directory.CreateDirectory(appFolder);
+				}
+
+				return appFolder;
+			}
+		}
 	}
 }

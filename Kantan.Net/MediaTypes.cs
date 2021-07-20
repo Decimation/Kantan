@@ -38,29 +38,28 @@ namespace Kantan.Net
 		/// <summary>
 		/// Identifies the MIME type of <paramref name="url"/>
 		/// </summary>
-		public static string? Identify(string url)
+		public static string GetMediaType(string url)
 		{
-			var res = Network.GetMetaResponse(url);
+			var res = Network.GetResponse(url);
 
-			return res?.ContentType;
+			return res.ContentType;
 		}
 
 		/// <summary>
 		/// Whether the MIME <paramref name="mime"/> is of type <paramref name="type"/>
 		/// </summary>
-		public static bool IsType(string mime, MimeType type) =>
+		public static bool IsType(string mime, MediaType type) =>
 			GetTypeComponent(mime) == Enum.GetName(type)!.ToLower();
 
-		public static bool IsDirect(string url, MimeType m)
+		public static bool IsUrlType(string url, MediaType m)
 		{
+
+			// (Is direct)
+
 			//var isUri = Network.IsUri(value, out _);
 
-			string? mediaType = Identify(url);
-
-			if (mediaType == null) {
-				return false;
-			}
-
+			string mediaType = GetMediaType(url);
+			
 			bool b = IsType(mediaType, m);
 
 			return b;
@@ -160,16 +159,18 @@ namespace Kantan.Net
 
 		private const string DB_JSON_URL = "https://cdn.jsdelivr.net/gh/jshttp/mime-db@master/db.json";
 
-		private static Dictionary<string, MimeTypeInfo> GetDatabase()
+		private static Dictionary<string, MediaTypeInfo> GetDatabase()
 		{
 			using var client = new WebClient();
 
 			string json = client.DownloadString(new Uri(DB_JSON_URL));
 
-			var mimeTypes = JsonConvert.DeserializeObject<Dictionary<string, MimeTypeInfo>>(json)!;
+			var mimeTypes = JsonConvert.DeserializeObject<Dictionary<string, MediaTypeInfo>>(json)!;
 
 			return mimeTypes;
 		}
+
+		public static MediaTypeInfo GetInfo(string mime) => Database.Value[mime];
 
 		public static IEnumerable<string> GetExtensions(string mime)
 		{
@@ -178,22 +179,24 @@ namespace Kantan.Net
 			return Database.Value.Where(kp => kp.Key == mime).SelectMany(kp => kp.Value.Extensions);
 		}
 
-		private static Lazy<Dictionary<string, MimeTypeInfo>> Database { get; } = new(GetDatabase);
+		private static Lazy<Dictionary<string, MediaTypeInfo>> Database { get; } = new(GetDatabase);
 
 
 		static MediaTypes() { }
 	}
 
-	public enum MimeType
+	public enum MediaType
 	{
 		Image,
 		Video,
-		Audio
+		Audio,
+		Text,
+		Application
 	}
 
-	public sealed class MimeTypeInfo
+	public sealed class MediaTypeInfo
 	{
-		public MimeTypeInfo()
+		public MediaTypeInfo()
 		{
 			Extensions = new List<string>();
 		}
