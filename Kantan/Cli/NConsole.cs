@@ -91,11 +91,11 @@ namespace Kantan.Cli
 
 		public static int BufferLimit { get; set; } = Console.BufferWidth - 10;
 
-		private static readonly Color    ColorHeader  = Color.Red;
-		private static readonly Color    ColorOptions = Color.Aquamarine;
-		private static readonly Color    ColorError   = Color.Red;
+		private static readonly Color ColorHeader  = Color.Red;
+		private static readonly Color ColorOptions = Color.Aquamarine;
+		private static readonly Color ColorError   = Color.Red;
 
-		private static          TimeSpan PauseTime { get; set; } = TimeSpan.FromSeconds(1);
+		private static TimeSpan PauseTime { get; set; } = TimeSpan.FromSeconds(1);
 
 
 		#region Write
@@ -253,9 +253,10 @@ namespace Kantan.Cli
 		///     Root formatting function.
 		/// </summary>
 		[StringFormatMethod(STRING_FORMAT_ARG)]
-		public static string FormatString(string delim, string s)
+		public static string FormatString(string delim, string s, bool repDelim = true)
 		{
 			string[] split = s.Split(StringConstants.NativeNewLine);
+			bool     d1    = false;
 
 			for (int i = 0; i < split.Length; i++) {
 				string a = StringConstants.SPACE + split[i];
@@ -266,7 +267,14 @@ namespace Kantan.Cli
 					b = String.Empty;
 				}
 				else {
-					b = delim + a;
+					if (repDelim || !d1) {
+						b  = delim + a;
+						d1 = true;
+					}
+
+					else b = new string(' ', delim.Length) + a;
+					
+
 				}
 
 				string c = b.Truncate(BufferLimit);
@@ -350,8 +358,16 @@ namespace Kantan.Cli
 		{
 			Console.Clear();
 
-			if (dialog.Header is { }) {
+			if (dialog.Header != null) {
 				Write(false, dialog.Header.AddColor(ColorHeader));
+			}
+
+			if (dialog.Subtitle != null) {
+
+				string subStr = FormatString(StringConstants.CHEVRON, dialog.Subtitle, false).AddColor(ColorOptions);
+
+				Write(true, subStr);
+				Console.WriteLine();
 			}
 
 			int clamp = Math.Clamp(dialog.Options.Count, 0, MAX_DISPLAY_OPTIONS);
@@ -380,7 +396,7 @@ namespace Kantan.Cli
 			if (dialog.SelectMultiple) {
 				Console.WriteLine();
 
-				string optionsStr = $">> {selectedOptions.QuickJoin()}".AddColor(ColorOptions);
+				string optionsStr = $"{StringConstants.CHEVRON} {selectedOptions.QuickJoin()}".AddColor(ColorOptions);
 
 				Write(true, optionsStr);
 			}
@@ -440,7 +456,7 @@ namespace Kantan.Cli
 						DisplayDialog(dialog, selectedOptions);
 					}
 				}
-				
+
 
 				// Key was read
 

@@ -30,10 +30,20 @@ namespace Kantan.Utilities
 	/// <seealso cref="UnicodeRanges"/>
 	public static class Strings
 	{
-		public static string SelectOnlyDigits(this string s)
+		public static string Center(string str, int width)
 		{
-			return s.SelectOnly(Char.IsDigit);
+			//https://stackoverflow.com/questions/48621267/is-there-a-way-to-center-text-in-powershell
+
+
+			var count = (int) (Math.Max(0, width / 2) - Math.Floor((double) str.Length / 2));
+
+			return $"{new string(' ', count)}{str}";
+
 		}
+
+		public static string Center(string str) => Center(str, Console.BufferWidth);
+
+		public static string SelectOnlyDigits(this string s) => s.SelectOnly(Char.IsDigit);
 
 		public static string SelectOnly(this string s, Func<char, bool> fn)
 		{
@@ -56,8 +66,7 @@ namespace Kantan.Utilities
 
 		public static string Truncate(this string value, int maxLength)
 		{
-			if (String.IsNullOrEmpty(value))
-			{
+			if (String.IsNullOrEmpty(value)) {
 				return value;
 			}
 
@@ -86,22 +95,21 @@ namespace Kantan.Utilities
 		public static string SplitPascalCase(string convert)
 		{
 			return Regex.Replace(Regex.Replace(convert, @"(\P{Ll})(\P{Ll}\p{Ll})", "$1 $2"),
-								 @"(\p{Ll})(\P{Ll})", "$1 $2");
+			                     @"(\p{Ll})(\P{Ll})", "$1 $2");
 		}
 
 		public static string CreateRandom(int length)
 		{
 			return new(Enumerable.Repeat(Alphanumeric, length)
-								 .Select(s => s[RandomInstance.Next(s.Length)])
-								 .ToArray());
+			                     .Select(s => s[RandomInstance.Next(s.Length)])
+			                     .ToArray());
 		}
 
 		public static IEnumerable<int> AllIndexesOf(this string str, string search)
 		{
 			int minIndex = str.IndexOf(search);
 
-			while (minIndex != -1)
-			{
+			while (minIndex != -1) {
 				yield return minIndex;
 				minIndex = str.IndexOf(search, minIndex + search.Length, StringComparison.Ordinal);
 			}
@@ -117,8 +125,8 @@ namespace Kantan.Utilities
 		/// </summary>
 		public static int Compute(string s, string t)
 		{
-			int n = s.Length;
-			int m = t.Length;
+			int    n = s.Length;
+			int    m = t.Length;
 			int[,] d = new int[n + 1, m + 1];
 
 			// Step 1
@@ -135,14 +143,13 @@ namespace Kantan.Utilities
 
 			// Step 3
 			for (int i = 1; i <= n; i++) //Step 4
-				for (int j = 1; j <= m; j++)
-				{
-					// Step 5
-					int cost = t[j - 1] == s[i - 1] ? 0 : 1;
+			for (int j = 1; j <= m; j++) {
+				// Step 5
+				int cost = t[j - 1] == s[i - 1] ? 0 : 1;
 
-					// Step 6
-					d[i, j] = Math.Min(Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1), d[i - 1, j - 1] + cost);
-				}
+				// Step 6
+				d[i, j] = Math.Min(Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1), d[i - 1, j - 1] + cost);
+			}
 
 			// Step 7
 			return d[n, m];
@@ -190,8 +197,7 @@ namespace Kantan.Utilities
 		{
 			int posA = value.LastIndexOf(a, StringComparison.Ordinal);
 
-			if (posA == INVALID)
-			{
+			if (posA == INVALID) {
 				return String.Empty;
 			}
 
@@ -216,8 +222,7 @@ namespace Kantan.Utilities
 			int posA = value.IndexOf(a, StringComparison.Ordinal);
 			int posB = value.LastIndexOf(b, StringComparison.Ordinal);
 
-			if (posA == INVALID || posB == INVALID)
-			{
+			if (posA == INVALID || posB == INVALID) {
 				return String.Empty;
 			}
 
@@ -256,10 +261,8 @@ namespace Kantan.Utilities
 			var esb = new ExtendedStringBuilder();
 
 
-			foreach (var (key, value) in view.View)
-			{
-				switch (value)
-				{
+			foreach (var (key, value) in view.View) {
+				switch (value) {
 					case null:
 						continue;
 					case IViewable view2:
@@ -292,20 +295,17 @@ namespace Kantan.Utilities
 				fmt = fmt.ToUpper(CultureInfo.InvariantCulture);
 				string hexStr;
 
-				if (arg is IFormattable f)
-				{
+				if (arg is IFormattable f) {
 					hexStr = f.ToString(HEX_FORMAT_SPECIFIER, null);
 				}
-				else
-				{
+				else {
 					throw new NotImplementedException();
 				}
 
 				var sb = new StringBuilder();
 
 
-				switch (fmt)
-				{
+				switch (fmt) {
 					case FMT_P:
 						sb.Append(HEX_PREFIX);
 						goto case FMT_X;
@@ -336,7 +336,7 @@ namespace Kantan.Utilities
 		#region Join
 
 		public static string FormatJoin<T>(this IEnumerable<T> values, string format, IFormatProvider provider = null,
-										   string delim = JOIN_COMMA) where T : IFormattable
+		                                   string delim = JOIN_COMMA) where T : IFormattable
 		{
 			return values.Select(v => v.ToString(format, provider)).QuickJoin(delim);
 		}
@@ -352,7 +352,7 @@ namespace Kantan.Utilities
 		/// <param name="delim">Delimiter</param>
 		/// <typeparam name="T">Element type</typeparam>
 		public static string FuncJoin<T>(this IEnumerable<T> values, Func<T, string> toString,
-										 string delim = JOIN_COMMA)
+		                                 string delim = JOIN_COMMA)
 		{
 			return values.Select(toString).QuickJoin(delim);
 		}
@@ -369,9 +369,10 @@ namespace Kantan.Utilities
 		{
 			return dest.GetString(Encoding.Convert(src, dest, src.GetBytes(a)));
 		}
+
 		public static bool IsCharInRange(short c, UnicodeRange r) => IsCharInRange((char) c, r);
 
-		public static bool IsCharInRange(char c, UnicodeRange r) => c < (r.FirstCodePoint + r.Length) && c >= r.FirstCodePoint;
-
+		public static bool IsCharInRange(char c, UnicodeRange r) =>
+			c < (r.FirstCodePoint + r.Length) && c >= r.FirstCodePoint;
 	}
 }

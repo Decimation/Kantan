@@ -166,6 +166,13 @@ namespace Kantan.Diagnostics
 
 		[DH]
 		[AM]
+		public static void AssertNonNegative([NNV] long value, string? name = null)
+		{
+			Assert<ArgumentException>(value is > 0 or 0, name);
+		}
+
+		[DH]
+		[AM]
 		public static void AssertPositive([NNV] long value, string? name = null)
 		{
 			Assert<ArgumentException>(value > 0, name);

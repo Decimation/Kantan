@@ -27,8 +27,12 @@
       CS1591,
     </NoWarn>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Configurations>Debug;Release;TestDebug</Configurations>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='TestDebug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
   </PropertyGroup>
 

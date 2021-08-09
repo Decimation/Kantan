@@ -109,6 +109,14 @@ namespace Kantan.Utilities
 			return idx < rg.Count && idx >= 0;
 		}*/
 
+		public static IEnumerator<T> Cast<T>(this IEnumerator iterator)
+		{
+			while (iterator.MoveNext())
+			{
+				yield return (T) iterator.Current;
+			}
+		}
+
 		public static IEnumerable<T> Difference<T>(this IEnumerable<T> a, IEnumerable<T> b)
 		{
 			return b.Where(c => !a.Contains(c));

@@ -68,17 +68,5 @@ namespace Kantan.Net
 			using var wc = new WebClient();
 			return wc.DownloadString(url);
 		}
-
-		public static bool TryGetString(string url, out string? e)
-		{
-			try {
-				e = GetString(url);
-				return true;
-			}
-			catch (Exception) {
-				e = null;
-				return false;
-			}
-		}
 	}
 }

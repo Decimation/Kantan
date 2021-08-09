@@ -6,6 +6,7 @@ using System.Net;
 using System.Runtime.InteropServices;
 using Kantan.Diagnostics;
 using Newtonsoft.Json;
+using RestSharp;
 
 // ReSharper disable InconsistentNaming
 
@@ -31,9 +32,7 @@ namespace Kantan.Net
 		 * type/subtype
 		 * type/subtype;parameter=value
 		 */
-
-		//todo
-
+		
 
 		/// <summary>
 		/// Identifies the MIME type of <paramref name="url"/>
@@ -48,10 +47,10 @@ namespace Kantan.Net
 		/// <summary>
 		/// Whether the MIME <paramref name="mime"/> is of type <paramref name="type"/>
 		/// </summary>
-		public static bool IsType(string mime, MediaType type) =>
+		public static bool IsTypeEqual(string mime, MediaType type) =>
 			GetTypeComponent(mime) == Enum.GetName(type)!.ToLower();
 
-		public static bool IsUrlType(string url, MediaType m)
+		public static bool IsType(string url, MediaType m)
 		{
 
 			// (Is direct)
@@ -59,15 +58,40 @@ namespace Kantan.Net
 			//var isUri = Network.IsUri(value, out _);
 
 			string mediaType = GetMediaType(url);
-			
-			bool b = IsType(mediaType, m);
+
+			bool b = IsTypeEqual(mediaType, m);
 
 			return b;
+		}
+
+		public static bool IsType(string url, string type, int ms = Network.TimeoutMS)
+		{
+			if (!Network.IsUri(url, out var u)) {
+				return false;
+			}
+
+			var response = Network.GetResponse(u.ToString(), ms, Method.HEAD);
+
+			return response.IsSuccessful && response.ContentType.StartsWith(type);
 		}
 
 		/*
 		 * https://github.com/khellang/MimeTypes/blob/master/src/MimeTypes/MimeTypeFunctions.ttinclude
 		 */
+
+		private const char DELIM = '/';
+
+		private const int TYPE_I = 0;
+
+		private const int SUBTYPE_I = 1;
+
+		public static string GetTypeComponent(string mime) => mime.Split(DELIM)[TYPE_I];
+
+		public static string GetSubTypeComponent(string mime)
+		{
+			// NOTE: doesn't handle parameters
+			return mime.Split(DELIM)[SUBTYPE_I];
+		}
 
 		[DllImport("urlmon.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = false)]
 		private static extern int FindMimeFromData(IntPtr pBC,
@@ -141,20 +165,6 @@ namespace Kantan.Net
 		{
 			return GetMediaTypes(GetMediaTypes()).ToList();
 		}*/
-
-		private const char DELIM = '/';
-
-		private const int TYPE_I = 0;
-
-		private const int SUBTYPE_I = 1;
-
-		public static string GetTypeComponent(string mime) => mime.Split(DELIM)[TYPE_I];
-
-		public static string GetSubTypeComponent(string mime)
-		{
-			// NOTE: doesn't handle parameters
-			return mime.Split(DELIM)[SUBTYPE_I];
-		}
 
 
 		private const string DB_JSON_URL = "https://cdn.jsdelivr.net/gh/jshttp/mime-db@master/db.json";

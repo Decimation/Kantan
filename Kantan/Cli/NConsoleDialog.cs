@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
+// ReSharper disable UnusedMember.Global
+
 // ReSharper disable NonReadonlyMemberInGetHashCode
 
 namespace Kantan.Cli
@@ -12,6 +14,7 @@ namespace Kantan.Cli
 
 		public bool SelectMultiple { get; init; }
 
+		[CanBeNull]
 		public string Header { get; set; }
 
 		[CanBeNull]
@@ -21,7 +24,12 @@ namespace Kantan.Cli
 		public string Description { get; set; }
 
 
-		
+		[CanBeNull]
+		public string Subtitle { get; set; }
+
+
+		public HashSet<object> Read() => NConsole.ReadOptions(this);
+
 
 		public override int GetHashCode()
 		{
@@ -36,6 +44,8 @@ namespace Kantan.Cli
 			h.Add(Status?.GetHashCode());
 			h.Add(Description?.GetHashCode());
 			h.Add(Header?.GetHashCode());
+			h.Add(Subtitle?.GetHashCode());
+
 			return h.ToHashCode();
 		}
 	}

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+
 // ReSharper disable PropertyCanBeMadeInitOnly.Local
 
 // ReSharper disable UnusedMember.Global
@@ -213,7 +214,7 @@ namespace Kantan.Model
 
 		private string Format(List<int> columnLengths, char delimiter = '|')
 		{
-			// set right alinment if is a number
+			// set right alignment if is a number
 			var columnAlignment = Enumerable.Range(0, Columns.Count)
 			                                .Select(GetNumberAlignment)
 			                                .ToList();
@@ -289,8 +290,9 @@ namespace Kantan.Model
 
 	public class ConsoleTableOptions
 	{
-		public IEnumerable<string> Columns     { get; set; } = new List<string>();
-		public bool                EnableCount { get; set; } = true;
+		public IEnumerable<string> Columns { get; set; } = new List<string>();
+
+		public bool EnableCount { get; set; } = true;
 
 		/// <summary>
 		/// Enable only from a list of objects
@@ -301,6 +303,8 @@ namespace Kantan.Model
 		/// The <see cref="TextWriter"/> to write to. Defaults to <see cref="Console.Out"/>.
 		/// </summary>
 		public TextWriter OutputTo { get; set; } = Console.Out;
+
+
 	}
 
 	public enum ConsoleTableFormat

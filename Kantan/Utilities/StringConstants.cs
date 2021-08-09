@@ -14,6 +14,7 @@ namespace Kantan.Utilities
 
 		public const string ELLIPSES = "...";
 
+		public const string CHEVRON = ">>";
 
 		public const char PERIOD      = '.';
 		public const char ASTERISK    = '*';

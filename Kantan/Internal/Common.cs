@@ -28,7 +28,7 @@ namespace Kantan.Internal
 		/// </summary>
 		internal const int INVALID = -1;
 
-		private const string Kantan = "Kantan";
+		/*private const string Kantan = "Kantan";
 
 		internal static string AppFolder
 		{
@@ -43,6 +43,6 @@ namespace Kantan.Internal
 
 				return appFolder;
 			}
-		}
+		}*/
 	}
 }

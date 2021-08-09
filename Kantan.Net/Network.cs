@@ -6,13 +6,13 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Threading;
 using System.Web;
+using Kantan.Internal;
 using Kantan.Model;
 using Newtonsoft.Json;
 using RestSharp;
 using RestSharp.Extensions;
 using Formatting = System.Xml.Formatting;
 
-#pragma warning disable 8602
 
 #pragma warning disable 8600
 #pragma warning disable 8604
@@ -20,7 +20,6 @@ using Formatting = System.Xml.Formatting;
 // ReSharper disable CognitiveComplexity
 
 // ReSharper disable InconsistentNaming
-#pragma warning disable 8618
 
 // ReSharper disable SwitchStatementHandlesSomeKnownEnumValuesWithDefault
 
@@ -38,7 +37,7 @@ namespace Kantan.Net
 	/// <seealso cref="HttpUtility"/>
 	public static class Network
 	{
-		private const int TimeoutMS = 3000;
+		internal const int TimeoutMS = 2000;
 
 		#region URI
 
@@ -62,7 +61,7 @@ namespace Kantan.Net
 			bool result = Uri.TryCreate(uriName, UriKind.Absolute, out uriResult)
 			              && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
 
-
+			
 			// if (!result) {
 			// 	var b = new UriBuilder(StripScheme(new Uri(uriName)))
 			// 	{
@@ -141,16 +140,6 @@ namespace Kantan.Net
 
 		#endregion
 
-		public static bool IsType(string url, string type, int ms = TimeoutMS)
-		{
-			if (!IsUri(url, out var u)) {
-				return false;
-			}
-
-			var response = GetResponse(u.ToString(), ms, Method.HEAD);
-
-			return response.IsSuccessful && response.ContentType.StartsWith(type);
-		}
 
 		public static bool IsAlive(Uri u, int ms = TimeoutMS) => GetResponse(u.ToString(), ms).IsSuccessful;
 
@@ -216,12 +205,13 @@ namespace Kantan.Net
 		}
 
 
-		public static IRestResponse GetResponse(string url, int ms = TimeoutMS, Method method = Method.GET)
+		public static IRestResponse GetResponse(string url,  int ms = TimeoutMS, Method method = Method.GET, bool redirect = true, int? c = null)
 		{
 			var client = new RestClient
 			{
-				FollowRedirects = false,
-				Proxy           = null
+				FollowRedirects = redirect,
+				Proxy           = null,
+				MaxRedirects = c,
 			};
 
 			var request = new RestRequest(url)
@@ -234,7 +224,7 @@ namespace Kantan.Net
 
 			return response;
 		}
-
+		
 		public static void DumpResponse(IRestResponse response)
 		{
 			var ct = new ConsoleTable("-", "Value");
@@ -248,7 +238,7 @@ namespace Kantan.Net
 
 			Trace.WriteLine(str);
 		}
-
+		
 		public static void DumpResponse(HttpWebResponse response)
 		{
 			var ct = new ConsoleTable("-", "Value");
