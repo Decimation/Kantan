@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
+using System.Threading;
+using System.Threading.Tasks;
 
 // ReSharper disable UnusedMember.Global
 
@@ -37,6 +39,7 @@ namespace Kantan.Cli
 
 		public HashSet<object> Read() => NConsole.ReadOptions(this);
 
+		public Task<HashSet<object>> ReadAsync() => NConsole.ReadOptionsAsync(this);
 
 		public override int GetHashCode()
 		{

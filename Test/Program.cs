@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http;
@@ -23,7 +24,7 @@ namespace Test
 	{
 		private static async Task Main(string[] args)
 		{
-			/*var dialog = new NConsoleDialog()
+			var dialog = new NConsoleDialog()
 			{
 				Subtitle = "a\nb\nc",
 				Functions = new Action[]
@@ -34,33 +35,24 @@ namespace Test
 
 					},
 				},
-				Options = NConsoleOption.FromArray(new[] {1, 2, 3})
+				Options = NConsoleOption.FromArray(new[] {1, 2, 3}).ToList()
 			};
 
-			dialog.Read();*/
-
-			var i = "https://litter.catbox.moe/tnneye.jpg";
-
-			var jpg2 = "https://ascii2d.net/search/url/"+i;
-
-			var jpg = "https://yandex.com/images/search?rpt=imageview&url=https://i.imgur.com/u92FZ6P.png";
-			var w   =Network.GetHttpResponse(jpg, HttpMethod.Get, 5000);
-			Console.WriteLine(w);
-			Console.WriteLine(w.StatusCode);
-			Console.WriteLine(w.Headers.Location);
-			Console.WriteLine(w.TrailingHeaders.Location);
-			foreach (KeyValuePair<string, IEnumerable<string>> header in w.Headers) {
-				Console.WriteLine(header);
-			}
-
-			var v = AsyncHelpers.RunSync(() =>
+			var t=Task.Factory.StartNew(() =>
 			{
-				return w.Content.ReadAsStringAsync();
-
+				Thread.Sleep(TimeSpan.FromSeconds(3));
+				dialog.Options.Add(new NConsoleOption() {Name = "a"});
 			});
-			//Console.WriteLine(v);
-			Console.WriteLine(w.Content.ReadAsStringAsync().Result);
-			
+			var r=NConsole.ReadOptionsAsync(dialog);
+			await r;
+
+			Console.WriteLine("--");
+			Console.ReadKey();
+			var r2=NConsole.ReadOptions(dialog);
+			Console.WriteLine(r.Result.QuickJoin());
+			Console.WriteLine(r2.QuickJoin());
+
+
 		}
 	}
 }

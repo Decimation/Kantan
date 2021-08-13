@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Kantan.Utilities;
 using static Kantan.Internal.Common;
@@ -59,11 +60,9 @@ namespace Kantan.Cli
 		 * https://github.com/ZacharyPatten/Towel
 		 */
 
-
 		/*
 		 * TODO: this design isn't great
 		 */
-
 
 		public static void Init()
 		{
@@ -79,7 +78,7 @@ namespace Kantan.Cli
 		/// <returns><c>true</c> if the operation succeeded</returns>
 		public static bool Resize(int cww, int cwh)
 		{
-			bool canResize = Console.LargestWindowWidth  >= cww &&
+			bool canResize = Console.LargestWindowWidth >= cww &&
 			                 Console.LargestWindowHeight >= cwh;
 
 			if (canResize) {
@@ -96,7 +95,6 @@ namespace Kantan.Cli
 		private static readonly Color ColorError   = Color.Red;
 
 		private static TimeSpan PauseTime { get; set; } = TimeSpan.FromSeconds(1);
-
 
 		#region Write
 
@@ -120,19 +118,16 @@ namespace Kantan.Cli
 				s = Strings.ToHexString(obj);
 			}
 
-
 			else if (Collections.TryCastDictionary(obj, out var kv)) {
 				s = kv.Select(x => $"{x.Key} = {x.Value}")
 				      .QuickJoin("\n");
 			}
-
 
 			c(s);
 
 		}
 
 		#endregion
-
 
 		/// <summary>
 		///     Root write method.
@@ -189,7 +184,6 @@ namespace Kantan.Cli
 		/// </summary>
 		public const ConsoleKey NC_GLOBAL_EXIT_KEY = ConsoleKey.Escape;
 
-
 		/// <summary>
 		///     <see cref="Refresh" />
 		/// </summary>
@@ -199,7 +193,6 @@ namespace Kantan.Cli
 		///     Return
 		/// </summary>
 		public const ConsoleKey NC_GLOBAL_RETURN_KEY = ConsoleKey.F12;
-
 
 		/// <summary>
 		///     <see cref="NConsoleOption.AltFunction" />
@@ -247,7 +240,6 @@ namespace Kantan.Cli
 			} while (cki.Key != ConsoleKey.Escape);
 		}*/
 
-
 		#region Display/formatting
 
 		/// <summary>
@@ -274,7 +266,6 @@ namespace Kantan.Cli
 					}
 
 					else b = new string(' ', delim.Length) + a;
-					
 
 				}
 
@@ -410,12 +401,22 @@ namespace Kantan.Cli
 
 		#endregion
 
-
 		/// <summary>
 		///     Handles user input and options
 		/// </summary>
 		/// <remarks>Returns when <see cref="NConsoleOption.Function"/> returns a non-null value</remarks>
 		public static HashSet<object> ReadOptions(NConsoleDialog dialog)
+		{
+			var task = ReadOptionsAsync(dialog);
+			task.Wait();
+			return task.Result;
+		}
+
+		/// <summary>
+		///     Handles user input and options
+		/// </summary>
+		/// <remarks>Returns when <see cref="NConsoleOption.Function"/> returns a non-null value</remarks>
+		public static async Task<HashSet<object>> ReadOptionsAsync(NConsoleDialog dialog)
 		{
 			var selectedOptions = new HashSet<object>();
 
@@ -425,51 +426,49 @@ namespace Kantan.Cli
 
 			ConsoleKeyInfo cki;
 
-			// int prevHash  = 0;
-			// int prevCount = 0;
-
 			do {
 				DisplayDialog(dialog, selectedOptions);
+				
+				var t = Task.Run(() =>
+				{
+					// Block until input is entered.
 
-				//Debug.WriteLine($"{hashCode}|{dialog.Options.GetHashCode()}");
+					var prevCount = dialog.Options.Count;
 
-				// Block until input is entered.
+					while (!Console.KeyAvailable) {
 
-				while (!Console.KeyAvailable) {
+						var refresh = Atomic.Exchange(ref Status, ConsoleStatus.Ok) == ConsoleStatus.Refresh;
 
-					// Handle signals from other threads
+						int currentCount = dialog.Options.Count;
 
-					/*int hashCode    = dialog.GetHashCode();
-					int selectCount = selectedOptions.Count;
+						if (refresh || prevCount != currentCount) {
 
-					var b1 = prevHash != hashCode || prevCount != selectCount;
+							DisplayDialog(dialog, selectedOptions);
 
-					var b2 = Atomic.Exchange(ref Status, ConsoleStatus.Ok) == ConsoleStatus.Refresh;
+							prevCount = currentCount;
 
-					if (b1 || b2) {
-						Debug.WriteLine($"Refreshing {hashCode}");
-						DisplayDialog(dialog, selectedOptions);
-						prevHash  = hashCode;
-						prevCount = selectCount;
-					}*/
-
-					if (Atomic.Exchange(ref Status, ConsoleStatus.Ok) == ConsoleStatus.Refresh) {
-						DisplayDialog(dialog, selectedOptions);
+						}
 					}
-				}
 
+					// Key was read
+
+					var cki2 = Console.ReadKey(true);
+
+					return cki2;
+				});
+
+				await t;
 
 				// Key was read
 
-				cki = Console.ReadKey(true);
-
+				cki = t.Result;
 
 				// Handle special keys
 
 				if (cki.Key is <= ConsoleKey.F12 and >= ConsoleKey.F1) {
 					var i = cki.Key - ConsoleKey.F1;
-					
-					if (dialog.Functions is {}) {
+
+					if (dialog.Functions is { }) {
 						if (dialog.Functions.Length > i && i >= 0) {
 							dialog.Functions[i]();
 						}
@@ -483,9 +482,8 @@ namespace Kantan.Cli
 						break;
 					case NC_GLOBAL_RETURN_KEY:
 						//todo
-						return new HashSet<object> {true};
+						return (new HashSet<object> {true});
 				}
-
 
 				// KeyChar can't be used as modifiers are not applicable
 				char keyChar = (char) (int) cki.Key;
@@ -509,8 +507,8 @@ namespace Kantan.Cli
 				if (idx < dialog.Options.Count && idx >= 0) {
 					var option = dialog.Options[idx];
 
-					bool useAltFunc   = altModifier   && option.AltFunction   != null;
-					bool useCtrlFunc  = ctrlModifier  && option.CtrlFunction  != null;
+					bool useAltFunc   = altModifier && option.AltFunction != null;
+					bool useCtrlFunc  = ctrlModifier && option.CtrlFunction != null;
 					bool useShiftFunc = shiftModifier && option.ShiftFunction != null;
 
 					bool useComboFunc = altModifier && ctrlModifier && option.ComboFunction != null;
@@ -544,16 +542,15 @@ namespace Kantan.Cli
 								selectedOptions.Add(funcResult);
 							}
 							else {
-								return new HashSet<object> {funcResult};
+								return (new HashSet<object> {funcResult});
 							}
 						}
 					}
 				}
 			} while (cki.Key != NC_GLOBAL_EXIT_KEY);
 
-			return selectedOptions;
+			return (selectedOptions);
 		}
-
 
 		public static string ReadInput(string? prompt = null, Predicate<string>? invalid = null,
 		                               string? errPrompt = null)
@@ -562,7 +559,6 @@ namespace Kantan.Cli
 
 			string? input;
 			bool    isInvalid;
-
 
 			do {
 				//https://stackoverflow.com/questions/8946808/can-console-clear-be-used-to-only-clear-a-line-instead-of-whole-console
@@ -590,10 +586,8 @@ namespace Kantan.Cli
 
 			} while (isInvalid);
 
-
 			return input;
 		}
-
 
 		[StringFormatMethod(STRING_FORMAT_ARG)]
 		public static bool ReadConfirmation(string msg, params object[] args)
@@ -662,7 +656,6 @@ namespace Kantan.Cli
 		#endregion Options
 
 		#endregion IO
-
 
 		/*
 		 * https://github.com/sindresorhus/cli-spinners/blob/main/spinners.json
