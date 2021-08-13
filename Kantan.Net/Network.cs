@@ -3,16 +3,17 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Threading;
 using System.Web;
+using JetBrains.Annotations;
 using Kantan.Internal;
 using Kantan.Model;
 using Newtonsoft.Json;
 using RestSharp;
 using RestSharp.Extensions;
 using Formatting = System.Xml.Formatting;
-
 
 #pragma warning disable 8600
 #pragma warning disable 8604
@@ -39,6 +40,8 @@ namespace Kantan.Net
 	{
 		internal const int TimeoutMS = 2000;
 
+		private const int MAX_AUTO_REDIRECTS = 50;
+
 		#region URI
 
 		public static Uri GetHostUri(Uri u)
@@ -61,7 +64,6 @@ namespace Kantan.Net
 			bool result = Uri.TryCreate(uriName, UriKind.Absolute, out uriResult)
 			              && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
 
-			
 			// if (!result) {
 			// 	var b = new UriBuilder(StripScheme(new Uri(uriName)))
 			// 	{
@@ -72,7 +74,6 @@ namespace Kantan.Net
 			//
 			// 	//uriResult = new Uri(uriResult.ToString().Replace("file:", "http:"));
 			// }
-
 
 			return result;
 		}
@@ -125,7 +126,6 @@ namespace Kantan.Net
 		public static PingReply Ping(Uri u, int ms = TimeoutMS) =>
 			Ping(GetAddress(u.ToString()), ms);
 
-
 		public static PingReply Ping(string hostOrIP, int ms = TimeoutMS)
 		{
 			var ping = new Ping();
@@ -139,7 +139,6 @@ namespace Kantan.Net
 		}
 
 		#endregion
-
 
 		public static bool IsAlive(Uri u, int ms = TimeoutMS) => GetResponse(u.ToString(), ms).IsSuccessful;
 
@@ -204,14 +203,57 @@ namespace Kantan.Net
 			return newUrl;
 		}
 
+		#region Response
 
-		public static IRestResponse GetResponse(string url,  int ms = TimeoutMS, Method method = Method.GET, bool redirect = true, int? c = null)
+		[MustUseReturnValue]
+		public static HttpResponseMessage GetHttpResponse(string url, HttpMethod method, int ms = TimeoutMS,
+		                                                  bool redirect = true, int c = MAX_AUTO_REDIRECTS)
+		{
+			using var handler = new HttpClientHandler
+			{
+				AllowAutoRedirect        = redirect,
+				MaxAutomaticRedirections = c
+			};
+
+			using var client = new HttpClient(handler);
+
+			using var request = new HttpRequestMessage()
+			{
+				Method     = method,
+				RequestUri = new Uri(url),
+			};
+
+			client.Timeout = TimeSpan.FromMilliseconds(ms);
+
+			var message = client.Send(request);
+
+			return message;
+		}
+
+		[MustUseReturnValue]
+		public static HttpWebResponse GetWebResponse(string url, int ms = TimeoutMS, string method = "GET",
+		                                             bool redirect = true, int c = MAX_AUTO_REDIRECTS)
+		{
+			var h = (HttpWebRequest) WebRequest.Create(url);
+			h.AllowAutoRedirect            = redirect;
+			h.Method                       = method;
+			h.MaximumAutomaticRedirections = c;
+			h.Timeout                      = ms;
+
+			var r = (HttpWebResponse) h.GetResponse();
+
+			return r;
+		}
+
+		public static IRestResponse GetResponse(string url, int ms = TimeoutMS, Method method = Method.GET,
+		                                        bool redirect = true, int c = MAX_AUTO_REDIRECTS)
 		{
 			var client = new RestClient
 			{
 				FollowRedirects = redirect,
 				Proxy           = null,
-				MaxRedirects = c,
+				MaxRedirects    = c,
+
 			};
 
 			var request = new RestRequest(url)
@@ -224,7 +266,7 @@ namespace Kantan.Net
 
 			return response;
 		}
-		
+
 		public static void DumpResponse(IRestResponse response)
 		{
 			var ct = new ConsoleTable("-", "Value");
@@ -238,7 +280,7 @@ namespace Kantan.Net
 
 			Trace.WriteLine(str);
 		}
-		
+
 		public static void DumpResponse(HttpWebResponse response)
 		{
 			var ct = new ConsoleTable("-", "Value");
@@ -251,5 +293,7 @@ namespace Kantan.Net
 
 			Trace.WriteLine(str);
 		}
+
+		#endregion
 	}
 }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text.Unicode;
 using Kantan.Cli;
@@ -21,50 +20,17 @@ using NUnit.Framework;
 namespace UnitTest
 {
 	[TestFixture]
-	public class NetworkTests
-	{
-		[Test]
-		[TestCase(@"https://i.imgur.com/QtCausw.png", true)]
-		[TestCase(@"http://tidder.xyz/?imagelink=https://i.imgur.com/QtCausw.png", false)]
-		[TestCase(@"http://tidder.xyz/", false)]
-		[TestCase(@"https://i.imgur.com/QtCausw.png", true)]
-		public void UriAliveTest(string s, bool b)
-		{
-			Assert.AreEqual(b, Network.IsAlive(new Uri((s))));
-		}
-
-		[Test]
-		public void NAME() { }
-
-
-		[Test]
-		public void MediaTypesTest()
-		{
-			const string jpg = "https://i.ytimg.com/vi/r45a-l9Gqdk/hqdefault.jpg";
-
-			var i = MediaTypes.GetMediaType(jpg);
-			Assert.True(Network.IsUri(jpg, out var u));
-			Assert.True(MediaTypes.GetExtensions(i).Contains("jpe"));
-			Assert.True(MediaTypes.GetTypeComponent(i)    == "image");
-			Assert.True(MediaTypes.GetSubTypeComponent(i) == "jpeg");
-
-
-		}
-	}
-
-	[TestFixture]
 	public class Tests
 	{
 		[SetUp]
 		public void Setup() { }
 
 		[Test]
-		public void CliHandler()
+		public void CliTest()
 		{
 			TestFlags x = 0;
 
 			var c = new CliHandler();
-
 			c.Parameters.Add(new()
 			{
 				ParameterId = "-x",
@@ -78,8 +44,65 @@ namespace UnitTest
 
 			c.Run(new[] {"-x", "a,b"});
 
-
 			Assert.AreEqual(TestFlags.a | TestFlags.b, x);
+
+
+			//
+
+			string x1 = null;
+			c = new CliHandler();
+
+			CliParameter item = new()
+			{
+				ParameterId = null,
+				Function = o =>
+				{
+					x1 = o[0];
+					return null;
+				},
+				ArgumentCount = 1
+			};
+			c.Default = item;
+
+			c.Run(new[] { "hello" });
+
+			Assert.AreEqual("hello",x1);
+
+
+			//
+
+			c = new CliHandler {Default = null};
+
+
+			Assert.Throws<InvalidOperationException>(() =>
+			{
+				c.Run(new[] { "hello" });
+
+			});
+
+
+			//
+
+			string s = null;
+			c = new CliHandler { Default = new()
+				{
+					ParameterId = null,
+					Function = o =>
+					{
+						s = o[0];
+						return null;
+					},
+					ArgumentCount = 1
+				}
+			};
+
+
+			Assert.DoesNotThrow(() =>
+			{
+				c.Run(new[] { "hello" });
+
+			});
+			Assert.AreEqual("hello", s);
 
 		}
 
@@ -189,12 +212,12 @@ namespace UnitTest
 		[Test]
 		public void CollectionsTest2()
 		{
-			var rg      = new List<int>() {1, 2, 3, 9, 9, 9, 1, 2, 3};
-			var search  = new List<int>() {1, 2, 3};
-			var replace = new List<int>() {3, 2, 1};
+			var rg      = new List<int> {1, 2, 3, 9, 9, 9, 1, 2, 3};
+			var search  = new List<int> {1, 2, 3};
+			var replace = new List<int> {3, 2, 1};
 
 			var rg2  = rg.ReplaceAllSequences(search, replace);
-			var rg2x = new List<int>() {3, 2, 1, 9, 9, 9, 3, 2, 1};
+			var rg2x = new List<int> {3, 2, 1, 9, 9, 9, 3, 2, 1};
 
 			Assert.True(rg2.SequenceEqual(rg2x));
 		}
@@ -203,16 +226,16 @@ namespace UnitTest
 		[Test]
 		public void CollectionsTest()
 		{
-			var rg      = new List<int>() {1, 2, 3, 4, 5, 6, 3, 4, 5};
-			var search  = new List<int>() {3, 4, 5};
-			var replace = new List<int>() {5, 4, 3};
+			var rg      = new List<int> {1, 2, 3, 4, 5, 6, 3, 4, 5};
+			var search  = new List<int> {3, 4, 5};
+			var replace = new List<int> {5, 4, 3};
 
 
 			rg.ReplaceAllSequences(search, replace);
 
 			TestContext.WriteLine($"{rg.QuickJoin()}");
 
-			var rgNew = new List<int>() {1, 2, 5, 4, 3, 6, 5, 4, 3};
+			var rgNew = new List<int> {1, 2, 5, 4, 3, 6, 5, 4, 3};
 
 			Assert.True(rg.SequenceEqual(rgNew));
 
@@ -227,6 +250,36 @@ namespace UnitTest
 			// //TestContext.WriteLine($"{rg2.QuickJoin()}");
 			// var rg2New = new[] {"a", "goo", "hi"};
 			// Assert.True(rg2.SequenceEqual(rg2New));
+		}
+	}
+
+	[TestFixture]
+	public class NetworkTests
+	{
+		[Test]
+		[TestCase(@"https://i.imgur.com/QtCausw.png", true)]
+		[TestCase(@"http://tidder.xyz/?imagelink=https://i.imgur.com/QtCausw.png", false)]
+		[TestCase(@"http://tidder.xyz/", false)]
+		[TestCase(@"https://i.imgur.com/QtCausw.png", true)]
+		public void UriAliveTest(string s, bool b)
+		{
+			Assert.AreEqual(b, Network.IsAlive(new Uri((s))));
+		}
+		
+
+
+		[Test]
+		public void MediaTypesTest()
+		{
+			const string jpg = "https://i.ytimg.com/vi/r45a-l9Gqdk/hqdefault.jpg";
+
+			var i = MediaTypes.GetMediaType(jpg);
+			Assert.True(Network.IsUri(jpg, out var u));
+			Assert.True(MediaTypes.GetExtensions(i).Contains("jpe"));
+			Assert.True(MediaTypes.GetTypeComponent(i)    == "image");
+			Assert.True(MediaTypes.GetSubTypeComponent(i) == "jpeg");
+
+
 		}
 	}
 

@@ -6,73 +6,92 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Kantan.Diagnostics;
 using Kantan.Utilities;
 using static Kantan.Diagnostics.LogCategories;
+// ReSharper disable EmptyConstructor
+
+// ReSharper disable UnusedMember.Global
 
 namespace Kantan.Cli
 {
-	// todo: WIP
-
 	public class CliHandler
 	{
-		public class CliParameter
-		{
-			public string ParameterId { get; init; }
+		public CliHandler() { }
 
-			public Func<string[], object> Function { get; init; }
+		public List<CliParameter> Parameters { get; } = new();
 
-			public int ArgumentCount { get; init; }
-		}
-
-
-		public CliHandler()
-		{
-			Parameters = new List<CliParameter>();
-		}
-
-		public List<CliParameter> Parameters { get; }
+		[CanBeNull]
+		public CliParameter Default { get; set; }
 
 
 		public void Run() => Run(Environment.GetCommandLineArgs());
 
 		public void Run(string[] args)
 		{
-			Trace.WriteLine($"{nameof(CliHandler)}: cli arguments: {args.QuickJoin()}", C_INFO);
+			Trace.WriteLine($"{nameof(CliHandler)}: arguments: {args.QuickJoin(" ")}", C_DEBUG);
 
 			var argEnum = args.GetEnumerator().Cast<string>();
 
 			while (argEnum.MoveNext()) {
 
-				var arg = Parameters.FirstOrDefault(x => x.ParameterId == argEnum.Current);
+				var current = argEnum.Current;
 
-				if (arg != null) {
-					var count = arg.ArgumentCount;
+				var cliParam = Parameters.FirstOrDefault(p => p.ParameterId == current);
 
-					Guard.AssertNonNegative(count);
-
-					if (count == 0) {
-						// switch
-						arg.Function(new[] {true.ToString()});
-						return;
+				if (cliParam == null) {
+					if (Default == null) {
+						throw new InvalidOperationException();
 					}
 
-					var argValues = new string[count];
-
-					for (int i = 0; i < count; i++) {
-						argEnum.MoveNext();
-						argValues[i] = argEnum.Current;
-					}
-
-
-					arg.Function(argValues);
-
-					//((FieldInfo)((MemberExpression)reg.fx.Body).Member).SetValue();
+					Default.Handle(argEnum);
+				}
+				else {
+					cliParam.Handle(argEnum);
 				}
 
 			}
 
 
+		}
+	}
+
+
+	public record CliParameter
+	{
+		public string ParameterId { get; init; }
+
+		public Func<string[], object> Function { get; init; }
+
+		/// <remarks><c>0</c> for switch parameter</remarks>
+		public int ArgumentCount { get; init; }
+
+
+		internal void Handle(IEnumerator<string> argEnum)
+		{
+
+			Guard.AssertNonNegative(ArgumentCount);
+
+			if (ArgumentCount == 0) {
+				// switch
+				Function(new[] {true.ToString()});
+				return;
+			}
+
+			var argValues = new string[ArgumentCount];
+
+			for (int i = 0; i < ArgumentCount; i++) {
+				argEnum.MoveNext();
+				argValues[i] = argEnum.Current;
+			}
+
+			Trace.WriteLine($"{nameof(CliHandler)}: invoking {ParameterId} with {argValues.QuickJoin()}",
+			                C_VERBOSE);
+
+			Function(argValues);
+
+			//((FieldInfo)((MemberExpression)reg.fx.Body).Member).SetValue();
 		}
 	}
 }

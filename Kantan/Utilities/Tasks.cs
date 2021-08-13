@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 // ReSharper disable UnusedMember.Global
@@ -11,7 +10,6 @@ namespace Kantan.Utilities
 {
 	public static class Tasks
 	{
-		
 		public static Task ForEachAsync<T>(this IEnumerable<T> sequence, Func<T, Task> action)
 		{
 			return Task.WhenAll(sequence.Select(action));

@@ -21,36 +21,46 @@ namespace Test
 {
 	public static class Program
 	{
-		[Flags]
-		private enum flag
-		{
-			a=1,
-			b=1<<1,
-			c=1<<2
-		}
 		private static async Task Main(string[] args)
 		{
-			flag x = 0;
-
-			var c = new CliHandler();
-
-			c.Parameters.Add(new()
+			/*var dialog = new NConsoleDialog()
 			{
-				ParameterId = "-x", Function = o =>
+				Subtitle = "a\nb\nc",
+				Functions = new Action[]
 				{
-					Debug.WriteLine($"{o[0]}");
-					
-					x = Enum.Parse<flag>(o[0]);
-					return null;
+					() =>
+					{
+						Console.WriteLine("g");
+
+					},
 				},
-				ArgumentCount = 1
+				Options = NConsoleOption.FromArray(new[] {1, 2, 3})
+			};
+
+			dialog.Read();*/
+
+			var i = "https://litter.catbox.moe/tnneye.jpg";
+
+			var jpg2 = "https://ascii2d.net/search/url/"+i;
+
+			var jpg = "https://yandex.com/images/search?rpt=imageview&url=https://i.imgur.com/u92FZ6P.png";
+			var w   =Network.GetHttpResponse(jpg, HttpMethod.Get, 5000);
+			Console.WriteLine(w);
+			Console.WriteLine(w.StatusCode);
+			Console.WriteLine(w.Headers.Location);
+			Console.WriteLine(w.TrailingHeaders.Location);
+			foreach (KeyValuePair<string, IEnumerable<string>> header in w.Headers) {
+				Console.WriteLine(header);
+			}
+
+			var v = AsyncHelpers.RunSync(() =>
+			{
+				return w.Content.ReadAsStringAsync();
+
 			});
-
-			c.Run();
-
-			Console.WriteLine(x);
-
-			//new NConsoleDialog() {Subtitle = "a\nb\nc", Options = NConsoleOption.FromArray(new[]{1,2,3})}.Read();
+			//Console.WriteLine(v);
+			Console.WriteLine(w.Content.ReadAsStringAsync().Result);
+			
 		}
 	}
 }

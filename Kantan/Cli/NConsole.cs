@@ -198,7 +198,8 @@ namespace Kantan.Cli
 		/// <summary>
 		///     Return
 		/// </summary>
-		public const ConsoleKey NC_GLOBAL_RETURN_KEY = ConsoleKey.F1;
+		public const ConsoleKey NC_GLOBAL_RETURN_KEY = ConsoleKey.F12;
+
 
 		/// <summary>
 		///     <see cref="NConsoleOption.AltFunction" />
@@ -465,11 +466,21 @@ namespace Kantan.Cli
 
 				// Handle special keys
 
+				if (cki.Key is <= ConsoleKey.F12 and >= ConsoleKey.F1) {
+					var i = cki.Key - ConsoleKey.F1;
+					
+					if (dialog.Functions is {}) {
+						if (dialog.Functions.Length > i && i >= 0) {
+							dialog.Functions[i]();
+						}
+
+					}
+				}
+
 				switch (cki.Key) {
 					case NC_GLOBAL_REFRESH_KEY:
 						Refresh();
 						break;
-
 					case NC_GLOBAL_RETURN_KEY:
 						//todo
 						return new HashSet<object> {true};

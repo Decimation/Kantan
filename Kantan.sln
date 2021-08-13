@@ -15,33 +15,24 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
-		TestDebug|Any CPU = TestDebug|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{EFEFA5E1-EC3F-439A-915D-564185937136}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{EFEFA5E1-EC3F-439A-915D-564185937136}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EFEFA5E1-EC3F-439A-915D-564185937136}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EFEFA5E1-EC3F-439A-915D-564185937136}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EFEFA5E1-EC3F-439A-915D-564185937136}.TestDebug|Any CPU.ActiveCfg = TestDebug|Any CPU
-		{EFEFA5E1-EC3F-439A-915D-564185937136}.TestDebug|Any CPU.Build.0 = TestDebug|Any CPU
 		{0A9DEC3D-BF50-4660-9D3E-B85099476372}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0A9DEC3D-BF50-4660-9D3E-B85099476372}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0A9DEC3D-BF50-4660-9D3E-B85099476372}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0A9DEC3D-BF50-4660-9D3E-B85099476372}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0A9DEC3D-BF50-4660-9D3E-B85099476372}.TestDebug|Any CPU.ActiveCfg = TestDebug|Any CPU
-		{0A9DEC3D-BF50-4660-9D3E-B85099476372}.TestDebug|Any CPU.Build.0 = TestDebug|Any CPU
 		{9BE557A3-9158-4DB4-B56E-E3BCCAE5F747}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9BE557A3-9158-4DB4-B56E-E3BCCAE5F747}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9BE557A3-9158-4DB4-B56E-E3BCCAE5F747}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9BE557A3-9158-4DB4-B56E-E3BCCAE5F747}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9BE557A3-9158-4DB4-B56E-E3BCCAE5F747}.TestDebug|Any CPU.ActiveCfg = TestDebug|Any CPU
-		{9BE557A3-9158-4DB4-B56E-E3BCCAE5F747}.TestDebug|Any CPU.Build.0 = TestDebug|Any CPU
 		{6F9B8F61-27EC-4730-B5AF-B6F27EA5E75E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6F9B8F61-27EC-4730-B5AF-B6F27EA5E75E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6F9B8F61-27EC-4730-B5AF-B6F27EA5E75E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6F9B8F61-27EC-4730-B5AF-B6F27EA5E75E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6F9B8F61-27EC-4730-B5AF-B6F27EA5E75E}.TestDebug|Any CPU.ActiveCfg = TestDebug|Any CPU
-		{6F9B8F61-27EC-4730-B5AF-B6F27EA5E75E}.TestDebug|Any CPU.Build.0 = TestDebug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
