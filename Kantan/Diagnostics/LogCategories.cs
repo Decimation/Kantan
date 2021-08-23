@@ -13,8 +13,9 @@ namespace Kantan.Diagnostics
 		public const string C_WARN = "[warning]";
 
 		public const string C_ERROR = "[error]";
-		
+
 		public const string C_VERBOSE = "[verbose]";
 
+		public const string C_FATAL   = "[fatal]";
 	}
 }

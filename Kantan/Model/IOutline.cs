@@ -4,8 +4,8 @@
 
 namespace Kantan.Model
 {
-	public interface IViewable
+	public interface IOutline
 	{
-		public Dictionary<string, object> View { get; }
+		public Dictionary<string, object> Outline { get; }
 	}
 }

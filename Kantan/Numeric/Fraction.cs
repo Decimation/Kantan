@@ -1,4 +1,5 @@
 ﻿using System;
+// ReSharper disable NonReadonlyMemberInGetHashCode
 
 // ReSharper disable InconsistentNaming
 
@@ -77,29 +78,18 @@ namespace Kantan.Numeric
 
 	public class Fraction
 	{
-		/// <summary>
-		/// Class attributes/members
-		/// </summary>
-		private long m_iNumerator;
-
 		private long m_iDenominator;
 
 		/// <summary>
 		/// Constructors
 		/// </summary>
-		public Fraction()
-		{
-			Initialize(0, 1);
-		}
+		public Fraction() => Initialize(0, 1);
 
-		public Fraction(long iWholeNumber)
-		{
-			Initialize(iWholeNumber, 1);
-		}
+		public Fraction(long wholeNumber) => Initialize(wholeNumber, 1);
 
-		public Fraction(double dDecimalValue)
+		public Fraction(double decimalValue)
 		{
-			var temp = ToFraction(dDecimalValue);
+			var temp = ToFraction(decimalValue);
 			Initialize(temp.Numerator, temp.Denominator);
 		}
 
@@ -109,18 +99,18 @@ namespace Kantan.Numeric
 			Initialize(temp.Numerator, temp.Denominator);
 		}
 
-		public Fraction(long iNumerator, long iDenominator)
+		public Fraction(long numerator, long denominator)
 		{
-			Initialize(iNumerator, iDenominator);
+			Initialize(numerator, denominator);
 		}
 
 		/// <summary>
 		/// Internal function for constructors
 		/// </summary>
-		private void Initialize(long iNumerator, long iDenominator)
+		private void Initialize(long numerator, long denominator)
 		{
-			Numerator   = iNumerator;
-			Denominator = iDenominator;
+			Numerator   = numerator;
+			Denominator = denominator;
 			ReduceFraction(this);
 		}
 
@@ -139,17 +129,16 @@ namespace Kantan.Numeric
 			}
 		}
 
-		public long Numerator
-		{
-			get => m_iNumerator;
-			set => m_iNumerator = value;
-		}
+		/// <summary>
+		/// Class attributes/members
+		/// </summary>
+		public long Numerator { get; set; }
 
 		public long Value
 		{
 			set
 			{
-				m_iNumerator   = value;
+				Numerator   = value;
 				m_iDenominator = 1;
 			}
 		}
@@ -260,7 +249,7 @@ namespace Kantan.Numeric
 		{
 			var frac = new Fraction
 			{
-				Numerator = Numerator, 
+				Numerator   = Numerator,
 				Denominator = Denominator
 			};
 			return frac;
@@ -303,100 +292,43 @@ namespace Kantan.Numeric
 
 		public static Fraction operator -(int iNo, Fraction frac1) => Add(-frac1, new Fraction(iNo));
 
-		public static Fraction operator -(Fraction frac1, int iNo)
-		{
-			return Add(frac1, -new Fraction(iNo));
-		}
+		public static Fraction operator -(Fraction frac1, int iNo) => Add(frac1, -new Fraction(iNo));
 
-		public static Fraction operator -(double dbl, Fraction frac1)
-		{
-			return Add(-frac1, ToFraction(dbl));
-		}
+		public static Fraction operator -(double dbl, Fraction frac1) => Add(-frac1, ToFraction(dbl));
 
-		public static Fraction operator -(Fraction frac1, double dbl)
-		{
-			return Add(frac1, -ToFraction(dbl));
-		}
+		public static Fraction operator -(Fraction frac1, double dbl) => Add(frac1, -ToFraction(dbl));
 
-		public static Fraction operator *(Fraction frac1, Fraction frac2)
-		{
-			return Multiply(frac1, frac2);
-		}
+		public static Fraction operator *(Fraction frac1, Fraction frac2) => Multiply(frac1, frac2);
 
-		public static Fraction operator *(int iNo, Fraction frac1)
-		{
-			return Multiply(frac1, new Fraction(iNo));
-		}
+		public static Fraction operator *(int iNo, Fraction frac1) => Multiply(frac1, new Fraction(iNo));
 
-		public static Fraction operator *(Fraction frac1, int iNo)
-		{
-			return Multiply(frac1, new Fraction(iNo));
-		}
+		public static Fraction operator *(Fraction frac1, int iNo) => Multiply(frac1, new Fraction(iNo));
 
-		public static Fraction operator *(double dbl, Fraction frac1)
-		{
-			return Multiply(frac1, ToFraction(dbl));
-		}
+		public static Fraction operator *(double dbl, Fraction frac1) => Multiply(frac1, ToFraction(dbl));
 
-		public static Fraction operator *(Fraction frac1, double dbl)
-		{
-			return Multiply(frac1, ToFraction(dbl));
-		}
+		public static Fraction operator *(Fraction frac1, double dbl) => Multiply(frac1, ToFraction(dbl));
 
-		public static Fraction operator /(Fraction frac1, Fraction frac2)
-		{
-			return Multiply(frac1, Inverse(frac2));
-		}
+		public static Fraction operator /(Fraction frac1, Fraction frac2) => Multiply(frac1, Inverse(frac2));
 
-		public static Fraction operator /(int iNo, Fraction frac1)
-		{
-			return Multiply(Inverse(frac1), new Fraction(iNo));
-		}
+		public static Fraction operator /(int iNo, Fraction frac1) => Multiply(Inverse(frac1), new Fraction(iNo));
 
-		public static Fraction operator /(Fraction frac1, int iNo)
-		{
-			return Multiply(frac1, Inverse(new Fraction(iNo)));
-		}
+		public static Fraction operator /(Fraction frac1, int iNo) => Multiply(frac1, Inverse(new Fraction(iNo)));
 
-		public static Fraction operator /(double dbl, Fraction frac1)
-		{
-			return Multiply(Inverse(frac1), ToFraction(dbl));
-		}
+		public static Fraction operator /(double dbl, Fraction frac1) => Multiply(Inverse(frac1), ToFraction(dbl));
 
-		public static Fraction operator /(Fraction frac1, double dbl)
-		{
-			return Multiply(frac1, Inverse(ToFraction(dbl)));
-		}
+		public static Fraction operator /(Fraction frac1, double dbl) => Multiply(frac1, Inverse(ToFraction(dbl)));
 
-		public static bool operator ==(Fraction frac1, Fraction frac2)
-		{
-			return frac1.Equals(frac2);
-		}
+		public static bool operator ==(Fraction frac1, Fraction frac2) => frac1 is not null && frac1.Equals(frac2);
 
-		public static bool operator !=(Fraction frac1, Fraction frac2)
-		{
-			return !frac1.Equals(frac2);
-		}
+		public static bool operator !=(Fraction frac1, Fraction frac2) => frac1 is not null && !frac1.Equals(frac2);
 
-		public static bool operator ==(Fraction frac1, int iNo)
-		{
-			return frac1.Equals(new Fraction(iNo));
-		}
+		public static bool operator ==(Fraction frac1, int iNo) => frac1 is not null && frac1.Equals(new Fraction(iNo));
 
-		public static bool operator !=(Fraction frac1, int iNo)
-		{
-			return !frac1.Equals(new Fraction(iNo));
-		}
+		public static bool operator !=(Fraction frac1, int iNo) => frac1 is not null && !frac1.Equals(new Fraction(iNo));
 
-		public static bool operator ==(Fraction frac1, double dbl)
-		{
-			return frac1.Equals(new Fraction(dbl));
-		}
+		public static bool operator ==(Fraction frac1, double dbl) => frac1 is not null && frac1.Equals(new Fraction(dbl));
 
-		public static bool operator !=(Fraction frac1, double dbl)
-		{
-			return !frac1.Equals(new Fraction(dbl));
-		}
+		public static bool operator !=(Fraction frac1, double dbl) => frac1 is not null && !frac1.Equals(new Fraction(dbl));
 
 		public static bool operator <(Fraction frac1, Fraction frac2)
 		{
@@ -424,20 +356,11 @@ namespace Kantan.Numeric
 		/// <summary>
 		/// Overloaded user defined conversions: from numeric data types to Fractions
 		/// </summary>
-		public static implicit operator Fraction(long lNo)
-		{
-			return new(lNo);
-		}
+		public static implicit operator Fraction(long num) => new(num);
 
-		public static implicit operator Fraction(double dNo)
-		{
-			return new(dNo);
-		}
+		public static implicit operator Fraction(double num) => new(num);
 
-		public static implicit operator Fraction(string strNo)
-		{
-			return new(strNo);
-		}
+		public static implicit operator Fraction(string strNum) => new(strNum);
 
 		/// <summary>
 		/// Overloaded user defined conversions: from fractions to double and string
@@ -458,7 +381,7 @@ namespace Kantan.Numeric
 		public override bool Equals(object obj)
 		{
 			var frac = (Fraction) obj;
-			return Numerator == frac.Numerator && Denominator == frac.Denominator;
+			return frac is not null && Numerator == frac.Numerator && Denominator == frac.Denominator;
 		}
 
 		/// <summary>
@@ -466,19 +389,13 @@ namespace Kantan.Numeric
 		/// </summary>
 		public override int GetHashCode()
 		{
-			return Convert.ToInt32((Numerator ^ Denominator) & 0xFFFFFFFF);
+			return Convert.ToInt32((Numerator ^ Denominator) & UInt32.MaxValue);
 		}
 
 		/// <summary>
 		/// internal function for negation
 		/// </summary>
-		private static Fraction Negate(Fraction frac1)
-		{
-			long iNumerator   = -frac1.Numerator;
-			long iDenominator = frac1.Denominator;
-			return new Fraction(iNumerator, iDenominator);
-
-		}
+		private static Fraction Negate(Fraction frac1) => new Fraction(-frac1.Numerator, frac1.Denominator);
 
 		/// <summary>
 		/// internal functions for binary operations
@@ -487,9 +404,9 @@ namespace Kantan.Numeric
 		{
 			try {
 				checked {
-					long iNumerator   = frac1.Numerator * frac2.Denominator + frac2.Numerator * frac1.Denominator;
-					long iDenominator = frac1.Denominator * frac2.Denominator;
-					return new Fraction(iNumerator, iDenominator);
+					long numerator   = frac1.Numerator * frac2.Denominator + frac2.Numerator * frac1.Denominator;
+					long denominator = frac1.Denominator * frac2.Denominator;
+					return new Fraction(numerator, denominator);
 				}
 			}
 			catch (OverflowException) {
@@ -504,9 +421,9 @@ namespace Kantan.Numeric
 		{
 			try {
 				checked {
-					long iNumerator   = frac1.Numerator   * frac2.Numerator;
-					long iDenominator = frac1.Denominator * frac2.Denominator;
-					return new Fraction(iNumerator, iDenominator);
+					long numerator   = frac1.Numerator * frac2.Numerator;
+					long denominator = frac1.Denominator * frac2.Denominator;
+					return new Fraction(numerator, denominator);
 				}
 			}
 			catch (OverflowException) {
@@ -528,9 +445,7 @@ namespace Kantan.Numeric
 
 			do {
 				if (iNo1 < iNo2) {
-					long tmp = iNo1; // swap the two operands
-					iNo1 = iNo2;
-					iNo2 = tmp;
+					(iNo1, iNo2) = (iNo2, iNo1);
 				}
 
 				iNo1 %= iNo2;
@@ -568,10 +483,6 @@ namespace Kantan.Numeric
 		}
 	}
 
-
-	/// <summary>
-	/// Exception class for Fraction, derived from System.Exception
-	/// </summary>
 	public class FractionException : Exception
 	{
 		public FractionException() : base() { }

@@ -1,31 +1,44 @@
-﻿// ReSharper disable IdentifierTypo
-
+﻿
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using JetBrains.Annotations;
 using static Kantan.Internal.Common;
 
 // ReSharper disable UnusedMember.Local
 // ReSharper disable UnusedMember.Global
-#pragma warning disable IDE0051
+// ReSharper disable UseNullableReferenceTypesAnnotationSyntax
+// ReSharper disable IdentifierTypo
+
+#pragma warning disable IDE0051, IDE0005
 #nullable enable
 
 #region Aliases
 
 using ACT = JetBrains.Annotations.AssertionConditionType;
 using AC = JetBrains.Annotations.AssertionConditionAttribute;
-using DNR = System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute;
-using DNRI = System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute;
 using AM = JetBrains.Annotations.AssertionMethodAttribute;
-using NNV = JetBrains.Annotations.NonNegativeValueAttribute;
-using NN = JetBrains.Annotations.NotNullAttribute;
-using DH = System.Diagnostics.DebuggerHiddenAttribute;
 using CA = JetBrains.Annotations.ContractAnnotationAttribute;
 using SFM = JetBrains.Annotations.StringFormatMethodAttribute;
+using DH = System.Diagnostics.DebuggerHiddenAttribute;
+using DNR = System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute;
+using DNRI = System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute;
+using NNV = JetBrains.Annotations.NonNegativeValueAttribute;
+using NNINN = System.Diagnostics.CodeAnalysis.NotNullIfNotNullAttribute;
+using NNW = System.Diagnostics.CodeAnalysis.NotNullWhenAttribute;
+using MNN = System.Diagnostics.CodeAnalysis.MemberNotNullAttribute;
+using MNNW = System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute;
+using MNW = System.Diagnostics.CodeAnalysis.MaybeNullWhenAttribute;
+using NN = JetBrains.Annotations.NotNullAttribute;
+using CBN = JetBrains.Annotations.CanBeNullAttribute;
+using ICBN = JetBrains.Annotations.ItemCanBeNullAttribute;
+using AN = System.Diagnostics.CodeAnalysis.AllowNullAttribute;
+using MN = System.Diagnostics.CodeAnalysis.MaybeNullAttribute;
 
 #endregion
+
 
 namespace Kantan.Diagnostics
 {
@@ -159,9 +172,9 @@ namespace Kantan.Diagnostics
 
 		[DH]
 		[AM]
-		public static void AssertContains<T>(IEnumerable<T> enumerable, T name)
+		public static void AssertContains<T>(IEnumerable<T> enumerable, T value)
 		{
-			Assert(enumerable.Contains(name));
+			Assert(enumerable.Contains(value));
 		}
 
 		[DH]
@@ -210,6 +223,6 @@ namespace Kantan.Diagnostics
 	{
 		public GuardException() { }
 
-		public GuardException([CanBeNull] string? message) : base(message) { }
+		public GuardException(string? message) : base(message) { }
 	}
 }

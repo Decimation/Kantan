@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Linq;
@@ -23,6 +24,13 @@ namespace Kantan.Cli
 	/// </summary>
 	public class NConsoleOption
 	{
+		public const ConsoleModifiers NC_FN_MAIN  = 0;
+		public const ConsoleModifiers NC_FN_ALT   = ConsoleModifiers.Alt;
+		public const ConsoleModifiers NC_FN_CTRL  = ConsoleModifiers.Control;
+		public const ConsoleModifiers NC_FN_SHIFT = ConsoleModifiers.Shift;
+		public const ConsoleModifiers NC_FN_COMBO = NC_FN_CTRL | NC_FN_ALT;
+
+
 		/// <summary>
 		///     Display name
 		/// </summary>
@@ -32,45 +40,29 @@ namespace Kantan.Cli
 		/// <summary>
 		///     Function to execute when selected
 		/// </summary>
-		public virtual NConsoleFunction Function { get; set; }
-
-		/// <summary>
-		///     Function to execute when selected with modifiers (<see cref="NConsole.NC_ALT_FUNC_MODIFIER" />)
-		/// </summary>
-		public virtual NConsoleFunction? AltFunction { get; set; }
-
-		/// <summary>
-		///     Function to execute when selected with modifiers (<see cref="NConsole.NC_CTRL_FUNC_MODIFIER" />)
-		/// </summary>
-		public virtual NConsoleFunction? CtrlFunction { get; set; }
-
-		/// <summary>
-		///     Function to execute when selected with modifiers (<see cref="NConsole.NC_SHIFT_FUNC_MODIFIER" />)
-		/// </summary>
-		public virtual NConsoleFunction? ShiftFunction { get; set; }
-
-		/// <summary>
-		///     Function to execute when selected with modifiers (<see cref="NConsole.NC_COMBO_FUNC_MODIFIER" />)
-		/// </summary>
-		public virtual NConsoleFunction? ComboFunction { get; set; }
+		public virtual NConsoleFunction Function
+		{
+			get => Functions[NC_FN_MAIN];
+			set => Functions[NC_FN_MAIN] = value;
+		}
 
 		/// <summary>
 		///     Information about this <see cref="NConsoleOption" />
 		/// </summary>
-		public virtual IViewable? Data { get; set; }
+		public virtual IOutline? Data { get; set; }
 
 
 		public virtual Color? Color { get; set; }
 
+		public Dictionary<ConsoleModifiers, NConsoleFunction> Functions { get; init; } = new()
+		{
+			//[0] = () => { return null; },
+
+		};
+
 		public static List<NConsoleOption> FromList<T>(IList<T> values) =>
 			FromArray(values, arg => arg!.ToString()!).ToList();
 
-		
-
-		public override int GetHashCode()
-		{
-			return HashCode.Combine(Name, Function, AltFunction, CtrlFunction, ShiftFunction, ComboFunction, Data, Color);
-		}
 
 		public static NConsoleOption[] FromArray<T>(T[] values) => FromArray(values, arg => arg!.ToString()!);
 

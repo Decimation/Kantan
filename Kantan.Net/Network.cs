@@ -217,7 +217,7 @@ namespace Kantan.Net
 
 			using var client = new HttpClient(handler);
 
-			using var request = new HttpRequestMessage()
+			using var request = new HttpRequestMessage
 			{
 				Method     = method,
 				RequestUri = new Uri(url),

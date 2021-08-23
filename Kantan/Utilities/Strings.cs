@@ -233,7 +233,7 @@ namespace Kantan.Utilities
 		#endregion
 
 
-		#region View
+		#region Outline
 
 		public static string Separator { get; set; } = new('-', 20);
 
@@ -256,17 +256,17 @@ namespace Kantan.Utilities
 		}
 
 
-		public static string ViewString(IViewable view)
+		public static string OutlineString(IOutline view)
 		{
 			var esb = new ExtendedStringBuilder();
 
 
-			foreach (var (key, value) in view.View) {
+			foreach (var (key, value) in view.Outline) {
 				switch (value) {
 					case null:
 						continue;
-					case IViewable view2:
-						esb.Append(ViewString(view2));
+					case IOutline view2:
+						esb.Append(OutlineString(view2));
 						break;
 					default:
 						esb.Append(key, value);

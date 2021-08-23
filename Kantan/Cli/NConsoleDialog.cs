@@ -30,11 +30,12 @@ namespace Kantan.Cli
 		[CanBeNull]
 		public string Subtitle { get; set; }
 
-		public Action[] Functions { get; set; }
+		public Dictionary<ConsoleKey, Action> Functions { get; set; } = new()
+			{ };
 
 		public NConsoleDialog()
 		{
-			Functions = new Action[12];
+			
 		}
 
 		public HashSet<object> Read() => NConsole.ReadOptions(this);

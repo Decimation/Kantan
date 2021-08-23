@@ -98,36 +98,7 @@ namespace Kantan.Cli
 
 		#region Write
 
-		#region QWrite
-
-		public delegate void WriteFunction(object o);
-
-		public static void QWrite(object obj) => QWrite(obj, Console.WriteLine);
-
-		public static void QWrite(object obj, WriteFunction c)
-		{
-			string? s = obj switch
-			{
-				object[] rg => rg.QuickJoin(),
-				Array r     => r.CastObjectArray().QuickJoin(),
-
-				_ => obj.ToString()
-			};
-
-			if (obj.GetType().IsPointer || obj is IntPtr) {
-				s = Strings.ToHexString(obj);
-			}
-
-			else if (Collections.TryCastDictionary(obj, out var kv)) {
-				s = kv.Select(x => $"{x.Key} = {x.Value}")
-				      .QuickJoin("\n");
-			}
-
-			c(s);
-
-		}
-
-		#endregion
+		
 
 		/// <summary>
 		///     Root write method.
@@ -193,26 +164,7 @@ namespace Kantan.Cli
 		///     Return
 		/// </summary>
 		public const ConsoleKey NC_GLOBAL_RETURN_KEY = ConsoleKey.F12;
-
-		/// <summary>
-		///     <see cref="NConsoleOption.AltFunction" />
-		/// </summary>
-		public const ConsoleModifiers NC_ALT_FUNC_MODIFIER = ConsoleModifiers.Alt;
-
-		/// <summary>
-		///     <see cref="NConsoleOption.CtrlFunction" />
-		/// </summary>
-		public const ConsoleModifiers NC_CTRL_FUNC_MODIFIER = ConsoleModifiers.Control;
-
-		/// <summary>
-		///     <see cref="NConsoleOption.ShiftFunction" />
-		/// </summary>
-		public const ConsoleModifiers NC_SHIFT_FUNC_MODIFIER = ConsoleModifiers.Shift;
-
-		/// <summary>
-		///     <see cref="NConsoleOption.ComboFunction" />
-		/// </summary>
-		public const ConsoleModifiers NC_COMBO_FUNC_MODIFIER = NC_ALT_FUNC_MODIFIER | NC_CTRL_FUNC_MODIFIER;
+		
 
 		#endregion Keys
 
@@ -302,7 +254,7 @@ namespace Kantan.Cli
 
 				sb.AppendLine();
 
-				sb.Append($"{Strings.Indent(Strings.ViewString(option.Data))}");
+				sb.Append($"{Strings.Indent(Strings.OutlineString(option.Data))}");
 			}
 
 			if (!sb.ToString().EndsWith(StringConstants.NativeNewLine)) {
@@ -404,7 +356,7 @@ namespace Kantan.Cli
 		/// <summary>
 		///     Handles user input and options
 		/// </summary>
-		/// <remarks>Returns when <see cref="NConsoleOption.Function"/> returns a non-null value</remarks>
+		/// <remarks>Returns when <see cref="NConsoleOption.Function"/> returns a non-<c>null</c> value</remarks>
 		public static HashSet<object> ReadOptions(NConsoleDialog dialog)
 		{
 			var task = ReadOptionsAsync(dialog);
@@ -468,11 +420,11 @@ namespace Kantan.Cli
 				if (cki.Key is <= ConsoleKey.F12 and >= ConsoleKey.F1) {
 					var i = cki.Key - ConsoleKey.F1;
 
-					if (dialog.Functions is { }) {
-						if (dialog.Functions.Length > i && i >= 0) {
+					if (dialog.Functions is { } && dialog.Functions.ContainsKey(cki.Key)) {
+						/*if (dialog.Functions.Length > i && i >= 0) {
 							dialog.Functions[i]();
-						}
-
+						}*/
+						dialog.Functions[cki.Key]();
 					}
 				}
 
@@ -495,10 +447,7 @@ namespace Kantan.Cli
 				}
 
 				var modifiers = cki.Modifiers;
-
-				bool altModifier   = modifiers.HasFlag(NC_ALT_FUNC_MODIFIER);
-				bool ctrlModifier  = modifiers.HasFlag(NC_CTRL_FUNC_MODIFIER);
-				bool shiftModifier = modifiers.HasFlag(NC_SHIFT_FUNC_MODIFIER);
+				
 
 				// Handle option
 
@@ -507,43 +456,26 @@ namespace Kantan.Cli
 				if (idx < dialog.Options.Count && idx >= 0) {
 					var option = dialog.Options[idx];
 
-					bool useAltFunc   = altModifier && option.AltFunction != null;
-					bool useCtrlFunc  = ctrlModifier && option.CtrlFunction != null;
-					bool useShiftFunc = shiftModifier && option.ShiftFunction != null;
+					
 
-					bool useComboFunc = altModifier && ctrlModifier && option.ComboFunction != null;
-
-					if (useComboFunc) {
-						object? comboFunc = option.ComboFunction();
-
-						//
+					if (!option.Functions.ContainsKey(modifiers)) {
+						continue;
 					}
-					else if (useCtrlFunc) {
-						object? ctrlFunc = option.CtrlFunction();
 
+					var fn = option.Functions[modifiers];
+
+					var funcResult = fn();
+
+					if (funcResult != null)
+					{
 						//
-					}
-					else if (useAltFunc) {
-						object? altFunc = option.AltFunction();
-
-						//
-					}
-					else if (useShiftFunc) {
-						object? shiftFunc = option.ShiftFunction();
-
-						//
-					}
-					else {
-						object? funcResult = option.Function();
-
-						if (funcResult != null) {
-							//
-							if (dialog.SelectMultiple) {
-								selectedOptions.Add(funcResult);
-							}
-							else {
-								return (new HashSet<object> {funcResult});
-							}
+						if (dialog.SelectMultiple)
+						{
+							selectedOptions.Add(funcResult);
+						}
+						else
+						{
+							return (new HashSet<object> { funcResult });
 						}
 					}
 				}

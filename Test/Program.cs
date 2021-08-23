@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Kantan.Cli;
+using Kantan.Diagnostics;
 using Kantan.Internal;
 using Kantan.Net;
 using Kantan.Utilities;
@@ -27,28 +28,42 @@ namespace Test
 			var dialog = new NConsoleDialog()
 			{
 				Subtitle = "a\nb\nc",
-				Functions = new Action[]
+				Functions = new()
 				{
-					() =>
+					[ConsoleKey.F1]=() =>
 					{
 						Console.WriteLine("g");
 
 					},
 				},
-				Options = NConsoleOption.FromArray(new[] {1, 2, 3}).ToList()
+				Options = NConsoleOption.FromArray(new[] { 1, 2, 3 }).ToList()
 			};
 
-			var t=Task.Factory.StartNew(() =>
+			dialog.Options[0].Functions[0] = () =>
+			{
+				Console.WriteLine("butt");
+				return null;
+			};
+			dialog.Options[0].Functions[ConsoleModifiers.Control] = () =>
+			{
+				Console.WriteLine("ctrl");
+				return null;
+			}; dialog.Options[0].Functions[ConsoleModifiers.Control | ConsoleModifiers.Alt] = () =>
+			{
+				Console.WriteLine("alt+ctrl");
+				return null;
+			};
+			var t = Task.Factory.StartNew(() =>
 			{
 				Thread.Sleep(TimeSpan.FromSeconds(3));
-				dialog.Options.Add(new NConsoleOption() {Name = "a"});
+				dialog.Options.Add(new NConsoleOption() { Name = "a" });
 			});
-			var r=NConsole.ReadOptionsAsync(dialog);
+			var r = NConsole.ReadOptionsAsync(dialog);
 			await r;
 
 			Console.WriteLine("--");
 			Console.ReadKey();
-			var r2=NConsole.ReadOptions(dialog);
+			var r2 = NConsole.ReadOptions(dialog);
 			Console.WriteLine(r.Result.QuickJoin());
 			Console.WriteLine(r2.QuickJoin());
 
