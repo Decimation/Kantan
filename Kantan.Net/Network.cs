@@ -30,7 +30,7 @@ using Formatting = System.Xml.Formatting;
 namespace Kantan.Net
 {
 	/// <summary>
-	/// 
+	/// Network, HTTP, web utilities
 	/// </summary>
 	/// <seealso cref="WebUtilities"/>
 	/// <seealso cref="Dns"/>

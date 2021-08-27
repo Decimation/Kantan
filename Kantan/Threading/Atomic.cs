@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Threading;
 
-namespace Kantan.Utilities
+namespace Kantan.Threading
 {
 	public static class Atomic
 	{

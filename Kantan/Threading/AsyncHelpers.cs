@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 // ReSharper disable UnusedMember.Global
 
-namespace Kantan.Utilities
+namespace Kantan.Threading
 {
 	public static class AsyncHelpers
 	{

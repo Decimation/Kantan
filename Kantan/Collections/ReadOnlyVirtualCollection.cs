@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 // ReSharper disable UnusedMember.Global
 
-namespace Kantan.Model
+namespace Kantan.Collections
 {
 	/// <inheritdoc />
 	/// <summary>

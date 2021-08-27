@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Linq;
 using Kantan.Model;
+#pragma warning disable 8603
 
 // ReSharper disable InconsistentNaming
 
@@ -61,10 +62,10 @@ namespace Kantan.Cli
 		};
 
 		public static List<NConsoleOption> FromList<T>(IList<T> values) =>
-			FromArray(values, arg => arg!.ToString()!).ToList();
+			FromArray(values, arg => arg.ToString()).ToList();
 
 
-		public static NConsoleOption[] FromArray<T>(T[] values) => FromArray(values, arg => arg!.ToString()!);
+		public static NConsoleOption[] FromArray<T>(T[] values) => FromArray(values, arg => arg.ToString());
 
 		public static NConsoleOption[] FromArray<T>(IList<T> values, Func<T, string> getName)
 		{

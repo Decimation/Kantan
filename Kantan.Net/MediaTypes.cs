@@ -11,7 +11,6 @@ using RestSharp;
 // ReSharper disable InconsistentNaming
 
 // ReSharper disable IdentifierTypo
-
 #pragma warning disable 8602
 #pragma warning disable 8604
 #pragma warning disable 8625
@@ -20,6 +19,8 @@ using RestSharp;
 
 // ReSharper disable UnusedMember.Global
 #nullable enable
+using MA = System.Runtime.InteropServices.MarshalAsAttribute;
+using UT = System.Runtime.InteropServices.UnmanagedType;
 
 namespace Kantan.Net
 {
@@ -32,58 +33,32 @@ namespace Kantan.Net
 		 * type/subtype
 		 * type/subtype;parameter=value
 		 */
-		
 
-		/// <summary>
-		/// Identifies the MIME type of <paramref name="url"/>
-		/// </summary>
-		public static string GetMediaType(string url)
-		{
-			var res = Network.GetResponse(url);
-
-			return res.ContentType;
-		}
-
-		/// <summary>
-		/// Whether the MIME <paramref name="mime"/> is of type <paramref name="type"/>
-		/// </summary>
-		public static bool IsTypeEqual(string mime, MediaType type) =>
-			GetTypeComponent(mime) == Enum.GetName(type)!.ToLower();
-
-		public static bool IsType(string url, MediaType m)
-		{
-
-			// (Is direct)
-
-			//var isUri = Network.IsUri(value, out _);
-
-			string mediaType = GetMediaType(url);
-
-			bool b = IsTypeEqual(mediaType, m);
-
-			return b;
-		}
-
-		public static bool IsType(string url, string type, int ms = Network.TimeoutMS)
-		{
-			if (!Network.IsUri(url, out var u)) {
-				return false;
-			}
-
-			var response = Network.GetResponse(u.ToString(), ms, Method.HEAD);
-
-			return response.IsSuccessful && response.ContentType.StartsWith(type);
-		}
-
-		/*
-		 * https://github.com/khellang/MimeTypes/blob/master/src/MimeTypes/MimeTypeFunctions.ttinclude
-		 */
 
 		private const char DELIM = '/';
 
 		private const int TYPE_I = 0;
 
 		private const int SUBTYPE_I = 1;
+
+		
+
+		/// <summary>
+		/// Whether the MIME <paramref name="mime"/> is of type <paramref name="type"/>
+		/// </summary>
+		public static bool IsTypeEqual(string mime, MediaType type) =>
+			IsTypeEqual(mime, Enum.GetName(type));
+
+		/// <summary>
+		/// Whether the MIME <paramref name="mime"/> is of type <paramref name="type"/>
+		/// </summary>
+		public static bool IsTypeEqual(string mime, string type) =>
+			GetTypeComponent(mime).StartsWith(type, StringComparison.InvariantCultureIgnoreCase);
+
+
+		/*
+		 * https://github.com/khellang/MimeTypes/blob/master/src/MimeTypes/MimeTypeFunctions.ttinclude
+		 */
 
 		public static string GetTypeComponent(string mime) => mime.Split(DELIM)[TYPE_I];
 
@@ -94,22 +69,17 @@ namespace Kantan.Net
 		}
 
 		[DllImport("urlmon.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = false)]
-		private static extern int FindMimeFromData(IntPtr pBC,
-		                                           [MarshalAs(UnmanagedType.LPWStr)] string pwzUrl,
-		                                           [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.I1,
-		                                                      SizeParamIndex                      = 3)]
-		                                           byte[] pBuffer,
-		                                           int cbSize,
-		                                           [MarshalAs(UnmanagedType.LPWStr)] string pwzMimeProposed,
-		                                           int dwMimeFlags,
-		                                           out IntPtr ppwzMimeOut,
-		                                           int dwReserved);
+		private static extern int FindMimeFromData(IntPtr pBC, [MA(UT.LPWStr)] string pwzUrl,
+		                                           [MA(UT.LPArray, ArraySubType = UT.I1, SizeParamIndex = 3)]
+		                                           byte[] pBuffer, int cbSize,
+		                                           [MA(UT.LPWStr)] string pwzMimeProposed,
+		                                           int dwMimeFlags, out IntPtr ppwzMimeOut, int dwReserved);
 
 		public static string ResolveFromData(string url) => ResolveFromData(WebUtilities.GetStream(url));
 
 		public static string ResolveFromData(Stream s)
 		{
-			var ms = s as MemoryStream;
+			using var ms = s as MemoryStream;
 
 			const int BLOCK_SIZE = 256;
 
@@ -151,21 +121,6 @@ namespace Kantan.Net
 
 			return mimeRet;
 		}
-
-		/*private static IEnumerable<(string Extension, string Type)> GetMediaTypes(
-			IEnumerable<KeyValuePair<string, MimeType>> mimeTypes)
-			=> mimeTypes.Where(x => x.Value.Extensions.Any())
-				.SelectMany(x => x.Value.Extensions.Select(e => (e, x.Key)))
-				.Where(x => x.Item1.Length <= 8 && x.Item1.All(char.IsLetterOrDigit))
-				.GroupBy(x => x.Item1)
-				.Select(x => x.First())
-				.OrderBy(x => x.Item1, StringComparer.InvariantCulture);
-
-		public static IList<(string Extension, string Type)> GetMediaTypeList()
-		{
-			return GetMediaTypes(GetMediaTypes()).ToList();
-		}*/
-
 
 		private const string DB_JSON_URL = "https://cdn.jsdelivr.net/gh/jshttp/mime-db@master/db.json";
 

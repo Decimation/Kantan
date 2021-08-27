@@ -5,18 +5,16 @@ using System.IO;
 
 namespace Kantan.Utilities
 {
-	public static class Streams
+	public static class StreamHelper
 	{
 		public static string[] ReadAllLines(this StreamReader stream)
 		{
 			var list = new List<string>();
 
-			while (!stream.EndOfStream)
-			{
+			while (!stream.EndOfStream) {
 				string line = stream.ReadLine();
 
-				if (line != null)
-				{
+				if (line != null) {
 					list.Add(line);
 				}
 			}

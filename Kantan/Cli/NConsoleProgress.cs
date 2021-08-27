@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -502,13 +504,22 @@ namespace Kantan.Cli
 			t.Wait();
 			cts.Cancel();
 			cts.Dispose();
+			_isRunning = false;
 		}
+
+		private static bool _isRunning;
 
 		public static void Queue(CancellationTokenSource cts)
 		{
+			if (_isRunning) {
+				return;
+			}
+
 			// Pass the token to the cancelable operation.
 			ThreadPool.QueueUserWorkItem(Show, cts.Token);
+			_isRunning = true;
 		}
+
 
 		public static void Show(object obj)
 		{
@@ -530,6 +541,7 @@ namespace Kantan.Cli
 			}
 
 			Console.Title = oldTitle;
+			_isRunning    = false;
 		}
 	}
 }

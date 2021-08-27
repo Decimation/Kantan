@@ -12,7 +12,7 @@ namespace Kantan.Utilities
 	/// <summary>
 	/// Utilities for enums (<see cref="Enum"/>).
 	/// </summary>
-	public static class Enums
+	public static class EnumHelper
 	{
 		public static List<TEnum> GetSetFlags<TEnum>(TEnum value, bool excludeZero = true) where  TEnum : Enum
 		{

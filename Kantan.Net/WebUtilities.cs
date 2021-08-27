@@ -1,8 +1,21 @@
-﻿#nullable enable
+﻿#nullable disable
+
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
+using AngleSharp.Html.Dom;
+using AngleSharp.Html.Parser;
+using RestSharp;
+using static Kantan.Diagnostics.LogCategories;
+
+// ReSharper disable LoopCanBeConvertedToQuery
+
+#pragma warning disable 8602
 
 // ReSharper disable UnusedMember.Global
 
@@ -22,6 +35,14 @@ namespace Kantan.Net
 			client.DownloadFile(url, dir);
 
 			return dir;
+		}
+		public static IHtmlDocument GetHtmlDocument(string url)
+		{
+			string html   = WebUtilities.GetString(url);
+			var    parser = new HtmlParser();
+
+			var document = parser.ParseDocument(html);
+			return document;
 		}
 
 		public static string Download(string url) =>
@@ -68,5 +89,7 @@ namespace Kantan.Net
 			using var wc = new WebClient();
 			return wc.DownloadString(url);
 		}
+
+
 	}
 }

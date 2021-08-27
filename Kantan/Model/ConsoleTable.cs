@@ -5,6 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
+// ReSharper disable PossibleMultipleEnumeration
+// ReSharper disable PossibleNullReferenceException
+
 // ReSharper disable PropertyCanBeMadeInitOnly.Local
 
 // ReSharper disable UnusedMember.Global
@@ -36,7 +39,10 @@ namespace Kantan.Model
 		};
 
 		public ConsoleTable(params string[] columns)
-			: this(new ConsoleTableOptions {Columns = new List<string>(columns)}) { }
+			: this(new ConsoleTableOptions
+			{
+				Columns = new List<string>(columns)
+			}) { }
 
 		public ConsoleTable(ConsoleTableOptions options)
 		{
@@ -47,8 +53,10 @@ namespace Kantan.Model
 
 		public ConsoleTable AddColumn(IEnumerable<string> names)
 		{
-			foreach (var name in names)
+			foreach (var name in names) {
 				Columns.Add(name);
+			}
+
 			return this;
 		}
 
@@ -102,28 +110,28 @@ namespace Kantan.Model
 			// find the longest column by searching each row
 			var columnLengths = ColumnLengths();
 
-			// set right alinment if is a number
+			// set right alignment if is a number
 			var columnAlignment = Enumerable.Range(0, Columns.Count)
 			                                .Select(GetNumberAlignment)
 			                                .ToList();
 
 			// create the string format with padding
 			var format = Enumerable.Range(0, Columns.Count)
-			                       .Select(i => " | {"    + i + "," + columnAlignment[i] + columnLengths[i] + "}")
+			                       .Select(i => " | {" + i + "," + columnAlignment[i] + columnLengths[i] + "}")
 			                       .Aggregate((s, a) => s + a) + " |";
 
 			// find the longest formatted line
-			var maxRowLength  = Math.Max(0, Rows.Any() ? Rows.Max(row => string.Format(format, row).Length) : 0);
-			var columnHeaders = string.Format(format, Columns.ToArray());
+			var maxRowLength  = Math.Max(0, Rows.Any() ? Rows.Max(row => String.Format(format, row).Length) : 0);
+			var columnHeaders = String.Format(format, Columns.ToArray());
 
 			// longest line is greater of formatted columnHeader and longest row
 			var longestLine = Math.Max(maxRowLength, columnHeaders.Length);
 
 			// add each row
-			var results = Rows.Select(row => string.Format(format, row)).ToList();
+			var results = Rows.Select(row => String.Format(format, row)).ToList();
 
 			// create the divider
-			var divider = " " + string.Join("", Enumerable.Repeat("-", longestLine - 1)) + " ";
+			var divider = " " + String.Join("", Enumerable.Repeat("-", longestLine - 1)) + " ";
 
 			builder.AppendLine(divider);
 			builder.AppendLine(columnHeaders);
@@ -143,10 +151,7 @@ namespace Kantan.Model
 			return builder.ToString();
 		}
 
-		public string ToMarkDownString()
-		{
-			return ToMarkDownString('|');
-		}
+		public string ToMarkDownString() => ToMarkDownString('|');
 
 		private string ToMarkDownString(char delimiter)
 		{
@@ -159,10 +164,10 @@ namespace Kantan.Model
 			var format = Format(columnLengths, delimiter);
 
 			// find the longest formatted line
-			var columnHeaders = string.Format(format, Columns.ToArray());
+			var columnHeaders = String.Format(format, Columns.ToArray());
 
 			// add each row
-			var results = Rows.Select(row => string.Format(format, row)).ToList();
+			var results = Rows.Select(row => String.Format(format, row)).ToList();
 
 			// create the divider
 			var divider = Regex.Replace(columnHeaders, @"[^|]", "-");
@@ -174,10 +179,7 @@ namespace Kantan.Model
 			return builder.ToString();
 		}
 
-		public string ToMinimalString()
-		{
-			return ToMarkDownString(char.MinValue);
-		}
+		public string ToMinimalString() => ToMarkDownString(Char.MinValue);
 
 		public string ToStringAlternative()
 		{
@@ -190,10 +192,10 @@ namespace Kantan.Model
 			var format = Format(columnLengths);
 
 			// find the longest formatted line
-			var columnHeaders = string.Format(format, Columns.ToArray());
+			var columnHeaders = String.Format(format, Columns.ToArray());
 
 			// add each row
-			var results = Rows.Select(row => string.Format(format, row)).ToList();
+			var results = Rows.Select(row => String.Format(format, row)).ToList();
 
 			// create the divider
 			var divider     = Regex.Replace(columnHeaders, @"[^|]", "-");
@@ -219,10 +221,10 @@ namespace Kantan.Model
 			                                .Select(GetNumberAlignment)
 			                                .ToList();
 
-			var delimiterStr = delimiter == char.MinValue ? string.Empty : delimiter.ToString();
+			var delimiterStr = delimiter == Char.MinValue ? String.Empty : delimiter.ToString();
 
 			var format = (Enumerable.Range(0, Columns.Count)
-			                        .Select(i => " "              + delimiterStr + " {" + i + "," + columnAlignment[i] +
+			                        .Select(i => " " + delimiterStr + " {" + i + "," + columnAlignment[i] +
 			                                     columnLengths[i] + "}")
 			                        .Aggregate((s, a) => s + a) + " " + delimiterStr).Trim();
 			return format;
@@ -231,17 +233,17 @@ namespace Kantan.Model
 		private string GetNumberAlignment(int i)
 		{
 			return Options.NumberAlignment == ConsoleTableAlignment.Right
-			       && ColumnTypes          != null
+			       && ColumnTypes != null
 			       && NumericTypes.Contains(ColumnTypes[i])
-				? ""
-				: "-";
+				       ? ""
+				       : "-";
 		}
 
 		private List<int> ColumnLengths()
 		{
 			var columnLengths = Columns
 			                    .Select((t, i) => Rows.Select(x => x[i])
-			                                          .Union(new[] {Columns[i]})
+			                                          .Union(new[] { Columns[i] })
 			                                          .Where(x => x != null)
 			                                          .Select(x => x.ToString().Length).Max())
 			                    .ToList();
@@ -272,20 +274,13 @@ namespace Kantan.Model
 			}
 		}
 
-		private static IEnumerable<string> GetColumns<T>()
-		{
-			return typeof(T).GetProperties().Select(x => x.Name).ToArray();
-		}
+		private static IEnumerable<string> GetColumns<T>() => typeof(T).GetProperties().Select(x => x.Name).ToArray();
 
-		private static object GetColumnValue<T>(object target, string column)
-		{
-			return typeof(T).GetProperty(column).GetValue(target, null);
-		}
+		private static object GetColumnValue<T>(object target, string column) =>
+			typeof(T).GetProperty(column).GetValue(target, null);
 
-		private static IEnumerable<Type> GetColumnsType<T>()
-		{
-			return typeof(T).GetProperties().Select(x => x.PropertyType).ToArray();
-		}
+		private static IEnumerable<Type> GetColumnsType<T>() =>
+			typeof(T).GetProperties().Select(x => x.PropertyType).ToArray();
 	}
 
 	public class ConsoleTableOptions
@@ -303,8 +298,6 @@ namespace Kantan.Model
 		/// The <see cref="TextWriter"/> to write to. Defaults to <see cref="Console.Out"/>.
 		/// </summary>
 		public TextWriter OutputTo { get; set; } = Console.Out;
-
-
 	}
 
 	public enum ConsoleTableFormat

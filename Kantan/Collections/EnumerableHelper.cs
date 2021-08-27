@@ -4,19 +4,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using static Kantan.Internal.Common;
-using Map= System.Collections.Generic.Dictionary<object, object>;
+using Map = System.Collections.Generic.Dictionary<object, object>;
+
 // ReSharper disable AssignNullToNotNullAttribute
 
 // ReSharper disable PossibleMultipleEnumeration
 
 // ReSharper disable UnusedMember.Global
 
-namespace Kantan.Utilities
+namespace Kantan.Collections
 {
 	/// <summary>
 	/// Utilities for collections (<see cref="IEnumerable{T}"/>) and associated types.
 	/// </summary>
-	public static class Collections
+	public static class EnumerableHelper
 	{
 		/// <summary>
 		/// Determines whether <paramref name="list"/> ends with <paramref name="sequence"/>.
@@ -54,10 +55,7 @@ namespace Kantan.Utilities
 		public static object[] CastObjectArray(this Array r)
 		{
 			var rg = new object[r.Length];
-
-			for (int i = 0; i < r.Length; i++) {
-				rg[i] = r.GetValue(i);
-			}
+			r.CopyTo(rg, 0);
 
 			return rg;
 		}
@@ -92,7 +90,6 @@ namespace Kantan.Utilities
 					rg.InsertRange(i, replace);
 					i += sequence.Count;
 				}
-				
 
 
 			} while (!(++i >= rg.Count));
@@ -111,8 +108,7 @@ namespace Kantan.Utilities
 
 		public static IEnumerator<T> Cast<T>(this IEnumerator iterator)
 		{
-			while (iterator.MoveNext())
-			{
+			while (iterator.MoveNext()) {
 				yield return (T) iterator.Current;
 			}
 		}
@@ -122,6 +118,9 @@ namespace Kantan.Utilities
 			return b.Where(c => !a.Contains(c));
 		}
 
+#if !NET6_0_OR_GREATER
+
+		// TODO: Remove when .NET 6 releases
 
 		/// <summary>
 		/// Break a list of items into chunks of a specific size
@@ -134,6 +133,67 @@ namespace Kantan.Utilities
 			}
 		}
 
+		// From MoreLINQ
+
+		/// <summary>
+		/// Returns all distinct elements of the given source, where "distinctness"
+		/// is determined via a projection and the default equality comparer for the projected type.
+		/// </summary>
+		/// <remarks>
+		/// This operator uses deferred execution and streams the results, although
+		/// a set of already-seen keys is retained. If a key is seen multiple times,
+		/// only the first element with that key is returned.
+		/// </remarks>
+		/// <typeparam name="TSource">Type of the source sequence</typeparam>
+		/// <typeparam name="TKey">Type of the projected element</typeparam>
+		/// <param name="source">Source sequence</param>
+		/// <param name="keySelector">Projection for determining "distinctness"</param>
+		/// <returns>A sequence consisting of distinct elements from the source sequence,
+		/// comparing them by the specified key projection.</returns>
+		public static IEnumerable<TSource> DistinctBy<TSource, TKey>(this IEnumerable<TSource> source,
+		                                                             Func<TSource, TKey> keySelector)
+		{
+			return source.DistinctBy(keySelector, null);
+		}
+
+		/// <summary>
+		/// Returns all distinct elements of the given source, where "distinctness"
+		/// is determined via a projection and the specified comparer for the projected type.
+		/// </summary>
+		/// <remarks>
+		/// This operator uses deferred execution and streams the results, although
+		/// a set of already-seen keys is retained. If a key is seen multiple times,
+		/// only the first element with that key is returned.
+		/// </remarks>
+		/// <typeparam name="TSource">Type of the source sequence</typeparam>
+		/// <typeparam name="TKey">Type of the projected element</typeparam>
+		/// <param name="source">Source sequence</param>
+		/// <param name="keySelector">Projection for determining "distinctness"</param>
+		/// <param name="comparer">The equality comparer to use to determine whether or not keys are equal.
+		/// If null, the default equality comparer for <c>TSource</c> is used.</param>
+		/// <returns>A sequence consisting of distinct elements from the source sequence,
+		/// comparing them by the specified key projection.</returns>
+		public static IEnumerable<TSource> DistinctBy<TSource, TKey>(this IEnumerable<TSource> source,
+		                                                             Func<TSource, TKey> keySelector,
+		                                                             IEqualityComparer<TKey>? comparer)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+
+			return _();
+
+			IEnumerable<TSource> _()
+			{
+				var knownKeys = new HashSet<TKey>(comparer);
+
+				foreach (var element in source) {
+					if (knownKeys.Add(keySelector(element)))
+						yield return element;
+				}
+			}
+		}
+
+#endif
 		public static void Replace<T>(this List<T> list, Predicate<T> oldItemSelector, T newItem)
 		{
 			//check for different situations here and throw exception
@@ -173,9 +233,10 @@ namespace Kantan.Utilities
 
 		#endregion
 
-		public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dic,
-		                                                     TKey k, TValue d = default)
+		/*public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dic,
+															 TKey k, TValue d = default)
 		{
+
 			if (!dic.ContainsKey(k)) {
 				dic.Add(k, d);
 
@@ -184,9 +245,9 @@ namespace Kantan.Utilities
 			}
 
 			return dic[k];
-		}
+		}*/
 
-		public static bool TryCastDictionary(object obj, out Map buf)
+		public static bool TryCastDictionary<T>(T obj, out Map buf) where T : IDictionary
 		{
 			bool condition = obj.GetType().GetInterface(nameof(IDictionary)) != null;
 

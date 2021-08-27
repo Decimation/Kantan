@@ -2,13 +2,19 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Kantan.Threading;
 using Kantan.Utilities;
 using static Kantan.Internal.Common;
+
+#pragma warning disable 8601
+
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
 
 // ReSharper disable CognitiveComplexity
 
@@ -98,8 +104,6 @@ namespace Kantan.Cli
 
 		#region Write
 
-		
-
 		/// <summary>
 		///     Root write method.
 		/// </summary>
@@ -164,7 +168,6 @@ namespace Kantan.Cli
 		///     Return
 		/// </summary>
 		public const ConsoleKey NC_GLOBAL_RETURN_KEY = ConsoleKey.F12;
-		
 
 		#endregion Keys
 
@@ -378,10 +381,12 @@ namespace Kantan.Cli
 
 			ConsoleKeyInfo cki;
 
+			string? dragAndDropFile = null;
+
 			do {
 				DisplayDialog(dialog, selectedOptions);
-				
-				var t = Task.Run(() =>
+
+				var t = Task.Run<ConsoleKeyInfo?>(() =>
 				{
 					// Block until input is entered.
 
@@ -391,14 +396,14 @@ namespace Kantan.Cli
 
 						var refresh = Atomic.Exchange(ref Status, ConsoleStatus.Ok) == ConsoleStatus.Refresh;
 
+						// Refresh buffer if collection was updated
+
 						int currentCount = dialog.Options.Count;
 
 						if (refresh || prevCount != currentCount) {
 
 							DisplayDialog(dialog, selectedOptions);
-
 							prevCount = currentCount;
-
 						}
 					}
 
@@ -406,14 +411,27 @@ namespace Kantan.Cli
 
 					var cki2 = Console.ReadKey(true);
 
+					dragAndDropFile = ListenForFile(cki2);
+
+					if (!string.IsNullOrWhiteSpace(dragAndDropFile)) {
+
+						Debug.WriteLine($">> {dragAndDropFile}");
+						return null;
+					}
+
 					return cki2;
 				});
 
 				await t;
 
+				// File path was input via drag-and-drop
+				if (!t.Result.HasValue) {
+					return new HashSet<object>() { dragAndDropFile };
+				}
+
 				// Key was read
 
-				cki = t.Result;
+				cki = t.Result.Value;
 
 				// Handle special keys
 
@@ -434,20 +452,17 @@ namespace Kantan.Cli
 						break;
 					case NC_GLOBAL_RETURN_KEY:
 						//todo
-						return (new HashSet<object> {true});
+						return (new HashSet<object> { true });
 				}
 
 				// KeyChar can't be used as modifiers are not applicable
 				char keyChar = (char) (int) cki.Key;
-
-				Debug.WriteLine($"{cki.Key} ({keyChar}) | {cki.KeyChar}");
 
 				if (!Char.IsLetterOrDigit(keyChar)) {
 					continue;
 				}
 
 				var modifiers = cki.Modifiers;
-				
 
 				// Handle option
 
@@ -455,8 +470,6 @@ namespace Kantan.Cli
 
 				if (idx < dialog.Options.Count && idx >= 0) {
 					var option = dialog.Options[idx];
-
-					
 
 					if (!option.Functions.ContainsKey(modifiers)) {
 						continue;
@@ -466,15 +479,12 @@ namespace Kantan.Cli
 
 					var funcResult = fn();
 
-					if (funcResult != null)
-					{
+					if (funcResult != null) {
 						//
-						if (dialog.SelectMultiple)
-						{
+						if (dialog.SelectMultiple) {
 							selectedOptions.Add(funcResult);
 						}
-						else
-						{
+						else {
 							return (new HashSet<object> { funcResult });
 						}
 					}
@@ -482,6 +492,48 @@ namespace Kantan.Cli
 			} while (cki.Key != NC_GLOBAL_EXIT_KEY);
 
 			return (selectedOptions);
+		}
+
+		/// <summary>
+		/// Determines whether the console buffer contains a file directory that was
+		/// input via drag-and-drop.
+		/// </summary>
+		/// <param name="cki">First character in the buffer</param>
+		/// <returns>A valid file directory if the buffer contains one; otherwise, <c>null</c></returns>
+		/// <remarks>This is done heuristically by checking if the first character <paramref name="cki"/> is either a quote or the primary disk letter.
+		/// If so, then the rest of the buffer is read until the current sequence is a string resembling a valid file path.
+		/// </remarks>
+		public static string? ListenForFile(ConsoleKeyInfo cki)
+		{
+			const char ch = '\"';
+
+			char root = RootDirectory.First();
+
+			var sb = new StringBuilder();
+
+			char c = cki.KeyChar;
+
+			if (c == ch || c == root) {
+				sb.Append(c);
+
+				do {
+					var cki2 = Console.ReadKey(true);
+
+					if (cki2.Key == NC_GLOBAL_EXIT_KEY) {
+						return null;
+					}
+
+					c = cki2.KeyChar;
+					sb.Append(c);
+
+					if (File.Exists(sb.ToString())) {
+						break;
+					}
+				} while (c != ch);
+
+			}
+
+			return sb.ToString().Trim(ch);
 		}
 
 		public static string ReadInput(string? prompt = null, Predicate<string>? invalid = null,
@@ -557,6 +609,9 @@ namespace Kantan.Cli
 		///     Interface status
 		/// </summary>
 		private static ConsoleStatus Status;
+
+		public static readonly string RootDirectory =
+			Path.GetPathRoot(Environment.GetFolderPath(Environment.SpecialFolder.System));
 
 		private enum ConsoleStatus
 		{

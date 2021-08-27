@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Unicode;
 using Kantan.Cli;
+using Kantan.Collections;
 using Kantan.Diagnostics;
 using Kantan.Model;
 using Kantan.Net;
@@ -31,6 +32,7 @@ namespace UnitTest
 			TestFlags x = 0;
 
 			var c = new CliHandler();
+
 			c.Parameters.Add(new()
 			{
 				ParameterId = "-x",
@@ -42,10 +44,9 @@ namespace UnitTest
 				ArgumentCount = 1
 			});
 
-			c.Run(new[] {"-x", "a,b"});
+			c.Run(new[] { "-x", "a,b" });
 
 			Assert.AreEqual(TestFlags.a | TestFlags.b, x);
-
 
 			//
 
@@ -66,13 +67,11 @@ namespace UnitTest
 
 			c.Run(new[] { "hello" });
 
-			Assert.AreEqual("hello",x1);
-
+			Assert.AreEqual("hello", x1);
 
 			//
 
-			c = new CliHandler {Default = null};
-
+			c = new CliHandler { Default = null };
 
 			Assert.Throws<InvalidOperationException>(() =>
 			{
@@ -80,11 +79,13 @@ namespace UnitTest
 
 			});
 
-
 			//
 
 			string s = null;
-			c = new CliHandler { Default = new()
+
+			c = new CliHandler
+			{
+				Default = new()
 				{
 					ParameterId = null,
 					Function = o =>
@@ -95,7 +96,6 @@ namespace UnitTest
 					ArgumentCount = 1
 				}
 			};
-
 
 			Assert.DoesNotThrow(() =>
 			{
@@ -116,13 +116,12 @@ namespace UnitTest
 			Assert.AreEqual(MathHelper.Divide(10, 5), 2);
 		}
 
-
 		[Test]
 		public void EnumTest()
 		{
 			var name1 = "combo1";
 			var p     = Enum.Parse<TestFlags>(name1);
-			var flags = Enums.GetSetFlags(p, false);
+			var flags = EnumHelper.GetSetFlags(p, false);
 			var str   = flags.QuickJoin();
 
 			Assert.AreEqual(str, "a, b, c, combo1");
@@ -163,7 +162,6 @@ namespace UnitTest
 
 			});
 
-
 			Assert.Throws<Exception>(() =>
 			{
 				Guard.AssertEqual("a", "b");
@@ -200,7 +198,6 @@ namespace UnitTest
 
 		}
 
-
 		[Test]
 		public void StringTest()
 		{
@@ -212,33 +209,42 @@ namespace UnitTest
 		[Test]
 		public void CollectionsTest2()
 		{
-			var rg      = new List<int> {1, 2, 3, 9, 9, 9, 1, 2, 3};
-			var search  = new List<int> {1, 2, 3};
-			var replace = new List<int> {3, 2, 1};
+			var rg      = new List<int> { 1, 2, 3, 9, 9, 9, 1, 2, 3 };
+			var search  = new List<int> { 1, 2, 3 };
+			var replace = new List<int> { 3, 2, 1 };
 
 			var rg2  = rg.ReplaceAllSequences(search, replace);
-			var rg2x = new List<int> {3, 2, 1, 9, 9, 9, 3, 2, 1};
+			var rg2x = new List<int> { 3, 2, 1, 9, 9, 9, 3, 2, 1 };
 
 			Assert.True(rg2.SequenceEqual(rg2x));
-		}
 
+			var rg3 = new List<int>()
+			{
+				1, 2, 3, 3, 2, 1, 5, 6, 1, 2, 3, 5, 5, 5, 1, 2, 3
+			};
+
+			var rg3x = rg3.ReplaceAllSequences(new List<int>() { 1, 2, 3 }, new List<int>() { 4, 5, 6 });
+
+			Assert.True(rg3x.SequenceEqual(new List<int>()
+			{
+				4, 5, 6, 3, 2, 1, 5, 6, 4, 5, 6, 5, 5, 5, 4, 5, 6
+			}));
+		}
 
 		[Test]
 		public void CollectionsTest()
 		{
-			var rg      = new List<int> {1, 2, 3, 4, 5, 6, 3, 4, 5};
-			var search  = new List<int> {3, 4, 5};
-			var replace = new List<int> {5, 4, 3};
-
+			var rg      = new List<int> { 1, 2, 3, 4, 5, 6, 3, 4, 5 };
+			var search  = new List<int> { 3, 4, 5 };
+			var replace = new List<int> { 5, 4, 3 };
 
 			rg.ReplaceAllSequences(search, replace);
 
 			TestContext.WriteLine($"{rg.QuickJoin()}");
 
-			var rgNew = new List<int> {1, 2, 5, 4, 3, 6, 5, 4, 3};
+			var rgNew = new List<int> { 1, 2, 5, 4, 3, 6, 5, 4, 3 };
 
 			Assert.True(rg.SequenceEqual(rgNew));
-
 
 			// var rg2      = new[] {"a", "foo", "bar", "hi"};
 			// var search2  = new[] {"foo", "bar"};
@@ -265,21 +271,26 @@ namespace UnitTest
 		{
 			Assert.AreEqual(b, Network.IsAlive(new Uri((s))));
 		}
-		
-
 
 		[Test]
 		public void MediaTypesTest()
 		{
 			const string jpg = "https://i.ytimg.com/vi/r45a-l9Gqdk/hqdefault.jpg";
 
-			var i = MediaTypes.GetMediaType(jpg);
+			var i = Network.GetResponse(jpg).ContentType;
 			Assert.True(Network.IsUri(jpg, out var u));
 			Assert.True(MediaTypes.GetExtensions(i).Contains("jpe"));
-			Assert.True(MediaTypes.GetTypeComponent(i)    == "image");
+			Assert.True(MediaTypes.GetTypeComponent(i) == "image");
 			Assert.True(MediaTypes.GetSubTypeComponent(i) == "jpeg");
+		}
 
-
+		[Test]
+		[TestCase(
+			"https://danbooru.donmai.us/data/original/ca/7b/__re_l_mayer_ergo_proxy_drawn_by_koyorin__ca7b942f24b30e3a7a6f49b932fa2d56.png?download=1",
+			"https://danbooru.donmai.us/data/original/ca/7b/__re_l_mayer_ergo_proxy_drawn_by_koyorin__ca7b942f24b30e3a7a6f49b932fa2d56.png")]
+		public void UrlUtilTest(string a, string b)
+		{
+			Assert.True(UrlUtilities.UrlEqual(a, b));
 		}
 	}
 
