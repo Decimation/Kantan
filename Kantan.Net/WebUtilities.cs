@@ -1,17 +1,11 @@
 ﻿#nullable disable
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
-using RestSharp;
-using static Kantan.Diagnostics.LogCategories;
 
 // ReSharper disable LoopCanBeConvertedToQuery
 
@@ -38,7 +32,7 @@ namespace Kantan.Net
 		}
 		public static IHtmlDocument GetHtmlDocument(string url)
 		{
-			string html   = WebUtilities.GetString(url);
+			string html   = GetString(url);
 			var    parser = new HtmlParser();
 
 			var document = parser.ParseDocument(html);

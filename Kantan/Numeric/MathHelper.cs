@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+// ReSharper disable InconsistentNaming
+
 // ReSharper disable FieldCanBeMadeReadOnly.Local
 
 // ReSharper disable UnusedMember.Global
 
 namespace Kantan.Numeric
 {
-	public enum MetricUnit
+	public enum MetricPrefix
 	{
 		// Bit,
 		// Byte,
@@ -34,72 +36,71 @@ namespace Kantan.Numeric
 		/// </summary>
 		public const double MAGNITUDE2 = 1024D;
 
-		/// <summary>
-		/// Convert the given bytes to <see cref="MetricUnit"/>
-		/// </summary>
-		/// <param name="bytes">Value in bytes to be converted</param>
-		/// <param name="type">Unit to convert to</param>
-		/// <returns>Converted bytes</returns>
-		public static double ConvertToUnit(double bytes, MetricUnit type)
+		public static string GetSIUnit(double d, string format = null)
 		{
-			// var rg  = new[] { "k","M","G","T","P","E","Z","Y"};
-			// var pow = rg.ToList().IndexOf(type) +1;
+			int    degree = (int) Math.Floor(Math.Log10(Math.Abs(d)) / 3);
 
+			double scaled = d * Math.Pow(MAGNITUDE, -degree);
 
-			int    pow = (int) type;
-			double v   = bytes / Math.Pow(MAGNITUDE, pow);
+			char? prefix = Math.Sign(degree) switch
+			{
+				1  => IncPrefixes[degree - 1],
+				-1 => DecPrefixes[-degree - 1],
+				_  => null
+			};
 
-
-			return v;
+			return scaled.ToString(format) + prefix;
 		}
 
-		/*public static bool IsPointerSub(this Type t)
-		{
-			return t == typeof(void*) || t.IsPointer || t == typeof(IntPtr);
-		}
 
-		public static bool IsNumeric(this Type t)
-		{
-			return t.IsInteger() || t.IsReal();
-		}
-
-		public static bool IsReal(this Type t)
-		{
-			var  nx       = Type.GetTypeCode(t);
-			bool realCode = nx is >= TypeCode.Single and <= TypeCode.Decimal;
-			bool half     = t == typeof(Half);
-
-			return realCode || half;
-		}
-
-		public static bool IsInteger(this Type t)
-		{
-			var nx = Type.GetTypeCode(t);
-			return nx is <= TypeCode.UInt64 and >= TypeCode.SByte;
-
-		}*/
-
-		public static string ConvertToUnit(double len)
+		public static string GetByteUnit(double len)
 		{
 			//https://stackoverflow.com/questions/281640/how-do-i-get-a-human-readable-file-size-in-bytes-abbreviation-using-net
 
 
 			int order = 0;
 
-			while (len >= MAGNITUDE2 && order < Sizes.Length - 1) {
+			while (len >= MAGNITUDE && order < BytePrefixes.Length - 1) {
 				order++;
-				len /= MAGNITUDE2;
+				len /= MAGNITUDE;
 			}
 
 			// Adjust the format string to your preferences. For example "{0:0.#}{1}" would
 			// show a single decimal place, and no space.
-			string result = $"{len:0.##} {Sizes[order]}";
+			string result = $"{len:0.##} {BytePrefixes[order]}";
 
 
 			return result;
 		}
+		/// <summary>
+		/// Convert the given bytes to <see cref="MetricUnit"/>
+		/// </summary>
+		/// <param name="bytes">Value in bytes to be converted</param>
+		/// <param name="type">Unit to convert to</param>
+		/// <returns>Converted bytes</returns>
+		public static double ConvertToUnit(double bytes, MetricPrefix type)
+		{
+			// var rg  = new[] { "k","M","G","T","P","E","Z","Y"};
+			// var pow = rg.ToList().IndexOf(type) +1;
 
-		private static readonly string[] Sizes = {"B", "KB", "MB", "GB", "TB"};
+
+			int    pow = (int)type;
+			double v   = bytes / Math.Pow(MAGNITUDE, pow);
+
+
+			return v;
+		}
+		private static readonly string[] BytePrefixes = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+
+		private static readonly char[] IncPrefixes = { 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y' };
+
+		private static readonly char[] DecPrefixes = { 'm', '\u03bc', 'n', 'p', 'f', 'a', 'z', 'y' };
+
+		#region Generic math
+
+		// TODO: Remove when .NET 6 releases
+#if !NET6_0_OR_GREATER
+
 
 		public static T Add<T>(T a, T b) => MathImplementation<T>.Add(a, b);
 
@@ -133,6 +134,9 @@ namespace Kantan.Numeric
 
 			}
 		}
+#endif
+
+		#endregion
 
 		public static bool IsPrime(int number)
 		{

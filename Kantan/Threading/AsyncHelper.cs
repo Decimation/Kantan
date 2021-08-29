@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Kantan.Threading
 {
-	public static class AsyncHelpers
+	public static class AsyncHelper
 	{
 		/// <summary>
 		/// Executes an async <see cref="Task{TResult}"/> method which has a void return value synchronously
@@ -118,7 +118,7 @@ namespace Kantan.Threading
 
 						if (InnerException != null) // the method threw an exception
 						{
-							throw new AggregateException($"{nameof(AsyncHelpers)} method threw an exception.", InnerException);
+							throw new AggregateException($"{nameof(AsyncHelper)} method threw an exception.", InnerException);
 						}
 					}
 					else {

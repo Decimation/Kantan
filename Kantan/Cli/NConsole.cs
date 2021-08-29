@@ -52,7 +52,7 @@ namespace Kantan.Cli
 	///             <see cref="NConsoleDialog" />
 	///         </description>
 	///     </item>
-	/// <item>
+	///     <item>
 	///         <description>
 	///             <see cref="NConsoleProgress" />
 	///         </description>
@@ -60,6 +60,14 @@ namespace Kantan.Cli
 	/// </list>
 	public static class NConsole
 	{
+		private static readonly Color ColorHeader  = Color.Red;
+		private static readonly Color ColorOptions = Color.Aquamarine;
+		private static readonly Color ColorError   = Color.Red;
+
+		public static int BufferLimit { get; set; } = Console.BufferWidth - 10;
+
+		private static TimeSpan PauseTime { get; set; } = TimeSpan.FromSeconds(1);
+
 		/*
 		 * https://github.com/Decimation/SimpleCore/blob/2d6009cfc498de07d5f507192c3cbe1983ff1a11/SimpleCore.Cli/NConsole.cs
 		 * https://gist.github.com/ZacharyPatten/798ed612d692a560bdd529367b6a7dbd
@@ -94,14 +102,6 @@ namespace Kantan.Cli
 			return canResize;
 		}
 
-		public static int BufferLimit { get; set; } = Console.BufferWidth - 10;
-
-		private static readonly Color ColorHeader  = Color.Red;
-		private static readonly Color ColorOptions = Color.Aquamarine;
-		private static readonly Color ColorError   = Color.Red;
-
-		private static TimeSpan PauseTime { get; set; } = TimeSpan.FromSeconds(1);
-
 		#region Write
 
 		/// <summary>
@@ -132,20 +132,23 @@ namespace Kantan.Cli
 			Console.Write(clear);
 			Write(msg);
 		}
-
-		public static void ClearCurrentConsoleLine()
+		
+		public static void ClearCurrentLine()
 		{
-			int currentLineCursor = Console.CursorTop;
+			Console.SetCursorPosition(0, Console.CursorTop - 1);
+
+			int top = Console.CursorTop;
 			Console.SetCursorPosition(0, Console.CursorTop);
-			Console.Write(new string(' ', Console.WindowWidth));
-			Console.SetCursorPosition(0, currentLineCursor);
+			Console.Write(new string(' ', Console.BufferWidth));
+			Console.SetCursorPosition(0, top);
 		}
 
 		public static void ClearLastLine()
 		{
-			Console.SetCursorPosition(0, Console.CursorTop - 1);
+			var top = Console.CursorTop;
+			Console.SetCursorPosition(0, top - 1);
 			Console.Write(new string(' ', Console.BufferWidth));
-			Console.SetCursorPosition(0, Console.CursorTop - 1);
+			Console.SetCursorPosition(0, top);
 		}
 
 		#endregion
@@ -155,7 +158,7 @@ namespace Kantan.Cli
 		#region Keys
 
 		/// <summary>
-		///     Exits <see cref="ReadOptions" />
+		///     Exits <see cref="ReadInput" />
 		/// </summary>
 		public const ConsoleKey NC_GLOBAL_EXIT_KEY = ConsoleKey.Escape;
 
@@ -164,36 +167,8 @@ namespace Kantan.Cli
 		/// </summary>
 		public const ConsoleKey NC_GLOBAL_REFRESH_KEY = ConsoleKey.F5;
 
-		/// <summary>
-		///     Return
-		/// </summary>
-		public const ConsoleKey NC_GLOBAL_RETURN_KEY = ConsoleKey.F12;
-
 		#endregion Keys
 
-		/*static void listen(Action x, Action<ConsoleKeyInfo> ck)
-		{
-			ConsoleKeyInfo cki;
-
-			do {
-				//io
-				Console.Clear();
-				x();
-
-				// Block until input is entered.
-				while (!Console.KeyAvailable) {
-					// HACK: hacky
-				}
-
-				// Key was read
-
-				cki = Console.ReadKey(true);
-
-				// Handle special keys
-
-				ck(cki);
-			} while (cki.Key != ConsoleKey.Escape);
-		}*/
 
 		#region Display/formatting
 
@@ -201,9 +176,9 @@ namespace Kantan.Cli
 		///     Root formatting function.
 		/// </summary>
 		[StringFormatMethod(STRING_FORMAT_ARG)]
-		public static string FormatString(string delim, string s, bool repDelim = true)
+		public static string FormatString(string delim, string msg, bool repDelim = true)
 		{
-			string[] split = s.Split(StringConstants.NativeNewLine);
+			string[] split = msg.Split(StringConstants.NativeNewLine);
 			bool     d1    = false;
 
 			for (int i = 0; i < split.Length; i++) {
@@ -264,11 +239,8 @@ namespace Kantan.Cli
 				sb.AppendLine();
 			}
 
-			var f = FormatString(StringConstants.ASTERISK.ToString(), sb.ToString());
+			string f = FormatString(StringConstants.ASTERISK.ToString(), sb.ToString());
 
-			//if (f.EndsWith('\n')) {
-			//	f += '\n';
-			//}
 
 			return f;
 		}
@@ -320,7 +292,7 @@ namespace Kantan.Cli
 			int clamp = Math.Clamp(dialog.Options.Count, 0, MAX_DISPLAY_OPTIONS);
 
 			for (int i = 0; i < clamp; i++) {
-				var option = dialog.Options[i];
+				NConsoleOption? option = dialog.Options[i];
 
 				string s = FormatOption(option, i);
 
@@ -359,10 +331,16 @@ namespace Kantan.Cli
 		/// <summary>
 		///     Handles user input and options
 		/// </summary>
-		/// <remarks>Returns when <see cref="NConsoleOption.Function"/> returns a non-<c>null</c> value</remarks>
-		public static HashSet<object> ReadOptions(NConsoleDialog dialog)
+		/// <remarks>Returns when:
+		/// <list type="number">
+		/// <item><description><see cref="NConsoleOption.Function" /> returns a non-<c>null</c> value</description></item>
+		/// <item><description>A file path is dragged-and-dropped</description></item>
+		/// <item><description><see cref="NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
+		/// </list>
+		/// </remarks>
+		public static HashSet<object> ReadInput(NConsoleDialog dialog)
 		{
-			var task = ReadOptionsAsync(dialog);
+			Task<HashSet<object>> task = ReadInputAsync(dialog);
 			task.Wait();
 			return task.Result;
 		}
@@ -370,8 +348,14 @@ namespace Kantan.Cli
 		/// <summary>
 		///     Handles user input and options
 		/// </summary>
-		/// <remarks>Returns when <see cref="NConsoleOption.Function"/> returns a non-null value</remarks>
-		public static async Task<HashSet<object>> ReadOptionsAsync(NConsoleDialog dialog)
+		/// <remarks>Returns when:
+		/// <list type="number">
+		/// <item><description><see cref="NConsoleOption.Function" /> returns a non-<c>null</c> value</description></item>
+		/// <item><description>A file path is dragged-and-dropped</description></item>
+		/// <item><description><see cref="NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
+		/// </list>
+		/// </remarks>
+		public static async Task<HashSet<object>> ReadInputAsync(NConsoleDialog dialog)
 		{
 			var selectedOptions = new HashSet<object>();
 
@@ -390,11 +374,11 @@ namespace Kantan.Cli
 				{
 					// Block until input is entered.
 
-					var prevCount = dialog.Options.Count;
+					int prevCount = dialog.Options.Count;
 
 					while (!Console.KeyAvailable) {
 
-						var refresh = Atomic.Exchange(ref Status, ConsoleStatus.Ok) == ConsoleStatus.Refresh;
+						bool refresh = AtomicHelper.Exchange(ref Status, ConsoleStatus.Ok) == ConsoleStatus.Refresh;
 
 						// Refresh buffer if collection was updated
 
@@ -413,7 +397,7 @@ namespace Kantan.Cli
 
 					dragAndDropFile = ListenForFile(cki2);
 
-					if (!string.IsNullOrWhiteSpace(dragAndDropFile)) {
+					if (!String.IsNullOrWhiteSpace(dragAndDropFile)) {
 
 						Debug.WriteLine($">> {dragAndDropFile}");
 						return null;
@@ -426,7 +410,7 @@ namespace Kantan.Cli
 
 				// File path was input via drag-and-drop
 				if (!t.Result.HasValue) {
-					return new HashSet<object>() { dragAndDropFile };
+					return new HashSet<object> { dragAndDropFile };
 				}
 
 				// Key was read
@@ -436,7 +420,7 @@ namespace Kantan.Cli
 				// Handle special keys
 
 				if (cki.Key is <= ConsoleKey.F12 and >= ConsoleKey.F1) {
-					var i = cki.Key - ConsoleKey.F1;
+					int i = cki.Key - ConsoleKey.F1;
 
 					if (dialog.Functions is { } && dialog.Functions.ContainsKey(cki.Key)) {
 						/*if (dialog.Functions.Length > i && i >= 0) {
@@ -450,9 +434,6 @@ namespace Kantan.Cli
 					case NC_GLOBAL_REFRESH_KEY:
 						Refresh();
 						break;
-					case NC_GLOBAL_RETURN_KEY:
-						//todo
-						return (new HashSet<object> { true });
 				}
 
 				// KeyChar can't be used as modifiers are not applicable
@@ -462,7 +443,7 @@ namespace Kantan.Cli
 					continue;
 				}
 
-				var modifiers = cki.Modifiers;
+				ConsoleModifiers modifiers = cki.Modifiers;
 
 				// Handle option
 
@@ -477,7 +458,7 @@ namespace Kantan.Cli
 
 					var fn = option.Functions[modifiers];
 
-					var funcResult = fn();
+					object? funcResult = fn();
 
 					if (funcResult != null) {
 						//
@@ -485,59 +466,17 @@ namespace Kantan.Cli
 							selectedOptions.Add(funcResult);
 						}
 						else {
-							return (new HashSet<object> { funcResult });
+							return new HashSet<object> { funcResult };
 						}
 					}
 				}
 			} while (cki.Key != NC_GLOBAL_EXIT_KEY);
 
-			return (selectedOptions);
+			return selectedOptions;
 		}
 
-		/// <summary>
-		/// Determines whether the console buffer contains a file directory that was
-		/// input via drag-and-drop.
-		/// </summary>
-		/// <param name="cki">First character in the buffer</param>
-		/// <returns>A valid file directory if the buffer contains one; otherwise, <c>null</c></returns>
-		/// <remarks>This is done heuristically by checking if the first character <paramref name="cki"/> is either a quote or the primary disk letter.
-		/// If so, then the rest of the buffer is read until the current sequence is a string resembling a valid file path.
-		/// </remarks>
-		public static string? ListenForFile(ConsoleKeyInfo cki)
-		{
-			const char ch = '\"';
-
-			char root = RootDirectory.First();
-
-			var sb = new StringBuilder();
-
-			char c = cki.KeyChar;
-
-			if (c == ch || c == root) {
-				sb.Append(c);
-
-				do {
-					var cki2 = Console.ReadKey(true);
-
-					if (cki2.Key == NC_GLOBAL_EXIT_KEY) {
-						return null;
-					}
-
-					c = cki2.KeyChar;
-					sb.Append(c);
-
-					if (File.Exists(sb.ToString())) {
-						break;
-					}
-				} while (c != ch);
-
-			}
-
-			return sb.ToString().Trim(ch);
-		}
-
-		public static string ReadInput(string? prompt = null, Predicate<string>? invalid = null,
-		                               string? errPrompt = null)
+		public static string ReadLine(string? prompt = null, Predicate<string>? invalid = null,
+		                              string? errPrompt = null)
 		{
 			invalid ??= String.IsNullOrWhiteSpace;
 
@@ -563,8 +502,12 @@ namespace Kantan.Cli
 					Console.WriteLine(errPrompt.AddColor(ColorError));
 					Thread.Sleep(PauseTime);
 					//Console.Write(new string('\r',7));
-					ClearLastLine();
-					//Console.CursorTop--;
+					/*ClearLastLine();
+					Console.CursorTop--;
+					*/
+
+					ClearCurrentLine();
+					Console.CursorTop--;
 
 				}
 
@@ -590,7 +533,7 @@ namespace Kantan.Cli
 			};
 		}
 
-		public static void Refresh() => Atomic.Exchange(ref Status, ConsoleStatus.Refresh);
+		public static void Refresh() => AtomicHelper.Exchange(ref Status, ConsoleStatus.Refresh);
 
 		public static void WaitForInput()
 		{
@@ -601,7 +544,51 @@ namespace Kantan.Cli
 
 		public static void WaitForTimeSpan(TimeSpan span) => Thread.Sleep(span);
 
-		public static void WaitForSecond() => WaitForTimeSpan(TimeSpan.FromSeconds(1));
+		public static void WaitForSecond() => WaitForTimeSpan(PauseTime);
+
+		/// <summary>
+		///     Determines whether the console buffer contains a file directory that was
+		///     input via drag-and-drop.
+		/// </summary>
+		/// <param name="cki">First character in the buffer</param>
+		/// <returns>A valid file directory if the buffer contains one; otherwise, <c>null</c></returns>
+		/// <remarks>
+		///     This is done heuristically by checking if the first character <paramref name="cki" /> is either a quote or the
+		///     primary disk letter. If so, then the rest of the buffer is read until the current sequence is a
+		/// string resembling a valid file path.
+		/// </remarks>
+		private static string? ListenForFile(ConsoleKeyInfo cki)
+		{
+			const char quote = '\"';
+
+			var sb = new StringBuilder();
+
+			char c = cki.KeyChar;
+
+			var driveLetters = DriveInfo.GetDrives().Select(x => x.Name.First()).ToArray();
+
+			if (c == quote || driveLetters.Any(e => e == c)) {
+				sb.Append(c);
+
+				do {
+					ConsoleKeyInfo cki2 = Console.ReadKey(true);
+
+					if (cki2.Key == NC_GLOBAL_EXIT_KEY) {
+						return null;
+					}
+
+					c = cki2.KeyChar;
+					sb.Append(c);
+
+					if (File.Exists(sb.ToString())) {
+						break;
+					}
+				} while (c != quote);
+
+			}
+
+			return sb.ToString().Trim(quote);
+		}
 
 		#region Status
 
@@ -609,9 +596,6 @@ namespace Kantan.Cli
 		///     Interface status
 		/// </summary>
 		private static ConsoleStatus Status;
-
-		public static readonly string RootDirectory =
-			Path.GetPathRoot(Environment.GetFolderPath(Environment.SpecialFolder.System));
 
 		private enum ConsoleStatus
 		{

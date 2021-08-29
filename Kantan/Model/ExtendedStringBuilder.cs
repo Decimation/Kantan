@@ -13,6 +13,7 @@ namespace Kantan.Model
 		public StringBuilder Builder { get; init; }
 
 
+
 		public ExtendedStringBuilder() : this(new StringBuilder()) { }
 
 		public ExtendedStringBuilder(StringBuilder builder)

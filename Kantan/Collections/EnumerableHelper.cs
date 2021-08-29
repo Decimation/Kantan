@@ -175,7 +175,7 @@ namespace Kantan.Collections
 		/// comparing them by the specified key projection.</returns>
 		public static IEnumerable<TSource> DistinctBy<TSource, TKey>(this IEnumerable<TSource> source,
 		                                                             Func<TSource, TKey> keySelector,
-		                                                             IEqualityComparer<TKey>? comparer)
+		                                                             IEqualityComparer<TKey> comparer)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
@@ -256,7 +256,7 @@ namespace Kantan.Collections
 				return false;
 			}
 
-			var ex = ((IDictionary) obj).GetEnumerator();
+			var ex = obj.GetEnumerator();
 
 			buf = new Map();
 

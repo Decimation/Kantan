@@ -278,7 +278,7 @@ namespace UnitTest
 			const string jpg = "https://i.ytimg.com/vi/r45a-l9Gqdk/hqdefault.jpg";
 
 			var i = Network.GetResponse(jpg).ContentType;
-			Assert.True(Network.IsUri(jpg, out var u));
+			Assert.True(UriUtilities.IsUri(jpg, out var u));
 			Assert.True(MediaTypes.GetExtensions(i).Contains("jpe"));
 			Assert.True(MediaTypes.GetTypeComponent(i) == "image");
 			Assert.True(MediaTypes.GetSubTypeComponent(i) == "jpeg");
@@ -290,7 +290,7 @@ namespace UnitTest
 			"https://danbooru.donmai.us/data/original/ca/7b/__re_l_mayer_ergo_proxy_drawn_by_koyorin__ca7b942f24b30e3a7a6f49b932fa2d56.png")]
 		public void UrlUtilTest(string a, string b)
 		{
-			Assert.True(UrlUtilities.UrlEqual(a, b));
+			Assert.True(UriUtilities.UrlEqual(a, b));
 		}
 	}
 

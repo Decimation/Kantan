@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace Kantan.Threading
 {
-	public static class Atomic
+	public static class AtomicHelper
 	{
 		public static unsafe T Exchange<T>(ref T location1, T location2) where T : unmanaged
 		{

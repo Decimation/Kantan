@@ -496,6 +496,8 @@ namespace Kantan.Cli
 
 		public static TimeSpan Duration { get; set; } = TimeSpan.FromMilliseconds(80);
 
+		private static bool _isRunning;
+
 		public static void ForTask(Task t)
 		{
 			var cts = new CancellationTokenSource();
@@ -506,8 +508,6 @@ namespace Kantan.Cli
 			cts.Dispose();
 			_isRunning = false;
 		}
-
-		private static bool _isRunning;
 
 		public static void Queue(CancellationTokenSource cts)
 		{

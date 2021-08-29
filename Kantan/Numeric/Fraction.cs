@@ -1,4 +1,5 @@
 ﻿using System;
+
 // ReSharper disable NonReadonlyMemberInGetHashCode
 
 // ReSharper disable InconsistentNaming
@@ -138,7 +139,7 @@ namespace Kantan.Numeric
 		{
 			set
 			{
-				Numerator   = value;
+				Numerator      = value;
 				m_iDenominator = 1;
 			}
 		}
@@ -324,11 +325,14 @@ namespace Kantan.Numeric
 
 		public static bool operator ==(Fraction frac1, int iNo) => frac1 is not null && frac1.Equals(new Fraction(iNo));
 
-		public static bool operator !=(Fraction frac1, int iNo) => frac1 is not null && !frac1.Equals(new Fraction(iNo));
+		public static bool operator !=(Fraction frac1, int iNo) =>
+			frac1 is not null && !frac1.Equals(new Fraction(iNo));
 
-		public static bool operator ==(Fraction frac1, double dbl) => frac1 is not null && frac1.Equals(new Fraction(dbl));
+		public static bool operator ==(Fraction frac1, double dbl) =>
+			frac1 is not null && frac1.Equals(new Fraction(dbl));
 
-		public static bool operator !=(Fraction frac1, double dbl) => frac1 is not null && !frac1.Equals(new Fraction(dbl));
+		public static bool operator !=(Fraction frac1, double dbl) =>
+			frac1 is not null && !frac1.Equals(new Fraction(dbl));
 
 		public static bool operator <(Fraction frac1, Fraction frac2)
 		{

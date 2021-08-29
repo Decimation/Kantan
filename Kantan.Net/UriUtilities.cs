@@ -13,7 +13,7 @@ using System.Web;
 
 namespace Kantan.Net
 {
-	public static class UrlUtilities
+	public static class UriUtilities
 	{
 		/*
 		 * Adapted from
@@ -145,6 +145,40 @@ namespace Kantan.Net
 			}
 
 			return url;
+		}
+
+		public static Uri GetHostUri(Uri u)
+		{
+			return new UriBuilder(u.Host).Uri;
+		}
+
+		public static string GetHostComponent(Uri u)
+		{
+			return u.GetComponents(UriComponents.NormalizedHost, UriFormat.Unescaped);
+		}
+
+		public static string StripScheme(Uri uri)
+		{
+			return uri.Host + uri.PathAndQuery + uri.Fragment;
+		}
+
+		public static bool IsUri(string uriName, out Uri uriResult)
+		{
+			bool result = Uri.TryCreate(uriName, UriKind.Absolute, out uriResult)
+			              && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+
+			// if (!result) {
+			// 	var b = new UriBuilder(StripScheme(new Uri(uriName)))
+			// 	{
+			// 		Scheme = Uri.UriSchemeHttps, 
+			// 		Port = -1
+			// 	};
+			// 	uriResult = b.Uri;
+			//
+			// 	//uriResult = new Uri(uriResult.ToString().Replace("file:", "http:"));
+			// }
+
+			return result;
 		}
 	}
 }

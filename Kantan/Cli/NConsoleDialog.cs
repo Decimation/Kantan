@@ -33,14 +33,11 @@ namespace Kantan.Cli
 		public Dictionary<ConsoleKey, Action> Functions { get; set; } = new()
 			{ };
 
-		public NConsoleDialog()
-		{
-			
-		}
+		public NConsoleDialog() { }
 
-		public HashSet<object> Read() => NConsole.ReadOptions(this);
+		public HashSet<object> Read() => NConsole.ReadInput(this);
 
-		public Task<HashSet<object>> ReadAsync() => NConsole.ReadOptionsAsync(this);
+		public Task<HashSet<object>> ReadAsync() => NConsole.ReadInputAsync(this);
 
 		public override int GetHashCode()
 		{

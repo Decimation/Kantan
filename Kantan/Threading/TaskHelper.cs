@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Kantan.Threading
 {
-	public static class Tasks
+	public static class TaskHelper
 	{
 		public static Task ForEachAsync<T>(this IEnumerable<T> sequence, Func<T, Task> action)
 		{

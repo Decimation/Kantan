@@ -42,44 +42,6 @@ namespace Kantan.Net
 
 		private const int MAX_AUTO_REDIRECTS = 50;
 
-		#region URI
-
-		public static Uri GetHostUri(Uri u)
-		{
-			return new UriBuilder(u.Host).Uri;
-		}
-
-		public static string GetHostComponent(Uri u)
-		{
-			return u.GetComponents(UriComponents.NormalizedHost, UriFormat.Unescaped);
-		}
-
-		public static string StripScheme(Uri uri)
-		{
-			return uri.Host + uri.PathAndQuery + uri.Fragment;
-		}
-
-		public static bool IsUri(string uriName, out Uri? uriResult)
-		{
-			bool result = Uri.TryCreate(uriName, UriKind.Absolute, out uriResult)
-			              && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
-
-			// if (!result) {
-			// 	var b = new UriBuilder(StripScheme(new Uri(uriName)))
-			// 	{
-			// 		Scheme = Uri.UriSchemeHttps, 
-			// 		Port = -1
-			// 	};
-			// 	uriResult = b.Uri;
-			//
-			// 	//uriResult = new Uri(uriResult.ToString().Replace("file:", "http:"));
-			// }
-
-			return result;
-		}
-
-		#endregion
-
 		#region IP
 
 		public static IPAddress GetExternalIP()
@@ -116,8 +78,8 @@ namespace Kantan.Net
 				s = ip.ToString();
 			}
 
-			if (IsUri(hostOrIP, out var ux)) {
-				s = GetHostComponent(ux);
+			if (UriUtilities.IsUri(hostOrIP, out var ux)) {
+				s = UriUtilities.GetHostComponent(ux);
 			}
 
 			return GetHostAddress(s).ToString();
@@ -207,12 +169,12 @@ namespace Kantan.Net
 
 		[MustUseReturnValue]
 		public static HttpResponseMessage GetHttpResponse(string url, HttpMethod method, int ms = TimeoutMS,
-		                                                  bool redirect = true, int c = MAX_AUTO_REDIRECTS)
+		                                                  bool redirect = true, int redirects = MAX_AUTO_REDIRECTS)
 		{
 			using var handler = new HttpClientHandler
 			{
 				AllowAutoRedirect        = redirect,
-				MaxAutomaticRedirections = c
+				MaxAutomaticRedirections = redirects
 			};
 
 			using var client = new HttpClient(handler);
@@ -232,12 +194,12 @@ namespace Kantan.Net
 
 		[MustUseReturnValue]
 		public static HttpWebResponse GetWebResponse(string url, int ms = TimeoutMS, string method = "GET",
-		                                             bool redirect = true, int c = MAX_AUTO_REDIRECTS)
+		                                             bool redirect = true, int redirects = MAX_AUTO_REDIRECTS)
 		{
 			var h = (HttpWebRequest) WebRequest.Create(url);
 			h.AllowAutoRedirect            = redirect;
 			h.Method                       = method;
-			h.MaximumAutomaticRedirections = c;
+			h.MaximumAutomaticRedirections = redirects;
 			h.Timeout                      = ms;
 
 			var r = (HttpWebResponse) h.GetResponse();
@@ -246,13 +208,13 @@ namespace Kantan.Net
 		}
 
 		public static IRestResponse GetResponse(string url, int ms = TimeoutMS, Method method = Method.GET,
-		                                        bool redirect = true, int c = MAX_AUTO_REDIRECTS)
+		                                        bool redirect = true, int redirects = MAX_AUTO_REDIRECTS)
 		{
 			var client = new RestClient
 			{
 				FollowRedirects = redirect,
 				Proxy           = null,
-				MaxRedirects    = c,
+				MaxRedirects    = redirects,
 
 			};
 

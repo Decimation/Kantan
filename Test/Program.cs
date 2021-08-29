@@ -15,6 +15,7 @@ using Kantan.Diagnostics;
 using Kantan.Internal;
 using Kantan.Model;
 using Kantan.Net;
+using Kantan.Numeric;
 using Kantan.Utilities;
 using RestSharp;
 
@@ -27,12 +28,34 @@ namespace Test
 	{
 		private static async Task Main(string[] args)
 		{
+			Console.WriteLine("a");
+			NConsole.WaitForSecond();
+			//NConsole.ClearCurrentLine();
+			NConsole.ClearLastLine();
+			Console.WriteLine("b"); 
+			NConsole.WaitForSecond();
+
+			Console.WriteLine("c");
+			NConsole.WaitForSecond();
+			NConsole.ClearCurrentLine();
+
+			Console.WriteLine("d");
+			Console.WriteLine("e");
+
+
+			var s = NConsole.ReadLine("foo", x => x != "x", "!");
+			Console.WriteLine(s);
+
+		}
+
+		private static async Task ConsoleTest()
+		{
 			var dialog = new NConsoleDialog()
 			{
 				Subtitle = "a\nb\nc",
 				Functions = new()
 				{
-					[ConsoleKey.F1]=() =>
+					[ConsoleKey.F1] = () =>
 					{
 						Console.WriteLine("g");
 
@@ -46,21 +69,56 @@ namespace Test
 				Console.WriteLine("butt");
 				return null;
 			};
+
 			dialog.Options[0].Functions[ConsoleModifiers.Control] = () =>
 			{
 				Console.WriteLine("ctrl");
 				return null;
-			}; dialog.Options[0].Functions[ConsoleModifiers.Control | ConsoleModifiers.Alt] = () =>
+			};
+
+			dialog.Options[0].Functions[ConsoleModifiers.Control | ConsoleModifiers.Alt] = () =>
 			{
 				Console.WriteLine("alt+ctrl");
 				return null;
 			};
-			
-			var r = NConsole.ReadOptionsAsync(dialog);
+
+			var r = NConsole.ReadInputAsync(dialog);
 			await r;
-			
+
 			Console.WriteLine(r.Result.QuickJoin());
-			
+
+		}
+
+		[Flags]
+		enum MyEnum
+		{
+			a = 1 << 0,
+			b = 1 << 1,
+			c = 1 << 2
+		}
+
+		private static async Task ConsoleTest2()
+		{
+			var dialog = new NConsoleDialog()
+			{
+				Functions = new()
+				{
+					[ConsoleKey.F1] = () =>
+					{
+						Console.WriteLine("g");
+
+					},
+				},
+				SelectMultiple = true,
+				Options        = NConsoleOption.FromEnum<MyEnum>().ToList()
+			};
+
+
+			var r = NConsole.ReadInputAsync(dialog);
+			await r;
+
+			Console.WriteLine(r.Result.QuickJoin());
+
 		}
 	}
 }

@@ -61,6 +61,8 @@ namespace Kantan.Cli
 
 		};
 
+		#region From
+
 		public static List<NConsoleOption> FromList<T>(IList<T> values) =>
 			FromArray(values, arg => arg.ToString()).ToList();
 
@@ -91,5 +93,7 @@ namespace Kantan.Cli
 			var options = (TEnum[]) Enum.GetValues(typeof(TEnum));
 			return FromArray(options, e => Enum.GetName(typeof(TEnum), e) ?? throw new InvalidOperationException());
 		}
+
+		#endregion
 	}
 }
