@@ -11,9 +11,6 @@ namespace Kantan.Numeric
 {
 	public enum MetricPrefix
 	{
-		// Bit,
-		// Byte,
-
 		Kilo = 1,
 		Mega,
 		Giga,
@@ -36,9 +33,61 @@ namespace Kantan.Numeric
 		/// </summary>
 		public const double MAGNITUDE2 = 1024D;
 
+		public static int HighestOrderBit(int num)
+		{
+			if (!(num > 0))
+				return 0;
+
+			int ret = 1;
+
+			while ((num >>= 1) > 0)
+				ret <<= 1;
+
+			return ret;
+		}
+
+		public static long[] SimplifyRadical(long insideRoot)
+		{
+			int outside_root = 1;
+			int d            = 2;
+
+			while (d * d <= insideRoot) {
+				if (insideRoot % (d * d) == 0) {
+					insideRoot   /= (d * d);
+					outside_root *= d;
+				}
+
+				else
+					d++;
+			}
+
+			long[] radical = new long[2];
+			radical[0] = outside_root;
+			radical[1] = insideRoot;
+
+			return radical;
+		}
+
+		public static long GCD(long a, long b)
+		{
+			while (a != 0 && b != 0) {
+				if (a > b)
+					a %= b;
+				else
+					b %= a;
+			}
+
+			return a | b;
+		}
+
+		public static long LCM(long a, long b)
+		{
+			return (a / GCD(a, b)) * b;
+		}
+
 		public static string GetSIUnit(double d, string format = null)
 		{
-			int    degree = (int) Math.Floor(Math.Log10(Math.Abs(d)) / 3);
+			int degree = (int) Math.Floor(Math.Log10(Math.Abs(d)) / 3);
 
 			double scaled = d * Math.Pow(MAGNITUDE, -degree);
 
@@ -72,8 +121,9 @@ namespace Kantan.Numeric
 
 			return result;
 		}
+
 		/// <summary>
-		/// Convert the given bytes to <see cref="MetricUnit"/>
+		/// Convert the given bytes to <see cref="MetricPrefix"/>
 		/// </summary>
 		/// <param name="bytes">Value in bytes to be converted</param>
 		/// <param name="type">Unit to convert to</param>
@@ -84,12 +134,13 @@ namespace Kantan.Numeric
 			// var pow = rg.ToList().IndexOf(type) +1;
 
 
-			int    pow = (int)type;
+			int    pow = (int) type;
 			double v   = bytes / Math.Pow(MAGNITUDE, pow);
 
 
 			return v;
 		}
+
 		private static readonly string[] BytePrefixes = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
 
 		private static readonly char[] IncPrefixes = { 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y' };
@@ -98,9 +149,10 @@ namespace Kantan.Numeric
 
 		#region Generic math
 
-		// TODO: Remove when .NET 6 releases
 #if !NET6_0_OR_GREATER
 
+
+		// TODO: Remove when .NET 6 releases
 
 		public static T Add<T>(T a, T b) => MathImplementation<T>.Add(a, b);
 

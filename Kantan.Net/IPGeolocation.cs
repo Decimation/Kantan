@@ -1,4 +1,5 @@
-﻿namespace Kantan.Net
+﻿// ReSharper disable InconsistentNaming
+namespace Kantan.Net
 {
 	public sealed class IPGeolocation
 	{

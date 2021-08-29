@@ -3,7 +3,7 @@ using System.Text;
 
 // ReSharper disable UnusedMember.Global
 
-namespace Kantan.Model
+namespace Kantan.Text
 {
 	/// <summary>
 	/// Mutable extended string type.

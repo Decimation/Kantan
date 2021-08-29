@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Kantan.Collections;
 using Kantan.Diagnostics;
+using Kantan.Text;
 using Kantan.Utilities;
 using static Kantan.Diagnostics.LogCategories;
 // ReSharper disable EmptyConstructor

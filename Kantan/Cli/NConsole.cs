@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Kantan.Text;
 using Kantan.Threading;
 using Kantan.Utilities;
 using static Kantan.Internal.Common;
@@ -563,12 +564,12 @@ namespace Kantan.Cli
 
 			var sb = new StringBuilder();
 
-			char c = cki.KeyChar;
+			char keyChar = cki.KeyChar;
 
 			var driveLetters = DriveInfo.GetDrives().Select(x => x.Name.First()).ToArray();
 
-			if (c == quote || driveLetters.Any(e => e == c)) {
-				sb.Append(c);
+			if (keyChar == quote || driveLetters.Any(e => e == keyChar)) {
+				sb.Append(keyChar);
 
 				do {
 					ConsoleKeyInfo cki2 = Console.ReadKey(true);
@@ -577,13 +578,13 @@ namespace Kantan.Cli
 						return null;
 					}
 
-					c = cki2.KeyChar;
-					sb.Append(c);
+					keyChar = cki2.KeyChar;
+					sb.Append(keyChar);
 
 					if (File.Exists(sb.ToString())) {
 						break;
 					}
-				} while (c != quote);
+				} while (keyChar != quote);
 
 			}
 

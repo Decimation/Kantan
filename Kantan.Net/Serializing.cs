@@ -12,6 +12,7 @@ namespace Kantan.Net
 	{
 		public static JsonValue TryGetKeyValue(this JsonValue value, string k)
 		{
+			
 			return value.ContainsKey(k) ? value[k] : null;
 		}
 
@@ -22,7 +23,7 @@ namespace Kantan.Net
 
 		public static IEnumerable<string> QuerySelectorAttributes(this IHtmlDocument document, string s, string a)
 		{
-			return document.QuerySelectorAll(s).Select(s => s.GetAttribute(a));
+			return document.QuerySelectorAll(s).Select(element => element.GetAttribute(a));
 
 		}
 

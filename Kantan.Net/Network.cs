@@ -102,7 +102,7 @@ namespace Kantan.Net
 
 		#endregion
 
-		public static bool IsAlive(Uri u, int ms = TimeoutMS) => GetResponse(u.ToString(), ms).IsSuccessful;
+		//public static bool IsAlive(Uri u, int ms = TimeoutMS) => GetResponse(u.ToString(), ms).IsSuccessful;
 
 		public static string? GetFinalRedirect(string url)
 		{

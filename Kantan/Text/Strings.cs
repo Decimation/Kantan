@@ -9,7 +9,7 @@ using System.Text.Unicode;
 using JetBrains.Annotations;
 using Kantan.Model;
 using static Kantan.Internal.Common;
-using static Kantan.Utilities.StringConstants;
+using static Kantan.Text.StringConstants;
 
 // ReSharper disable UnusedMember.Local
 
@@ -18,7 +18,7 @@ using static Kantan.Utilities.StringConstants;
 // ReSharper disable UnusedMember.Global
 
 
-namespace Kantan.Utilities
+namespace Kantan.Text
 {
 	/// <summary>
 	///     Utilities for strings (<see cref="string" />).
@@ -258,7 +258,7 @@ namespace Kantan.Utilities
 
 		public static string OutlineString(IOutline view)
 		{
-			var esb = new ExtendedStringBuilder();
+			var esb = new StringBuilder();
 
 
 			foreach (var (key, value) in view.Outline) {

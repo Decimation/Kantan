@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Kantan.Text;
 
 // ReSharper disable UnusedMember.Global
 #pragma warning disable CA2248

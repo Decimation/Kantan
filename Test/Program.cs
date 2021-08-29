@@ -16,6 +16,7 @@ using Kantan.Internal;
 using Kantan.Model;
 using Kantan.Net;
 using Kantan.Numeric;
+using Kantan.Text;
 using Kantan.Utilities;
 using RestSharp;
 
@@ -28,24 +29,9 @@ namespace Test
 	{
 		private static async Task Main(string[] args)
 		{
-			Console.WriteLine("a");
-			NConsole.WaitForSecond();
-			//NConsole.ClearCurrentLine();
-			NConsole.ClearLastLine();
-			Console.WriteLine("b"); 
-			NConsole.WaitForSecond();
-
-			Console.WriteLine("c");
-			NConsole.WaitForSecond();
-			NConsole.ClearCurrentLine();
-
-			Console.WriteLine("d");
-			Console.WriteLine("e");
-
-
-			var s = NConsole.ReadLine("foo", x => x != "x", "!");
-			Console.WriteLine(s);
-
+			
+			Console.WriteLine(MathHelper.LCM(4,6));
+			
 		}
 
 		private static async Task ConsoleTest()

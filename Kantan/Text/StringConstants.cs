@@ -1,5 +1,5 @@
 ﻿// ReSharper disable UnusedMember.Global
-namespace Kantan.Utilities
+namespace Kantan.Text
 {
 	public static class StringConstants
 	{
