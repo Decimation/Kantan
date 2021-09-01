@@ -411,6 +411,8 @@ namespace Kantan.Cli
 							prevCount = currentCount;
 						}
 
+						// TODO !!!!!!! TODO WIP WIP !!!!!!!!!
+
 						var inputRecord = NativeInput.Read();
 
 						if (!inputRecord.Equals(default) && inputRecord.EventType == NativeInput.MOUSE_EVENT &&

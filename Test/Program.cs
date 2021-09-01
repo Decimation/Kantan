@@ -89,6 +89,14 @@ namespace Test
 			};
 
 			var r = NConsole.ReadInputAsync(dialog);
+
+
+			Task.Factory.StartNew(() =>
+			{
+				Thread.Sleep(1000);
+				dialog.Options.Add(new NConsoleOption() { Name = "butt" });
+			});
+
 			await r;
 
 			Console.WriteLine(r.Result.QuickJoin());

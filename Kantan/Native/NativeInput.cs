@@ -13,7 +13,31 @@ namespace Kantan.Native
 		private static IntPtr _stdHandle;
 
 		private static int _oldMode;
+		
+		[DllImport("kernel32.dll", EntryPoint = "PeekConsoleInputW", CharSet = CharSet.Unicode, SetLastError = true)]
+		internal static extern bool PeekConsoleInput(
+			IntPtr hConsoleInput,
+			out INPUT_RECORD lpBuffer,
+			uint nLength,
+			out uint lpNumberOfEventsRead);
+		
 
+		internal static bool Peek(out INPUT_RECORD r)
+		{
+
+
+			var b = !(PeekConsoleInput(_stdHandle,  out r, 1, out var recordLen));
+
+			if (recordLen == 0) {
+				return false;
+			}
+			
+
+			//Console.SetCursorPosition(0, 0);
+			
+			return b;
+
+		}
 		internal static INPUT_RECORD Read()
 		{
 			var  record    = new INPUT_RECORD();
@@ -34,6 +58,7 @@ namespace Kantan.Native
 
 			ret:
 			WriteConsoleInput(_stdHandle, new[] { record }, 1, out recordLen);
+			
 			return record;
 
 		}
