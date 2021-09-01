@@ -44,28 +44,33 @@ namespace Test
 
 					},
 				},
-				Options = new List<NConsoleOption>()
-				{
-					new NConsoleOption()
-					{
-						Function = () =>
-						{
-							Console.Beep();
-							return null;
-						}
-					}
-					
-				},
+				SelectMultiple = true,
+				Options = NConsoleOption.FromArray(new int[]{1,2,3})
 			};
 
 
-			var cts = new CancellationTokenSource();
 			var v   =dialog.ReadAsync();
-			NativeMethods.Start(cts);
-			await v;
-			cts.Cancel();
 			
+			await v;
 
+
+			var dialog2 = new NConsoleDialog()
+			{
+				Subtitle = "a\nb\nc",
+				Functions = new()
+				{
+					[ConsoleKey.F1] = () =>
+					{
+						Console.WriteLine("g");
+
+					},
+				},
+				SelectMultiple = true,
+				Options        = NConsoleOption.FromArray(new int[] { 1, 2, 3 })
+			};
+
+			var v2=dialog2.ReadAsync();
+			await v2;
 		}
 
 		
