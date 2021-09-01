@@ -1,21 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Kantan.Native;
 using Kantan.Text;
 using Kantan.Threading;
 using Kantan.Utilities;
-using Microsoft.Win32.SafeHandles;
 using static Kantan.Internal.Common;
-using Console = System.Console;
 
 #pragma warning disable 8601
 
@@ -276,7 +273,7 @@ namespace Kantan.Cli
 			return INVALID;
 		}
 
-		public static Dictionary<int, NConsoleOption> pos = new();
+		private static readonly Dictionary<int, NConsoleOption> OptionPositions = new();
 
 		/// <summary>
 		///     Display dialog
@@ -306,8 +303,7 @@ namespace Kantan.Cli
 
 				Write(false, s);
 
-				//todo
-				pos[Console.CursorTop - 1] = option;
+				OptionPositions[Console.CursorTop - 1] = option;
 			}
 
 			Console.WriteLine();
@@ -376,11 +372,11 @@ namespace Kantan.Cli
 
 			ConsoleKeyInfo cki;
 
-			NConsoleOption? click           = null;
+			NConsoleOption? clickOption     = null;
 			string?         dragAndDropFile = null;
-			bool            k               = false;
 
-			pos.Clear();
+			NativeInput.Init();
+			OptionPositions.Clear();
 
 			do {
 				DisplayDialog(dialog, selectedOptions);
@@ -406,32 +402,35 @@ namespace Kantan.Cli
 							prevCount = currentCount;
 						}
 
-						var v = NativeMethods.Run();
+						var inputRecord = NativeInput.Read();
 
-						if (!v.Equals(default) && v.EventType == NativeMethods.MOUSE_EVENT &&
-						    v.MouseEvent.dwButtonState == 0x1) {
+						if (!inputRecord.Equals(default) && inputRecord.EventType == NativeInput.MOUSE_EVENT &&
+						    inputRecord.MouseEvent.dwButtonState == 0x1) {
+
 							Debug.WriteLine("click");
 
-							if (NConsole.pos.ContainsKey(v.MouseEvent.dwMousePosition.Y)) {
-								var po = NConsole.pos[v.MouseEvent.dwMousePosition.Y];
-								click = po;
-								k     = false;
+							var y = inputRecord.MouseEvent.dwMousePosition.Y;
+
+							if (OptionPositions.ContainsKey(y)) {
+								var option = OptionPositions[y];
+								clickOption = option;
+
 								break;
 							}
 						}
 
 						else {
-							k = true;
+							clickOption = null;
 						}
 
 					}
 
 					ConsoleKeyInfo cki2;
 
-					if (click is { } && !k) {
-						var i = GetDisplayOptionFromIndex(dialog.Options.IndexOf(click));
+					if (clickOption is { }) {
+						var i = GetDisplayOptionFromIndex(dialog.Options.IndexOf(clickOption));
 
-						cki2 = new ConsoleKeyInfo(i, (ConsoleKey) i, false, false, false) { };
+						cki2 = new ConsoleKeyInfo(i, (ConsoleKey) i, false, false, false);
 					}
 					else {
 						// Key was read
@@ -685,184 +684,5 @@ namespace Kantan.Cli
 		{
 			Console.WriteLine(args.QuickJoin());
 		}
-	}
-
-
-	// TODO
-	internal static class NativeMethods
-	{
-		internal static IntPtr _getStdHandle;
-		
-
-		internal static INPUT_RECORD Run()
-		{
-			_getStdHandle = GetStdHandle(STD_INPUT_HANDLE);
-			int mode = 0;
-
-			if (!(GetConsoleMode(_getStdHandle, ref mode))) {
-				throw new Win32Exception();
-			}
-			
-
-			mode |= ENABLE_MOUSE_INPUT;
-			mode &= ~ENABLE_QUICK_EDIT_MODE;
-			mode |= ENABLE_EXTENDED_FLAGS;
-
-			if (!(SetConsoleMode(_getStdHandle, mode))) {
-				throw new Win32Exception();
-			}
-
-			var  record    = new INPUT_RECORD();
-			uint recordLen = 0;
-
-			if (!(ReadConsoleInput(_getStdHandle, ref record, 1, ref recordLen))) {
-				throw new Win32Exception();
-			}
-
-			//Console.SetCursorPosition(0, 0);
-
-			switch (record.EventType) {
-				case MOUSE_EVENT:
-				{
-					/*Console.WriteLine("Mouse event");
-
-						Console.WriteLine($"    X ...............:   {record.MouseEvent.dwMousePosition.X,4:0}  ");
-
-						Console.WriteLine($"    Y ...............:   {record.MouseEvent.dwMousePosition.Y,4:0}  ");
-
-						Console.WriteLine($"    dwButtonState ...: 0x{record.MouseEvent.dwButtonState:X4}  ");
-
-						Console.WriteLine($"    dwControlKeyState: 0x{record.MouseEvent.dwControlKeyState:X4}  ");
-
-						Console.WriteLine($"    dwEventFlags ....: 0x{record.MouseEvent.dwEventFlags:X4}  ");*/
-
-
-					goto ret;
-
-				}
-					break;
-
-				/*case KEY_EVENT:
-					{
-						/*Console.WriteLine("Key event  ");
-						Console.WriteLine($"    bKeyDown  .......:  {record.KeyEvent.bKeyDown,5}  ");
-
-						Console.WriteLine($"    wRepeatCount ....:   {record.KeyEvent.wRepeatCount,4:0}  ");
-
-						Console.WriteLine($"    wVirtualKeyCode .:   {record.KeyEvent.wVirtualKeyCode,4:0}  ");
-
-						Console.WriteLine($"    uChar ...........:      {record.KeyEvent.UnicodeChar}  ");
-
-						Console.WriteLine($"    dwControlKeyState: 0x{record.KeyEvent.dwControlKeyState:X4}  ");#1#
-
-						if (record.KeyEvent.wVirtualKeyCode == (int) ConsoleKey.Escape) { return; }
-					}
-						break;*/
-			}
-
-			ret:
-			WriteConsoleInput(_getStdHandle, new[] { record }, 1, out recordLen);
-			return record;
-
-		}
-
-		[DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-		private static extern bool WriteConsoleInput(IntPtr hConsoleInput, INPUT_RECORD[] lpBuffer, uint nLength,
-		                                             out uint lpNumberOfEventsWritten);
-
-		public const int STD_INPUT_HANDLE = -10;
-
-		public const int ENABLE_MOUSE_INPUT     = 0x0010;
-		public const int ENABLE_QUICK_EDIT_MODE = 0x0040;
-		public const int ENABLE_EXTENDED_FLAGS  = 0x0080;
-
-		public const int KEY_EVENT   = 1;
-		public const int MOUSE_EVENT = 2;
-
-
-		[DebuggerDisplay("EventType: {EventType}")]
-		[StructLayout(LayoutKind.Explicit)]
-		internal struct INPUT_RECORD
-		{
-			[FieldOffset(0)]
-			public short EventType;
-
-			[FieldOffset(4)]
-			public KEY_EVENT_RECORD KeyEvent;
-
-			[FieldOffset(4)]
-			public MOUSE_EVENT_RECORD MouseEvent;
-		}
-
-		[DebuggerDisplay("{dwMousePosition.X}, {dwMousePosition.Y}")]
-		internal struct MOUSE_EVENT_RECORD
-		{
-			public COORD dwMousePosition;
-			public int   dwButtonState;
-			public int   dwControlKeyState;
-			public int   dwEventFlags;
-		}
-
-		[DebuggerDisplay("{X}, {Y}")]
-		internal struct COORD
-		{
-			public ushort X;
-			public ushort Y;
-		}
-
-		[DebuggerDisplay("KeyCode: {wVirtualKeyCode}")]
-		[StructLayout(LayoutKind.Explicit)]
-		internal struct KEY_EVENT_RECORD
-		{
-			[FieldOffset(0)]
-			[MarshalAs(UnmanagedType.Bool)]
-			public bool bKeyDown;
-
-			[FieldOffset(4)]
-			public ushort wRepeatCount;
-
-			[FieldOffset(6)]
-			public ushort wVirtualKeyCode;
-
-			[FieldOffset(8)]
-			public ushort wVirtualScanCode;
-
-			[FieldOffset(10)]
-			public char UnicodeChar;
-
-			[FieldOffset(10)]
-			public byte AsciiChar;
-
-			[FieldOffset(12)]
-			public int dwControlKeyState;
-		};
-
-
-		public class ConsoleHandle : SafeHandleMinusOneIsInvalid
-		{
-			public ConsoleHandle() : base(false) { }
-
-			protected override bool ReleaseHandle()
-			{
-				return true; //releasing console handle is not our business
-			}
-		}
-
-
-		[DllImport("kernel32.dll", SetLastError = true)]
-		[return: MarshalAs(UnmanagedType.Bool)]
-		internal static extern bool GetConsoleMode(IntPtr hConsoleHandle, ref int lpMode);
-
-		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern IntPtr GetStdHandle(int nStdHandle);
-
-		[DllImport("kernel32.dll", SetLastError = true)]
-		[return: MarshalAs(UnmanagedType.Bool)]
-		internal static extern bool ReadConsoleInput(IntPtr hConsoleInput, ref INPUT_RECORD lpBuffer,
-		                                             uint nLength, ref uint lpNumberOfEventsRead);
-
-		[DllImport("kernel32.dll", SetLastError = true)]
-		[return: MarshalAs(UnmanagedType.Bool)]
-		internal static extern bool SetConsoleMode(IntPtr hConsoleHandle, int dwMode);
 	}
 }
