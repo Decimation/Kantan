@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Linq;
+using JetBrains.Annotations;
 using Kantan.Model;
 #pragma warning disable 8603
 
@@ -51,9 +52,9 @@ namespace Kantan.Cli
 		///     Information about this <see cref="NConsoleOption" />
 		/// </summary>
 		public virtual IOutline? Data { get; set; }
-
-
+		
 		public virtual Color? Color { get; set; }
+		
 
 		public Dictionary<ConsoleModifiers, NConsoleFunction> Functions { get; init; } = new()
 		{
@@ -63,8 +64,7 @@ namespace Kantan.Cli
 
 		#region From
 
-		public static List<NConsoleOption> FromList<T>(IList<T> values) =>
-			FromArray(values, arg => arg.ToString()).ToList();
+		
 
 
 		public static NConsoleOption[] FromArray<T>(T[] values) => FromArray(values, arg => arg.ToString());

@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http;
+using System.Numerics;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,6 +21,7 @@ using Kantan.Net;
 using Kantan.Numeric;
 using Kantan.Text;
 using Kantan.Utilities;
+using Microsoft.Win32.SafeHandles;
 using RestSharp;
 
 // ReSharper disable UnusedParameter.Local
@@ -29,10 +33,42 @@ namespace Test
 	{
 		private static async Task Main(string[] args)
 		{
+			var dialog = new NConsoleDialog()
+			{
+				Subtitle = "a\nb\nc",
+				Functions = new()
+				{
+					[ConsoleKey.F1] = () =>
+					{
+						Console.WriteLine("g");
+
+					},
+				},
+				Options = new List<NConsoleOption>()
+				{
+					new NConsoleOption()
+					{
+						Function = () =>
+						{
+							Console.Beep();
+							return null;
+						}
+					}
+					
+				},
+			};
+
+
+			var cts = new CancellationTokenSource();
+			var v   =dialog.ReadAsync();
+			NativeMethods.Start(cts);
+			await v;
+			cts.Cancel();
 			
-			Console.WriteLine(MathHelper.LCM(4,6));
-			
+
 		}
+
+		
 
 		private static async Task ConsoleTest()
 		{

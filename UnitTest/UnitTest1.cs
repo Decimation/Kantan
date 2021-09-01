@@ -115,6 +115,7 @@ namespace UnitTest
 
 			Assert.AreEqual(MathHelper.Multiply(2, 2), 4);
 			Assert.AreEqual(MathHelper.Divide(10, 5), 2);
+			
 		}
 
 		[Test]

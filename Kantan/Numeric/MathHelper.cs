@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using System.Numerics;
 
 // ReSharper disable InconsistentNaming
 
@@ -23,18 +24,34 @@ namespace Kantan.Numeric
 
 	public static class MathHelper
 	{
-		/// <summary>
-		/// SI
-		/// </summary>
-		public const double MAGNITUDE = 1000D;
 
-		/// <summary>
-		/// ISO/IEC 80000
-		/// </summary>
-		public const double MAGNITUDE2 = 1024D;
+		/*public static bool ToleranceEqual(double a, double b, double epsilon = double.Epsilon)
+		{
+			//https://stackoverflow.com/questions/4787125/evaluate-if-two-doubles-are-equal-based-on-a-given-precision-not-within-a-certa
+
+			var absA = Math.Abs(a);
+			var absB = Math.Abs(b);
+			var diff = Math.Abs(a - b);
+
+			if (a*b==0) {
+				return diff < (epsilon*epsilon);
+			}
+			else {
+				return diff / (absA + absB) < epsilon;
+			}
+		}*/
+
+		public static bool ToleranceEqual(double a, double b, double epsilon = double.Epsilon)
+		{
+			//https://stackoverflow.com/questions/4787125/evaluate-if-two-doubles-are-equal-based-on-a-given-precision-not-within-a-certa
+
+			return Math.Abs(a - b) <= epsilon;
+		}
 
 		public static int HighestOrderBit(int num)
 		{
+			// NOTE: redundant? Use BitOperations?
+
 			if (!(num > 0))
 				return 0;
 
@@ -49,7 +66,8 @@ namespace Kantan.Numeric
 		public static long[] SimplifyRadical(long insideRoot)
 		{
 			int outside_root = 1;
-			int d            = 2;
+
+			int d = 2;
 
 			while (d * d <= insideRoot) {
 				if (insideRoot % (d * d) == 0) {
@@ -57,11 +75,13 @@ namespace Kantan.Numeric
 					outside_root *= d;
 				}
 
-				else
+				else {
 					d++;
+				}
 			}
 
-			long[] radical = new long[2];
+			var radical = new long[2];
+
 			radical[0] = outside_root;
 			radical[1] = insideRoot;
 
@@ -84,6 +104,18 @@ namespace Kantan.Numeric
 		{
 			return (a / GCD(a, b)) * b;
 		}
+
+		#region Units
+
+		/// <summary>
+		/// SI
+		/// </summary>
+		public const double MAGNITUDE = 1000D;
+
+		/// <summary>
+		/// ISO/IEC 80000
+		/// </summary>
+		public const double MAGNITUDE2 = 1024D;
 
 		public static string GetSIUnit(double d, string format = null)
 		{
@@ -133,10 +165,8 @@ namespace Kantan.Numeric
 			// var rg  = new[] { "k","M","G","T","P","E","Z","Y"};
 			// var pow = rg.ToList().IndexOf(type) +1;
 
-
 			int    pow = (int) type;
 			double v   = bytes / Math.Pow(MAGNITUDE, pow);
-
 
 			return v;
 		}
@@ -146,6 +176,8 @@ namespace Kantan.Numeric
 		private static readonly char[] IncPrefixes = { 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y' };
 
 		private static readonly char[] DecPrefixes = { 'm', '\u03bc', 'n', 'p', 'f', 'a', 'z', 'y' };
+
+		#endregion
 
 		#region Generic math
 

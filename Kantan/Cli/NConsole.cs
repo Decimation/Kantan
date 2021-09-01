@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,7 +13,9 @@ using JetBrains.Annotations;
 using Kantan.Text;
 using Kantan.Threading;
 using Kantan.Utilities;
+using Microsoft.Win32.SafeHandles;
 using static Kantan.Internal.Common;
+using Console = System.Console;
 
 #pragma warning disable 8601
 
@@ -133,7 +137,7 @@ namespace Kantan.Cli
 			Console.Write(clear);
 			Write(msg);
 		}
-		
+
 		public static void ClearCurrentLine()
 		{
 			Console.SetCursorPosition(0, Console.CursorTop - 1);
@@ -180,7 +184,8 @@ namespace Kantan.Cli
 		public static string FormatString(string delim, string msg, bool repDelim = true)
 		{
 			string[] split = msg.Split(StringConstants.NativeNewLine);
-			bool     d1    = false;
+
+			bool d1 = false;
 
 			for (int i = 0; i < split.Length; i++) {
 				string a = StringConstants.SPACE + split[i];
@@ -271,6 +276,8 @@ namespace Kantan.Cli
 			return INVALID;
 		}
 
+		public static Dictionary<int, NConsoleOption> pos = new();
+
 		/// <summary>
 		///     Display dialog
 		/// </summary>
@@ -298,6 +305,9 @@ namespace Kantan.Cli
 				string s = FormatOption(option, i);
 
 				Write(false, s);
+
+				//todo
+				pos[Console.CursorTop - 1] = option;
 			}
 
 			Console.WriteLine();
@@ -367,6 +377,8 @@ namespace Kantan.Cli
 			ConsoleKeyInfo cki;
 
 			string? dragAndDropFile = null;
+
+			pos.Clear();
 
 			do {
 				DisplayDialog(dialog, selectedOptions);
@@ -634,5 +646,182 @@ namespace Kantan.Cli
 		 * https://github.com/sindresorhus/cli-spinners
 		 * https://www.npmjs.com/package/cli-spinners
 		 */
+
+		public static void Print(params object[] args)
+		{
+			Console.WriteLine(args.QuickJoin());
+		}
+	}
+
+	internal static class NativeMethods
+	{
+		public static void Start(CancellationTokenSource cts)
+		{
+			ThreadPool.QueueUserWorkItem(Run, cts.Token);
+
+		}
+
+		private static void Run(object o)
+		{
+			var handle = NativeMethods.GetStdHandle(NativeMethods.STD_INPUT_HANDLE);
+
+			int mode = 0;
+			if (!(NativeMethods.GetConsoleMode(handle, ref mode))) { throw new Win32Exception(); }
+
+			mode |= NativeMethods.ENABLE_MOUSE_INPUT;
+			mode &= ~NativeMethods.ENABLE_QUICK_EDIT_MODE;
+			mode |= NativeMethods.ENABLE_EXTENDED_FLAGS;
+
+			if (!(NativeMethods.SetConsoleMode(handle, mode))) { throw new Win32Exception(); }
+
+			var  record    = new NativeMethods.INPUT_RECORD();
+			uint recordLen = 0;
+			var  cts       = (CancellationToken) o;
+
+			while (!cts.IsCancellationRequested) {
+				if (!(NativeMethods.ReadConsoleInput(handle, ref record, 1, ref recordLen))) {
+					throw new Win32Exception();
+				}
+
+				Console.SetCursorPosition(0, 0);
+
+				switch (record.EventType) {
+					case NativeMethods.MOUSE_EVENT:
+					{
+						/*Console.WriteLine("Mouse event");
+
+						Console.WriteLine($"    X ...............:   {record.MouseEvent.dwMousePosition.X,4:0}  ");
+
+						Console.WriteLine($"    Y ...............:   {record.MouseEvent.dwMousePosition.Y,4:0}  ");
+
+						Console.WriteLine($"    dwButtonState ...: 0x{record.MouseEvent.dwButtonState:X4}  ");
+
+						Console.WriteLine($"    dwControlKeyState: 0x{record.MouseEvent.dwControlKeyState:X4}  ");
+
+						Console.WriteLine($"    dwEventFlags ....: 0x{record.MouseEvent.dwEventFlags:X4}  ");*/
+
+						if (NConsole.pos.ContainsKey(record.MouseEvent.dwMousePosition.Y) &&
+						    record.MouseEvent.dwButtonState == 0x1) {
+							var po = NConsole.pos[record.MouseEvent.dwMousePosition.Y];
+							po.Function();
+						}
+
+					}
+						break;
+
+					case NativeMethods.KEY_EVENT:
+					{
+						/*Console.WriteLine("Key event  ");
+						Console.WriteLine($"    bKeyDown  .......:  {record.KeyEvent.bKeyDown,5}  ");
+
+						Console.WriteLine($"    wRepeatCount ....:   {record.KeyEvent.wRepeatCount,4:0}  ");
+
+						Console.WriteLine($"    wVirtualKeyCode .:   {record.KeyEvent.wVirtualKeyCode,4:0}  ");
+
+						Console.WriteLine($"    uChar ...........:      {record.KeyEvent.UnicodeChar}  ");
+
+						Console.WriteLine($"    dwControlKeyState: 0x{record.KeyEvent.dwControlKeyState:X4}  ");*/
+
+						if (record.KeyEvent.wVirtualKeyCode == (int) ConsoleKey.Escape) { return; }
+					}
+						break;
+				}
+			}
+		}
+
+		public const Int32 STD_INPUT_HANDLE = -10;
+
+		public const Int32 ENABLE_MOUSE_INPUT     = 0x0010;
+		public const Int32 ENABLE_QUICK_EDIT_MODE = 0x0040;
+		public const Int32 ENABLE_EXTENDED_FLAGS  = 0x0080;
+
+		public const Int32 KEY_EVENT   = 1;
+		public const Int32 MOUSE_EVENT = 2;
+
+
+		[DebuggerDisplay("EventType: {EventType}")]
+		[StructLayout(LayoutKind.Explicit)]
+		internal struct INPUT_RECORD
+		{
+			[FieldOffset(0)]
+			public Int16 EventType;
+
+			[FieldOffset(4)]
+			public KEY_EVENT_RECORD KeyEvent;
+
+			[FieldOffset(4)]
+			public MOUSE_EVENT_RECORD MouseEvent;
+		}
+
+		[DebuggerDisplay("{dwMousePosition.X}, {dwMousePosition.Y}")]
+		internal struct MOUSE_EVENT_RECORD
+		{
+			public COORD dwMousePosition;
+			public Int32 dwButtonState;
+			public Int32 dwControlKeyState;
+			public Int32 dwEventFlags;
+		}
+
+		[DebuggerDisplay("{X}, {Y}")]
+		internal struct COORD
+		{
+			public UInt16 X;
+			public UInt16 Y;
+		}
+
+		[DebuggerDisplay("KeyCode: {wVirtualKeyCode}")]
+		[StructLayout(LayoutKind.Explicit)]
+		internal struct KEY_EVENT_RECORD
+		{
+			[FieldOffset(0)]
+			[MarshalAs(UnmanagedType.Bool)]
+			public Boolean bKeyDown;
+
+			[FieldOffset(4)]
+			public UInt16 wRepeatCount;
+
+			[FieldOffset(6)]
+			public UInt16 wVirtualKeyCode;
+
+			[FieldOffset(8)]
+			public UInt16 wVirtualScanCode;
+
+			[FieldOffset(10)]
+			public Char UnicodeChar;
+
+			[FieldOffset(10)]
+			public Byte AsciiChar;
+
+			[FieldOffset(12)]
+			public Int32 dwControlKeyState;
+		};
+
+
+		public class ConsoleHandle : SafeHandleMinusOneIsInvalid
+		{
+			public ConsoleHandle() : base(false) { }
+
+			protected override bool ReleaseHandle()
+			{
+				return true; //releasing console handle is not our business
+			}
+		}
+
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		internal static extern Boolean GetConsoleMode(ConsoleHandle hConsoleHandle, ref Int32 lpMode);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern ConsoleHandle GetStdHandle(Int32 nStdHandle);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		internal static extern Boolean ReadConsoleInput(ConsoleHandle hConsoleInput, ref INPUT_RECORD lpBuffer,
+		                                                UInt32 nLength, ref UInt32 lpNumberOfEventsRead);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		internal static extern Boolean SetConsoleMode(ConsoleHandle hConsoleHandle, Int32 dwMode);
 	}
 }

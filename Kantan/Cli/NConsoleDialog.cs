@@ -13,6 +13,11 @@ namespace Kantan.Cli
 {
 	public class NConsoleDialog
 	{
+		/// <summary>
+		/// The index of an <see cref="NConsoleOption"/> corresponds to its key, which, when pressed,
+		/// executes the <see cref="NConsoleOption.Function"/> with the appropriate modifiers
+		/// </summary>
+		/// <remarks><see cref="NConsole.MAX_DISPLAY_OPTIONS"/></remarks>
 		public IList<NConsoleOption> Options { get; init; }
 
 		public bool SelectMultiple { get; init; }
@@ -30,6 +35,9 @@ namespace Kantan.Cli
 		[CanBeNull]
 		public string Subtitle { get; set; }
 
+		/// <summary>
+		/// <c>F*</c> keys
+		/// </summary>
 		public Dictionary<ConsoleKey, Action> Functions { get; set; } = new()
 			{ };
 
