@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -178,16 +179,21 @@ namespace Kantan.Cli
 		///     Root formatting function.
 		/// </summary>
 		[StringFormatMethod(STRING_FORMAT_ARG)]
-		public static string FormatString(string delim, string msg, bool repDelim = true)
+		public static string FormatString(string? delim, string msg, bool repDelim = true)
 		{
 			string[] split = msg.Split(StringConstants.NativeNewLine);
 
 			bool d1 = false;
+			bool dx = delim is null;
 
 			for (int i = 0; i < split.Length; i++) {
 				string a = StringConstants.SPACE + split[i];
 
 				string b;
+
+				if (dx) {
+					delim = Strings.GetUnicodeBoxPipe(split.Length, i);
+				}
 
 				if (String.IsNullOrWhiteSpace(a)) {
 					b = String.Empty;
@@ -289,6 +295,7 @@ namespace Kantan.Cli
 			if (dialog.Subtitle != null) {
 
 				string subStr = FormatString(StringConstants.CHEVRON, dialog.Subtitle, false).AddColor(ColorOptions);
+				// string subStr = FormatString(null, dialog.Subtitle, true).AddColor(ColorOptions);
 
 				Write(true, subStr);
 				Console.WriteLine();
@@ -298,6 +305,8 @@ namespace Kantan.Cli
 
 			for (int i = 0; i < clamp; i++) {
 				NConsoleOption? option = dialog.Options[i];
+
+				//string delim = Strings.GetUnicodeBoxPipe(clamp, i);
 
 				string s = FormatOption(option, i);
 
@@ -377,10 +386,11 @@ namespace Kantan.Cli
 
 			NativeInput.Init();
 			OptionPositions.Clear();
-			
+
 			do {
 
 				DisplayDialog(dialog, selectedOptions);
+
 				var t = Task.Run<ConsoleKeyInfo?>(() =>
 				{
 					// Block until input is entered.
@@ -400,7 +410,7 @@ namespace Kantan.Cli
 							DisplayDialog(dialog, selectedOptions);
 							prevCount = currentCount;
 						}
-						
+
 						var inputRecord = NativeInput.Read();
 
 						if (!inputRecord.Equals(default) && inputRecord.EventType == NativeInput.MOUSE_EVENT &&

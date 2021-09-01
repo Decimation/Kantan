@@ -30,6 +30,10 @@ namespace Kantan.Text
 	/// <seealso cref="UnicodeRanges"/>
 	public static class Strings
 	{
+		private const string UpperLeftCorner = "\u250c";
+		private const string BottomLeft      = "\u2514";
+		private const string MidPipe         = "\u2502";
+
 		public static string Center(string str, int width)
 		{
 			//https://stackoverflow.com/questions/48621267/is-there-a-way-to-center-text-in-powershell
@@ -250,6 +254,17 @@ namespace Kantan.Text
 
 			string[] split = s.Split('\n');
 
+			// split[0]  = UpperLeftCorner + split[0];
+			// split[^1] = BottomLeft + split[^1];
+			//
+			// if (split.Length > 2) {
+			// 	for (int i = 1; i < split.Length-1; i++) {
+			// 		split[i] = MidPipe + split[i];
+			// 	}
+			//
+			// }
+			// indent = indent[1..];
+
 			string j = String.Join($"\n{indent}", split);
 
 			return indent + j;
@@ -374,5 +389,16 @@ namespace Kantan.Text
 
 		public static bool IsCharInRange(char c, UnicodeRange r) =>
 			c < (r.FirstCodePoint + r.Length) && c >= r.FirstCodePoint;
+
+		internal static string GetUnicodeBoxPipe(int l, int i)
+		{
+			var delim = i switch
+			{
+				0                  => UpperLeftCorner,
+				> 0 when i < l - 1 => MidPipe,
+				_                  => BottomLeft
+			};
+			return delim;
+		}
 	}
 }

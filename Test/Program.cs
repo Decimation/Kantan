@@ -33,51 +33,26 @@ namespace Test
 	{
 		private static async Task Main(string[] args)
 		{
-			var dialog = new NConsoleDialog()
-			{
-				Subtitle = "a\nb\nc",
-				Functions = new()
-				{
-					[ConsoleKey.F1] = () =>
-					{
-						Console.WriteLine("g");
+			Console.OutputEncoding = CodePagesEncodingProvider.Instance.GetEncoding(437);
 
-					},
-				},
-				SelectMultiple = true,
-				Options = NConsoleOption.FromArray(new int[]{1,2,3})
-			};
+			Console.WriteLine("\u250c\n\u2502");
 
+			await ConsoleTest();
 
-			var v   =dialog.ReadAsync();
-			
-			await v;
-
-
-			var dialog2 = new NConsoleDialog()
-			{
-				Subtitle = "a\nb\nc",
-				Functions = new()
-				{
-					[ConsoleKey.F1] = () =>
-					{
-						Console.WriteLine("g");
-
-					},
-				},
-				SelectMultiple = true,
-				Options        = NConsoleOption.FromArray(new int[] { 1, 2, 3 })
-			};
-
-			var v2=dialog2.ReadAsync();
-			await v2;
-
-			
 
 		}
 
-		
 
+		class MyClass:IOutline
+		{
+			/// <inheritdoc />
+			public Dictionary<string, object> Outline => new Dictionary<string, object>()
+			{
+				["a"] = "g",
+				["x"] = "d",
+
+			};
+		}
 		private static async Task ConsoleTest()
 		{
 			var dialog = new NConsoleDialog()
@@ -91,9 +66,10 @@ namespace Test
 
 					},
 				},
+				
 				Options = NConsoleOption.FromArray(new[] { 1, 2, 3 }).ToList()
 			};
-
+			dialog.Options[0].Data = new MyClass();
 			dialog.Options[0].Functions[ConsoleModifiers.Shift] = () =>
 			{
 				Console.WriteLine("butt");
