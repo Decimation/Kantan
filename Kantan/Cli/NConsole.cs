@@ -377,10 +377,10 @@ namespace Kantan.Cli
 
 			NativeInput.Init();
 			OptionPositions.Clear();
-
+			
 			do {
-				DisplayDialog(dialog, selectedOptions);
 
+				DisplayDialog(dialog, selectedOptions);
 				var t = Task.Run<ConsoleKeyInfo?>(() =>
 				{
 					// Block until input is entered.
@@ -397,17 +397,16 @@ namespace Kantan.Cli
 						int currentCount = dialog.Options.Count;
 
 						if (refresh || prevCount != currentCount) {
-
 							DisplayDialog(dialog, selectedOptions);
 							prevCount = currentCount;
 						}
-
+						
 						var inputRecord = NativeInput.Read();
 
 						if (!inputRecord.Equals(default) && inputRecord.EventType == NativeInput.MOUSE_EVENT &&
 						    inputRecord.MouseEvent.dwButtonState == 0x1) {
 
-							Debug.WriteLine("click");
+							// Debug.WriteLine("click");
 
 							var y = inputRecord.MouseEvent.dwMousePosition.Y;
 
@@ -516,6 +515,7 @@ namespace Kantan.Cli
 						}
 					}
 				}
+
 			} while (cki.Key != NC_GLOBAL_EXIT_KEY);
 
 			return selectedOptions;
