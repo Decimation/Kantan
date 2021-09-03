@@ -12,6 +12,7 @@ using JetBrains.Annotations;
 using Kantan.Model;
 using static Kantan.Internal.Common;
 using static Kantan.Text.StringConstants;
+
 // ReSharper disable InconsistentNaming
 
 #pragma warning disable 8509
@@ -342,11 +343,11 @@ namespace Kantan.Text
 		#endregion
 
 		#region Join
-		
+
 		public static string FormatJoin<T>(this IEnumerable<T> values, string format, IFormatProvider provider = null,
 		                                   string delim = JOIN_COMMA) where T : IFormattable
 		{
-			
+
 			return values.Select(v => v.ToString(format, provider)).QuickJoin(delim);
 		}
 
@@ -395,19 +396,34 @@ namespace Kantan.Text
 
 		internal static string GetUnicodeBoxPipe(IList<string> l, int i)
 		{
-			
 			string delim;
-			
 
+			if (i == 0 && l.Count == 2) {
+				delim = StringConstants.Horizontal;
+				return delim;
+			}
 
-			//string.IsNullOrWhiteSpace(l[i]) ||l[i].All(c =>  (c == '\n') || (char.IsControl(c)))
-			//l.Skip(i).All(c=>string.IsNullOrWhiteSpace(c)||c.All(x=>char.IsControl(x)||x=='\n'))
-
-			if (l.Skip(i+1).All(c=>string.IsNullOrWhiteSpace(c))) {
+			if (l.Skip(i + 1).All(c => string.IsNullOrWhiteSpace(c))) {
 				return BottomLeftCorner;
 			}
 
-			if (l is { Count: 1 }) {
+			delim = l switch
+			{
+				{ Count: 1 } => Horizontal,
+				{ Count: 2 } => i switch
+				{
+					0 => UpperLeftCorner,
+					1 => BottomLeftCorner,
+				},
+				_ => i switch
+				{
+					0   => UpperLeftCorner,
+					> 0 => Vertical,
+					_   => BottomLeftCorner,
+				}
+			};
+
+			/*if (l is { Count: 1 }) {
 				delim = Horizontal;
 			}
 
@@ -420,7 +436,6 @@ namespace Kantan.Text
 			}
 
 			else {
-				
 
 				delim = i switch
 				{
@@ -428,7 +443,8 @@ namespace Kantan.Text
 					> 0 => Vertical,
 					_   => BottomLeftCorner,
 				};
-			}
+			}*/
+
 			ret:
 			return delim;
 		}

@@ -205,18 +205,16 @@ namespace Kantan.Cli
 			string[] split = msg.Split(StringConstants.NativeNewLine);
 
 			bool d1 = false;
-			bool dx = delim is null;
+			bool useBox = delim is null;
 
 			for (int i = 0; i < split.Length; i++) {
 				string a = StringConstants.SPACE + split[i];
 
 				string b;
 
-				if (dx) {
-					if (i == 0 && split.Length == 2) {
-						delim = StringConstants.Horizontal;
-					}
-					else delim = Strings.GetUnicodeBoxPipe(split, i);
+				if (useBox) {
+					
+					delim = Strings.GetUnicodeBoxPipe(split, i);
 				}
 
 				if (String.IsNullOrWhiteSpace(a)) {
