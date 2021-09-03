@@ -13,13 +13,11 @@ using Kantan.Model;
 
 // ReSharper disable UnusedMember.Global
 
-
 #pragma warning disable CS8618, CS8602
 
 namespace Kantan.Cli
 {
 	public delegate object? NConsoleFunction();
-
 
 	/// <summary>
 	///     Represents an interactive console/shell option
@@ -31,7 +29,6 @@ namespace Kantan.Cli
 		public const ConsoleModifiers NC_FN_CTRL  = ConsoleModifiers.Control;
 		public const ConsoleModifiers NC_FN_SHIFT = ConsoleModifiers.Shift;
 		public const ConsoleModifiers NC_FN_COMBO = NC_FN_CTRL | NC_FN_ALT;
-
 
 		/// <summary>
 		///     Display name
@@ -64,9 +61,6 @@ namespace Kantan.Cli
 		};
 
 		#region From
-
-		
-
 
 		public static NConsoleOption[] FromArray<T>(T[] values) => FromArray(values, arg => arg.ToString());
 

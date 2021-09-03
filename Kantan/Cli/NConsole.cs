@@ -15,6 +15,9 @@ using Kantan.Threading;
 using Kantan.Utilities;
 using static Kantan.Internal.Common;
 
+// ReSharper disable SwitchStatementHandlesSomeKnownEnumValuesWithDefault
+// ReSharper disable SuggestVarOrType_SimpleTypes
+
 // ReSharper disable SuggestVarOrType_Elsewhere
 
 #pragma warning disable 8601
@@ -109,6 +112,11 @@ namespace Kantan.Cli
 
 		#region Write
 
+		public static void Print(params object[] args)
+		{
+			Console.WriteLine(args.QuickJoin());
+		}
+
 		/// <summary>
 		///     Root write method.
 		/// </summary>
@@ -128,6 +136,7 @@ namespace Kantan.Cli
 		[StringFormatMethod(STRING_FORMAT_ARG)]
 		public static void Write(string msg, params object[] args) => Write(true, msg, args);
 
+
 		[StringFormatMethod(STRING_FORMAT_ARG)]
 		public static void WriteOnCurrentLine(string msg, params object[] args)
 		{
@@ -143,20 +152,20 @@ namespace Kantan.Cli
 			Console.Write("\r" + new string(' ', Console.WindowWidth - 1) + "\r");
 		}
 
-		public static void OverwriteLine(string s, int newTop)
+		public static void WriteOnLine(string s, int newTop)
 		{
 			(int left, int top) = Console.GetCursorPosition();
 			ClearLine(newTop);
 			Console.WriteLine(s);
 			Console.SetCursorPosition(left, top);
-
 		}
+
 		public static void ClearLine(int newTop)
 		{
 			(int left, int top) = Console.GetCursorPosition();
 			Console.SetCursorPosition(0, newTop);
 			Console.Write(new string(' ', Console.BufferWidth));
-			Console.SetCursorPosition(left,top);
+			Console.SetCursorPosition(left, top);
 
 		}
 
@@ -181,21 +190,6 @@ namespace Kantan.Cli
 		#endregion
 
 		#region IO
-
-		#region Keys
-
-		/// <summary>
-		///     Exits <see cref="ReadInput" />
-		/// </summary>
-		public const ConsoleKey NC_GLOBAL_EXIT_KEY = ConsoleKey.Escape;
-
-		/// <summary>
-		///     <see cref="Refresh" />
-		/// </summary>
-		public const ConsoleKey NC_GLOBAL_REFRESH_KEY = ConsoleKey.F5;
-
-		#endregion Keys
-
 
 		#region Display/formatting
 
@@ -258,8 +252,8 @@ namespace Kantan.Cli
 			if (option.Color.HasValue) {
 				name = name.AddColor(option.Color.Value);
 			}
-			if (option.ColorBG.HasValue)
-			{
+
+			if (option.ColorBG.HasValue) {
 				name = name.AddColorBG(option.ColorBG.Value);
 			}
 
@@ -366,7 +360,7 @@ namespace Kantan.Cli
 				Console.WriteLine();
 
 				string optionsStr = $"{StringConstants.CHEVRON} {output.Output.QuickJoin()}"
-						.AddColor(ColorOptions);
+					.AddColor(ColorOptions);
 
 				Write(true, optionsStr);
 
@@ -377,23 +371,6 @@ namespace Kantan.Cli
 		}
 
 		#endregion
-
-		/// <summary>
-		///     Handles user input and options
-		/// </summary>
-		/// <remarks>Returns when:
-		/// <list type="number">
-		/// <item><description><see cref="NConsoleOption.Function" /> returns a non-<c>null</c> value</description></item>
-		/// <item><description>A file path is dragged-and-dropped</description></item>
-		/// <item><description><see cref="NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
-		/// </list>
-		/// </remarks>
-		public static ConsoleOutputResult ReadInput(NConsoleDialog dialog)
-		{
-			var task = ReadInputAsync(dialog);
-			task.Wait();
-			return task.Result;
-		}
 
 		/// <summary>
 		///     Handles user input and options
@@ -444,7 +421,7 @@ namespace Kantan.Cli
 						}
 					}
 
-					var ir = ConsoleInterop.ReadInput();
+					InputRecord ir = ConsoleInterop.ReadInput();
 
 					ConsoleKeyInfo cki2;
 
@@ -459,7 +436,7 @@ namespace Kantan.Cli
 
 							if (!String.IsNullOrWhiteSpace(dragAndDropFile)) {
 
-								Debug.WriteLine($">> {dragAndDropFile}");
+								//Debug.WriteLine($">> {dragAndDropFile}");
 								output.DragAndDrop = dragAndDropFile;
 								return;
 							}
@@ -478,8 +455,8 @@ namespace Kantan.Cli
 
 								// note: KeyChar argument is slightly inaccurate
 								cki2 = ConsoleInterop.GetKeyInfo(c, c, me.dwControlKeyState);
-								
-								
+
+
 								// Highlight clicked option
 								/*option.Color   = Color.Black;
 								option.ColorBG = Color.Yellow;
@@ -521,7 +498,7 @@ namespace Kantan.Cli
 					throw new InvalidOperationException();
 				}
 
-				Debug.WriteLine($"{cki.Key} {cki.KeyChar} | {(int) cki.Key} {(int) cki.KeyChar}");
+				//Debug.WriteLine($"{cki.Key} {cki.KeyChar} | {(int) cki.Key} {(int) cki.KeyChar}");
 
 
 				// Handle special keys
@@ -577,10 +554,27 @@ namespace Kantan.Cli
 				}
 
 			} while (cki.Key != NC_GLOBAL_EXIT_KEY);
-			
+
 
 			ret:
 			return output;
+		}
+
+		/// <summary>
+		///     Handles user input and options
+		/// </summary>
+		/// <remarks>Returns when:
+		/// <list type="number">
+		/// <item><description><see cref="NConsoleOption.Function" /> returns a non-<c>null</c> value</description></item>
+		/// <item><description>A file path is dragged-and-dropped</description></item>
+		/// <item><description><see cref="NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
+		/// </list>
+		/// </remarks>
+		public static ConsoleOutputResult ReadInput(NConsoleDialog dialog)
+		{
+			var task = ReadInputAsync(dialog);
+			task.Wait();
+			return task.Result;
 		}
 
 
@@ -644,17 +638,6 @@ namespace Kantan.Cli
 
 		public static void Refresh() => AtomicHelper.Exchange(ref Status, ConsoleStatus.Refresh);
 
-		public static void WaitForInput()
-		{
-			Console.WriteLine();
-			Console.WriteLine("Press any key to continue...");
-			Console.ReadKey();
-		}
-
-		public static void WaitForTimeSpan(TimeSpan span) => Thread.Sleep(span);
-
-		public static void WaitForSecond() => WaitForTimeSpan(PauseTime);
-
 		/// <summary>
 		///     Determines whether the console buffer contains a file directory that was
 		///     input via drag-and-drop.
@@ -699,6 +682,35 @@ namespace Kantan.Cli
 			return sb.ToString().Trim(quote);
 		}
 
+		#region Keys
+
+		/// <summary>
+		///     Exits <see cref="ReadInput" />
+		/// </summary>
+		public const ConsoleKey NC_GLOBAL_EXIT_KEY = ConsoleKey.Escape;
+
+		/// <summary>
+		///     <see cref="Refresh" />
+		/// </summary>
+		public const ConsoleKey NC_GLOBAL_REFRESH_KEY = ConsoleKey.F5;
+
+		#endregion Keys
+
+		#region Wait
+
+		public static void WaitForInput()
+		{
+			Console.WriteLine();
+			Console.WriteLine("Press any key to continue...");
+			Console.ReadKey();
+		}
+
+		public static void WaitForTimeSpan(TimeSpan span) => Thread.Sleep(span);
+
+		public static void WaitForSecond() => WaitForTimeSpan(PauseTime);
+
+		#endregion
+
 		#region Status
 
 		/// <summary>
@@ -742,11 +754,6 @@ namespace Kantan.Cli
 		 * https://github.com/sindresorhus/cli-spinners
 		 * https://www.npmjs.com/package/cli-spinners
 		 */
-
-		public static void Print(params object[] args)
-		{
-			Console.WriteLine(args.QuickJoin());
-		}
 	}
 
 	public class ConsoleOutputResult

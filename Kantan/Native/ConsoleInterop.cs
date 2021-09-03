@@ -17,6 +17,12 @@ namespace Kantan.Native
 
 		private static IntPtr _stdOut;
 
+		// Note: some code comes from:
+		// .NET BCL
+		// http://mischel.com/pubs/consoledotnet/consoledotnet.zip,
+		// https://www.medo64.com/2013/05/console-mouse-input-in-c/
+
+
 		/// <summary>
 		/// Reads characters from the screen buffer, starting at the given position.
 		/// </summary>
@@ -29,9 +35,8 @@ namespace Kantan.Native
 			char[] buff      = new char[nChars];
 			int    charsRead = 0;
 
-			if (!ReadConsoleOutputCharacter(_stdOut, buff, nChars,
-			                                new Coord((ushort) x, (ushort) y), ref charsRead)) {
-				throw new System.IO.IOException("Read error", Marshal.GetLastWin32Error());
+			if (!ReadConsoleOutputCharacter(_stdOut, buff, nChars, new Coord((ushort) x, (ushort) y), ref charsRead)) {
+				throw new Win32Exception();
 			}
 
 			return new string(buff, 0, charsRead);
@@ -44,8 +49,8 @@ namespace Kantan.Native
 
 		private static bool IsMouseEvent(InputRecord ir)
 		{
-			return ir.EventType == ConsoleEventType.MOUSE_EVENT && ir.MouseEvent.dwButtonState == 0x1 /*&&
-			       ir.MouseEvent.dwEventFlags != 0x0008 && ir.MouseEvent.dwEventFlags != 0x0004*/;
+			return ir.EventType == ConsoleEventType.MOUSE_EVENT &&
+			       ir.MouseEvent.dwButtonState == ButtonState.FROM_LEFT_1ST_BUTTON_PRESSED;
 		}
 
 		private static bool IsModKey(InputRecord ir)
@@ -57,8 +62,6 @@ namespace Kantan.Native
 
 			return keyCode is >= 0x10 and <= 0x12 or 0x14 or 0x90 or 0x91;
 		}
-
-		private const short AltVKCode = 0x12;
 
 		public static ConsoleKeyInfo GetKeyInfoFromRecord(InputRecord ir)
 		{
@@ -88,8 +91,9 @@ namespace Kantan.Native
 
 				if (ch == 0) {
 					// Skip mod keys.
-					if (IsModKey(ir))
+					if (IsModKey(ir)) {
 						continue;
+					}
 				}
 
 				// When Alt is down, it is possible that we are in the middle of a Alt+NumPad unicode sequence.
@@ -109,7 +113,7 @@ namespace Kantan.Native
 				break;
 			}
 
-			var state = (ControlKeyState) ir.KeyEvent.dwControlKeyState;
+			var state = ir.KeyEvent.dwControlKeyState;
 
 			return GetKeyInfo(ir.KeyEvent.UnicodeChar, ir.KeyEvent.wVirtualKeyCode, state);
 
@@ -133,7 +137,7 @@ namespace Kantan.Native
 			// We need to keep track of the Alt+NumPad sequence and surface the final
 			// unicode char alone when the Alt key is released.
 
-			return (((ControlKeyState) ir.KeyEvent.dwControlKeyState) &
+			return (ir.KeyEvent.dwControlKeyState &
 			        (ControlKeyState.LeftAltPressed | ControlKeyState.RightAltPressed)) != 0;
 		}
 
@@ -237,13 +241,26 @@ namespace Kantan.Native
 		[DllImport(KERNEL32_DLL, SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		internal static extern bool ReadConsoleOutputCharacter(IntPtr hConsoleOutput,
-		                                                       [Out] [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 2)]
+		                                                       [Out]
+		                                                       [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 2)]
 		                                                       char[] lpCharacter, int nLength, Coord dwReadCoord,
 		                                                       ref int lpNumberOfCharsRead);
 
+		private const short AltVKCode = 0x12;
 
 		private const string KERNEL32_DLL = "kernel32.dll";
 	}
+
+
+	internal enum ButtonState
+	{
+		FROM_LEFT_1ST_BUTTON_PRESSED = 0x0001,
+		FROM_LEFT_2ND_BUTTON_PRESSED = 0x0004,
+		FROM_LEFT_3RD_BUTTON_PRESSED = 0x0008,
+		FROM_LEFT_4TH_BUTTON_PRESSED = 0x0010,
+		RIGHTMOST_BUTTON_PRESSED     = 0x0002,
+	}
+
 
 	internal enum StandardHandle : int
 	{
@@ -311,8 +328,11 @@ namespace Kantan.Native
 
 	internal enum ConsoleEventType : short
 	{
-		KEY_EVENT   = 1,
-		MOUSE_EVENT = 2
+		FOCUS_EVENT              = 0x0010,
+		KEY_EVENT                = 0x0001,
+		MENU_EVENT               = 0x0008,
+		MOUSE_EVENT              = 0x0002,
+		WINDOW_BUFFER_SIZE_EVENT = 0x0004,
 	}
 
 	[DebuggerDisplay("{X}, {Y}")]
@@ -365,7 +385,7 @@ namespace Kantan.Native
 		public byte AsciiChar;
 
 		[FieldOffset(12)]
-		public int dwControlKeyState;
+		public ControlKeyState dwControlKeyState;
 
 		/// <inheritdoc />
 		public override string ToString()
@@ -380,13 +400,22 @@ namespace Kantan.Native
 		}
 	};
 
+
+	internal enum EventFlags
+	{
+		DOUBLE_CLICK   = 0x0002,
+		MOUSE_HWHEELED = 0x0008,
+		MOUSE_MOVED    = 0x0001,
+		MOUSE_WHEELED  = 0x0004,
+	}
+
 	[DebuggerDisplay("{dwMousePosition.X}, {dwMousePosition.Y}")]
 	internal struct MouseEventRecord
 	{
 		public Coord           dwMousePosition;
-		public int             dwButtonState;
+		public ButtonState     dwButtonState;
 		public ControlKeyState dwControlKeyState;
-		public int             dwEventFlags;
+		public EventFlags      dwEventFlags;
 
 		/// <inheritdoc />
 		public override string ToString()
