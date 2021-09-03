@@ -133,7 +133,7 @@ namespace Kantan.Cli
 				Console.Write(fmt);
 			}
 		}
-		
+
 		[StringFormatMethod(STRING_FORMAT_ARG)]
 		public static void Write(string msg, params object[] args) => Write(true, msg, args);
 
@@ -387,7 +387,11 @@ namespace Kantan.Cli
 			}
 			// Console.Write(sb);
 		}
-		//todo: atomic write operations (i.e., instead of incremental)
+
+		// todo: atomic write operations (i.e., instead of incremental)
+
+		// todo: fix scrolling
+
 		#endregion
 
 		/// <summary>
@@ -508,7 +512,6 @@ namespace Kantan.Cli
 				// File path was input via drag-and-drop
 				if (output.DragAndDrop != null) {
 					goto ret;
-
 				}
 
 				if (output.Key.HasValue) {
@@ -518,7 +521,8 @@ namespace Kantan.Cli
 					throw new InvalidOperationException();
 				}
 
-				Debug.WriteLine($"{cki.Key} {cki.KeyChar} | {(int) cki.Key} {(int) cki.KeyChar}");
+				Debug.WriteLine($"{nameof(NConsole)}: ({cki.Key} {(int) cki.Key}) " +
+				                $"| ({cki.KeyChar} {(int) cki.KeyChar})");
 
 
 				// Handle special keys

@@ -20,6 +20,8 @@ namespace Kantan.Native
 		 * http://mischel.com/pubs/consoledotnet/consoledotnet.zip,
 		 * https://www.medo64.com/2013/05/console-mouse-input-in-c/
 		 */
+
+
 		[DllImport(KERNEL32_DLL, SetLastError = true)]
 		internal static extern int GetConsoleOutputCP();
 
@@ -57,12 +59,35 @@ namespace Kantan.Native
 		internal static extern bool ReadConsoleOutputCharacter(IntPtr hConsoleOutput,
 		                                                       [Out]
 		                                                       [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 2)]
-		                                                       char[] lpCharacter, int nLength, Coord dwReadCoord,
+		                                                       char[] lpCharacter,
+		                                                       int nLength, Coord dwReadCoord,
 		                                                       ref int lpNumberOfCharsRead);
+
+		[DllImport(KERNEL32_DLL, SetLastError = true)]
+		internal static extern bool SetConsoleWindowInfo(IntPtr hConsoleOutput, bool bAbsolute,
+		                                                 [In] [MarshalAs(UnmanagedType.LPStruct)]
+		                                                 SmallRect lpConsoleWindow);
+
+		[DllImport(KERNEL32_DLL, SetLastError = true)]
+		internal static extern bool GetConsoleScreenBufferInfo(IntPtr hConsoleOutput,
+		                                                       [In, Out] [MarshalAs(UnmanagedType.LPStruct)]
+		                                                       ConsoleScreenBufferInfo lpConsoleScreenBufferInfo);
+
+		[DllImport(KERNEL32_DLL, SetLastError = true)]
+		internal static extern bool GetConsoleSelectionInfo(
+			[In, Out] [MarshalAs(UnmanagedType.LPStruct)]
+			ConsoleSelectionInfo lpConsoleSelectionInfo);
+
+		[DllImport(KERNEL32_DLL, SetLastError = true)]
+		internal static extern bool ScrollConsoleScreenBuffer(IntPtr hConsoleOutput,
+		                                                      [In] [MarshalAs(UnmanagedType.LPStruct)]
+		                                                      SmallRect lpScrollRectangle,
+		                                                      [In] [MarshalAs(UnmanagedType.LPStruct)]
+		                                                      SmallRect lpClipRectangle, Coord dwDestinationOrigin,
+		                                                      ref ConsoleCharInfo lpFill);
 
 		private const string KERNEL32_DLL = "kernel32.dll";
 	}
-
 
 	#region Enums
 

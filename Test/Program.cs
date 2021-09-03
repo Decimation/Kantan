@@ -19,6 +19,7 @@ using Kantan.Diagnostics;
 using Kantan.Internal;
 using Kantan.Model;
 using Kantan.Native;
+using Kantan.Native.Structures;
 using Kantan.Net;
 using Kantan.Numeric;
 using Kantan.Text;
@@ -39,14 +40,21 @@ namespace Test
 		private static async Task Main(string[] args)
 		{
 
-			var s = new string('-', Console.BufferWidth)+'\n'+'\n';
+			/*var s = new string('-', Console.BufferWidth)+'\n'+'\n';
 			int    f = Strings.MeasureRows(s);
 			Console.WriteLine(s);
-			Console.WriteLine(f);
+			Console.WriteLine(f);*/
+
+			for (int i = 0; i <=50; i++) {
+				Console.WriteLine(i);
+			}
+
 			await ConsoleTest();
-
-
+			//ConsoleInterop.Init();
+			
 		}
+
+		
 
 
 		class MyClass : IOutline

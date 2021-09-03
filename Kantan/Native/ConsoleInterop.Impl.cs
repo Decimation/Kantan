@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using Kantan.Native.Structures;
+// ReSharper disable IdentifierTypo
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable InconsistentNaming
@@ -9,9 +10,9 @@ namespace Kantan.Native
 {
 	internal static partial class ConsoleInterop
 	{
-		private static IntPtr       _stdIn;
-		private static ConsoleModes _oldMode;
-		private static IntPtr       _stdOut;
+		internal static IntPtr       _stdIn;
+		private static  ConsoleModes _oldMode;
+		internal static IntPtr       _stdOut;
 
 		/// <summary>
 		/// Reads characters from the screen buffer, starting at the given position.
@@ -34,13 +35,18 @@ namespace Kantan.Native
 
 		private static bool IsKeyDownEvent(InputRecord ir)
 		{
-			return ir.EventType == ConsoleEventType.KEY_EVENT && ir.KeyEvent.bKeyDown != BOOL.FALSE;
+			var keyEvent = ir.KeyEvent;
+			return ir.EventType == ConsoleEventType.KEY_EVENT && keyEvent.bKeyDown != BOOL.FALSE;
 		}
 
 		private static bool IsMouseEvent(InputRecord ir)
 		{
+			var mouseEvent = ir.MouseEvent;
+
 			return ir.EventType == ConsoleEventType.MOUSE_EVENT &&
-			       ir.MouseEvent.dwButtonState == ButtonState.FROM_LEFT_1ST_BUTTON_PRESSED;
+			       mouseEvent.dwEventFlags != EventFlags.MOUSE_MOVED &&
+			       mouseEvent.dwEventFlags != EventFlags.MOUSE_WHEELED &&
+			       mouseEvent.dwEventFlags != EventFlags.MOUSE_HWHEELED;
 		}
 
 		private static bool IsModKey(InputRecord ir)
@@ -50,7 +56,7 @@ namespace Kantan.Native
 			// Left Control & Right Control. See the ConsoleKey enum for these values.
 			var keyCode = (VirtualKey) ir.KeyEvent.wVirtualKeyCode;
 
-			return keyCode is >= VirtualKey.SHIFT and <= VirtualKey.MENU or VirtualKey.CAPITAL 
+			return keyCode is >= VirtualKey.SHIFT and <= VirtualKey.MENU or VirtualKey.CAPITAL
 				       or VirtualKey.NUMLOCK or VirtualKey.SCROLL;
 		}
 
@@ -60,7 +66,7 @@ namespace Kantan.Native
 			// We did NOT have a previous keystroke with repeated characters:
 			while (true) {
 
-				var keyCode =(VirtualKey) ir.KeyEvent.wVirtualKeyCode;
+				var keyCode = (VirtualKey) ir.KeyEvent.wVirtualKeyCode;
 
 				// First check for non-keyboard events & discard them. Generally we tap into only KeyDown events and ignore the KeyUp events
 				// but it is possible that we are dealing with a Alt+NumPad unicode key sequence, the final unicode char is revealed only when
@@ -142,6 +148,8 @@ namespace Kantan.Native
 						throw new Win32Exception();
 					}
 
+					//Debug.WriteLine(ir);
+
 					if (numEventsRead == 0) {
 						return false;
 					}
@@ -200,6 +208,32 @@ namespace Kantan.Native
 
 			if (!SetConsoleMode(_stdIn, mode)) {
 				throw new Win32Exception();
+			}
+		}
+
+		internal static void ScrollRelative(int iRows)
+		{
+			var csbiInfo   = new ConsoleScreenBufferInfo();
+			var srctWindow = new SmallRect(0, 0, 0, 0);
+
+			// Get the current screen buffer window position.
+
+			if (!GetConsoleScreenBufferInfo(_stdOut, csbiInfo)) {
+				throw new Win32Exception();
+			}
+
+			// Check whether the window is too close to the screen buffer top
+
+			if (csbiInfo.srWindow.Top >= iRows) {
+				srctWindow.Top    = (short) -iRows; // move top up
+				srctWindow.Bottom = (short) -iRows; // move bottom up
+				srctWindow.Left   = 0;              // no change
+				srctWindow.Right  = 0;              // no change
+
+				if (!SetConsoleWindowInfo(_stdOut, false, srctWindow)) {
+					throw new Win32Exception();
+				}
+
 			}
 		}
 	}
