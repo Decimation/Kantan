@@ -99,6 +99,19 @@ namespace Kantan.Text
 			}
 
 			return (int) n;
+			/*int l = s.Length;
+			int c = 1;
+			while (--l>0) {
+				if (s[l]=='\n') {
+					c++;
+				}
+				else if (l % bufferWidth == 0) {
+					c++;
+				}
+				
+			}
+
+			return c;*/
 		}
 
 		public static bool StringWraps(string s)
@@ -403,7 +416,7 @@ namespace Kantan.Text
 				return delim;
 			}
 
-			if (l.Skip(i + 1).All(c => string.IsNullOrWhiteSpace(c))) {
+			if (l.Skip(i + 1).All(string.IsNullOrWhiteSpace)) {
 				return BottomLeftCorner;
 			}
 
@@ -422,30 +435,7 @@ namespace Kantan.Text
 					_   => BottomLeftCorner,
 				}
 			};
-
-			/*if (l is { Count: 1 }) {
-				delim = Horizontal;
-			}
-
-			else if (l is { Count: 2 }) {
-				delim = i switch
-				{
-					0 => UpperLeftCorner,
-					1 => BottomLeftCorner,
-				};
-			}
-
-			else {
-
-				delim = i switch
-				{
-					0   => UpperLeftCorner,
-					> 0 => Vertical,
-					_   => BottomLeftCorner,
-				};
-			}*/
-
-			ret:
+			
 			return delim;
 		}
 	}

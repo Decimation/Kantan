@@ -38,40 +38,11 @@ namespace Test
 	{
 		private static async Task Main(string[] args)
 		{
-			//Console.OutputEncoding = CodePagesEncodingProvider.Instance.GetEncoding(437);
-			Console.WriteLine(Encoding.Default.CodePage);
-			Console.WriteLine(Console.OutputEncoding.CodePage);
-			Console.WriteLine(ConsoleInterop.GetConsoleOutputCP());
 
-			Console.OutputEncoding = Encoding.Unicode;
-			Console.WriteLine(Console.OutputEncoding.CodePage);
-			Console.WriteLine(ConsoleInterop.GetConsoleOutputCP());
-			
-			/*Console.WriteLine(Console.OutputEncoding.CodePage);
-
-			var b        = Encoding.Unicode.GetBytes(StringConstants.CHECK_MARK.ToString());
-			var encoding = CodePagesEncodingProvider.Instance.GetEncoding(437);
-			var s        = Encoding.Convert(Encoding.Unicode, encoding, b);
-			var str      = encoding.GetString(s);
-
-			Console.WriteLine(str);
-			Console.WriteLine(Strings.EncodingConvert(Encoding.Unicode, encoding, StringConstants.CHECK_MARK.ToString()));
-			*/
-			Console.WriteLine(StringConstants.CHECK_MARK);
-			Console.WriteLine(Strings.EncodingConvert(Encoding.Unicode, CodePagesEncodingProvider.Instance.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage), StringConstants.CHECK_MARK.ToString()));
-			Console.WriteLine();
-			NConsole.WaitForInput();
-
-			/*NativeInput.Init();
-
-			while (!NativeInput.KeyAvailable) {
-				
-			}
-
-			var r=NativeInput.Read();
-
-			Console.WriteLine(r);*/
-
+			var s = new string('-', Console.BufferWidth)+'\n'+'\n';
+			int    f = Strings.MeasureRows(s);
+			Console.WriteLine(s);
+			Console.WriteLine(f);
 			await ConsoleTest();
 
 

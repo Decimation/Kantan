@@ -133,7 +133,7 @@ namespace Kantan.Cli
 				Console.Write(fmt);
 			}
 		}
-
+		
 		[StringFormatMethod(STRING_FORMAT_ARG)]
 		public static void Write(string msg, params object[] args) => Write(true, msg, args);
 
@@ -204,7 +204,7 @@ namespace Kantan.Cli
 
 			string[] split = msg.Split(StringConstants.NativeNewLine);
 
-			bool d1 = false;
+			bool d1     = false;
 			bool useBox = delim is null;
 
 			for (int i = 0; i < split.Length; i++) {
@@ -213,7 +213,7 @@ namespace Kantan.Cli
 				string b;
 
 				if (useBox) {
-					
+
 					delim = Strings.GetUnicodeBoxPipe(split, i);
 				}
 
@@ -314,8 +314,11 @@ namespace Kantan.Cli
 		{
 			Console.Clear();
 
+			// Console.SetCursorPosition(0,0);
+			// var sb = new StringBuilder();
 			if (dialog.Header != null) {
 				Write(false, dialog.Header.AddColor(ColorHeader));
+				// sb.Append(dialog.Header.AddColor(ColorHeader));
 			}
 
 			if (dialog.Subtitle != null) {
@@ -325,6 +328,7 @@ namespace Kantan.Cli
 
 				Write(true, subStr);
 				Console.WriteLine();
+				// sb.AppendLine(subStr).AppendLine();
 			}
 
 			int clamp = Math.Clamp(dialog.Options.Count, 0, MAX_DISPLAY_OPTIONS);
@@ -340,18 +344,26 @@ namespace Kantan.Cli
 
 				Write(false, s);
 
+				// Write(false, s);
+				/*sb.Append(s);
+				var rows      = Strings.MeasureRows(sb.ToString())+sb.ToString().Count(c=>c=='\n');
+				var key = Console.CursorTop+rows;
+				OptionPositions[key] = option;*/
 			}
 
 			Console.WriteLine();
+			// sb.AppendLine();
 
 			if (dialog.Status != null) {
 				Write(dialog.Status);
+				// sb.AppendLine(dialog.Status);
 			}
 
 			if (dialog.Description != null) {
 				Console.WriteLine();
 
 				Write(dialog.Description);
+				// sb.AppendLine().AppendLine(dialog.Description);
 			}
 
 			// Show options
@@ -359,17 +371,23 @@ namespace Kantan.Cli
 			if (dialog.SelectMultiple) {
 				Console.WriteLine();
 
+				// sb.AppendLine();
+
 				string optionsStr = $"{StringConstants.CHEVRON} {output.Output.QuickJoin()}"
 					.AddColor(ColorOptions);
 
 				Write(true, optionsStr);
 
+				// sb.AppendLine(optionsStr).AppendLine();
+
 				Console.WriteLine();
 				Write($"Press {NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.");
+
+				// sb.AppendLine($"Press {NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.");
 			}
-
+			// Console.Write(sb);
 		}
-
+		//todo: atomic write operations (i.e., instead of incremental)
 		#endregion
 
 		/// <summary>
