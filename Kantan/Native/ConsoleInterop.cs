@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 
 namespace Kantan.Native
 {
-	internal static class NativeInput
+	internal static class ConsoleInterop
 	{
 		private static IntPtr _stdHandle;
 
@@ -32,14 +32,12 @@ namespace Kantan.Native
 			// Left Control & Right Control. See the ConsoleKey enum for these values.
 			var keyCode = ir.KeyEvent.wVirtualKeyCode;
 
-			return keyCode >= 0x10 && keyCode <= 0x12
-			       || keyCode == 0x14 || keyCode == 0x90 || keyCode == 0x91;
-
+			return keyCode is >= 0x10 and <= 0x12 or 0x14 or 0x90 or 0x91;
 		}
 
 		private const short AltVKCode = 0x12;
 
-		public static ConsoleKeyInfo ReadKey(INPUT_RECORD ir)
+		public static ConsoleKeyInfo GetKeyInfoFromRecord(INPUT_RECORD ir)
 		{
 			int numEventsRead = -1;
 
@@ -79,7 +77,7 @@ namespace Kantan.Native
 				ConsoleKey key = (ConsoleKey) keyCode;
 
 				if (IsAltKeyDown(ir) && ((key >= ConsoleKey.NumPad0 && key <= ConsoleKey.NumPad9)
-				                         || (key == ConsoleKey.Clear) || (key == ConsoleKey.Insert)
+				                         || key is ConsoleKey.Clear or ConsoleKey.Insert 
 				                         || (key >= ConsoleKey.PageUp && key <= ConsoleKey.DownArrow))) {
 					continue;
 				}
@@ -93,44 +91,32 @@ namespace Kantan.Native
 			}
 
 			ControlKeyState state = (ControlKeyState) ir.KeyEvent.dwControlKeyState;
+
 			bool shift = (state & ControlKeyState.ShiftPressed) != 0;
 			bool alt = (state & (ControlKeyState.LeftAltPressed | ControlKeyState.RightAltPressed)) != 0;
 			bool control = (state & (ControlKeyState.LeftCtrlPressed | ControlKeyState.RightCtrlPressed)) != 0;
 
-			ConsoleKeyInfo info = new ConsoleKeyInfo((char) ir.KeyEvent.UnicodeChar,
-			                                         (ConsoleKey) ir.KeyEvent.wVirtualKeyCode,
-			                                         shift, alt, control);
+			var info = new ConsoleKeyInfo((char) ir.KeyEvent.UnicodeChar,
+			                              (ConsoleKey) ir.KeyEvent.wVirtualKeyCode,
+			                              shift, alt, control);
 			return info;
 
 		}
 
 
-		// For tracking Alt+NumPad unicode key sequence. When you press Alt key down
-		// and press a numpad unicode decimal sequence and then release Alt key, the
-		// desired effect is to translate the sequence into one Unicode KeyPress.
-		// We need to keep track of the Alt+NumPad sequence and surface the final
-		// unicode char alone when the Alt key is released.
 		private static bool IsAltKeyDown(INPUT_RECORD ir)
 		{
-			return (((ControlKeyState) ir.KeyEvent.dwControlKeyState)
-			        & (ControlKeyState.LeftAltPressed | ControlKeyState.RightAltPressed)) != 0;
+			// For tracking Alt+NumPad unicode key sequence. When you press Alt key down
+			// and press a numpad unicode decimal sequence and then release Alt key, the
+			// desired effect is to translate the sequence into one Unicode KeyPress.
+			// We need to keep track of the Alt+NumPad sequence and surface the final
+			// unicode char alone when the Alt key is released.
+
+			return (((ControlKeyState) ir.KeyEvent.dwControlKeyState) &
+			        (ControlKeyState.LeftAltPressed | ControlKeyState.RightAltPressed)) != 0;
 		}
 
-		[Flags]
-		internal enum ControlKeyState
-		{
-			RightAltPressed  = 0x0001,
-			LeftAltPressed   = 0x0002,
-			RightCtrlPressed = 0x0004,
-			LeftCtrlPressed  = 0x0008,
-			ShiftPressed     = 0x0010,
-			NumLockOn        = 0x0020,
-			ScrollLockOn     = 0x0040,
-			CapsLockOn       = 0x0080,
-			EnhancedKey      = 0x0100
-		}
-
-		internal static bool KeyAvailable
+		internal static bool InputAvailable
 		{
 			get
 			{
@@ -165,7 +151,7 @@ namespace Kantan.Native
 			} // get
 		}
 
-		internal static INPUT_RECORD Read()
+		internal static INPUT_RECORD ReadInput()
 		{
 			var record = new INPUT_RECORD[1];
 
@@ -244,6 +230,20 @@ namespace Kantan.Native
 		private const string KERNEL32_DLL = "kernel32.dll";
 	}
 
+	[Flags]
+	internal enum ControlKeyState
+	{
+		RightAltPressed  = 0x0001,
+		LeftAltPressed   = 0x0002,
+		RightCtrlPressed = 0x0004,
+		LeftCtrlPressed  = 0x0008,
+		ShiftPressed     = 0x0010,
+		NumLockOn        = 0x0020,
+		ScrollLockOn     = 0x0040,
+		CapsLockOn       = 0x0080,
+		EnhancedKey      = 0x0100
+	}
+
 	/// <summary>
 	/// Blittable version of Windows BOOL type. It is convenient in situations where
 	/// manual marshalling is required, or to avoid overhead of regular bool marshalling.
@@ -271,6 +271,8 @@ namespace Kantan.Native
 		public ushort X;
 		public ushort Y;
 	}
+
+	
 
 	[DebuggerDisplay("EventType: {EventType}")]
 	[StructLayout(LayoutKind.Explicit)]
@@ -337,7 +339,7 @@ namespace Kantan.Native
 	{
 		public COORD dwMousePosition;
 		public int   dwButtonState;
-		public int   dwControlKeyState;
+		public ControlKeyState   dwControlKeyState;
 		public int   dwEventFlags;
 
 		/// <inheritdoc />

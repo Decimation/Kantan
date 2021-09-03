@@ -386,10 +386,9 @@ namespace Kantan.Cli
 
 			ConsoleKeyInfo cki;
 
-			NConsoleOption? clickOption     = null;
-			string?         dragAndDropFile = null;
+			string? dragAndDropFile = null;
 
-			NativeInput.Init();
+			ConsoleInterop.Init();
 			OptionPositions.Clear();
 
 			do {
@@ -402,8 +401,7 @@ namespace Kantan.Cli
 
 					int prevCount = dialog.Options.Count;
 
-
-					while ( /*!Console.KeyAvailable*/ !NativeInput.KeyAvailable) {
+					while (!ConsoleInterop.InputAvailable) {
 
 						bool refresh = AtomicHelper.Exchange(ref Status, ConsoleStatus.Ok) == ConsoleStatus.Refresh;
 
@@ -415,34 +413,9 @@ namespace Kantan.Cli
 							DisplayDialog(dialog, selectedOptions);
 							prevCount = currentCount;
 						}
-
-						// TODO !!!!!!! TODO WIP WIP !!!!!!!!!
-
-						/*var inputRecord = NativeInput.Read();
-
-						if (!inputRecord.Equals(default) && inputRecord.EventType == ConsoleEventType.MOUSE_EVENT &&
-						    inputRecord.MouseEvent.dwButtonState == 0x1) {
-
-
-							var y = inputRecord.MouseEvent.dwMousePosition.Y;
-
-							if (OptionPositions.ContainsKey(y)) {
-								var option = OptionPositions[y];
-								clickOption = option;
-
-								break;
-							}
-						}
-
-						else {
-							clickOption = null;
-						}*/
-
 					}
 
-					var ir = NativeInput.Read();
-
-					Debug.WriteLine(ir);
+					var ir = ConsoleInterop.ReadInput();
 
 					ConsoleKeyInfo cki2;
 
@@ -451,10 +424,7 @@ namespace Kantan.Cli
 						case ConsoleEventType.KEY_EVENT:
 							// Key was read
 
-							//cki2 = Console.ReadKey(true);
-							//cki2            = new ConsoleKeyInfo(ir.KeyEvent.UnicodeChar, (ConsoleKey) ir.KeyEvent.wVirtualKeyCode, ir.KeyEvent.)
-
-							cki2 = NativeInput.ReadKey(ir);
+							cki2 = ConsoleInterop.GetKeyInfoFromRecord(ir);
 
 							dragAndDropFile = ListenForFile(cki2);
 
@@ -466,19 +436,36 @@ namespace Kantan.Cli
 
 							break;
 						case ConsoleEventType.MOUSE_EVENT:
+							// Mouse was read
 							var y = ir.MouseEvent.dwMousePosition.Y;
 
 							if (OptionPositions.ContainsKey(y)) {
 								var option = OptionPositions[y];
-								clickOption = option;
+
+								var c = GetDisplayOptionFromIndex(dialog.Options.IndexOf(option));
+
+								var me    = ir.MouseEvent;
+								var state = me.dwControlKeyState;
+
+								bool shift = (state & ControlKeyState.ShiftPressed) != 0;
+
+								bool alt =
+									(state & (ControlKeyState.LeftAltPressed | ControlKeyState.RightAltPressed)) != 0;
+
+								bool control =
+									(state & (ControlKeyState.LeftCtrlPressed | ControlKeyState.RightCtrlPressed)) != 0;
+
+								cki2 = new ConsoleKeyInfo(c, (ConsoleKey) c, shift, alt, control);
 							}
 
-							var i = GetDisplayOptionFromIndex(dialog.Options.IndexOf(clickOption));
+							else {
+								cki2 = default;
+							}
 
-							cki2 = new ConsoleKeyInfo(i, (ConsoleKey) i, false, false, false);
 							break;
 						default:
-							throw new ArgumentOutOfRangeException();
+							cki2 = default;
+							break;
 					}
 
 
@@ -487,12 +474,12 @@ namespace Kantan.Cli
 
 				await t;
 
+				// Input was read
+
 				// File path was input via drag-and-drop
 				if (!t.Result.HasValue) {
 					return new HashSet<object> { dragAndDropFile };
 				}
-
-				// Key was read
 
 				cki = t.Result.Value;
 
