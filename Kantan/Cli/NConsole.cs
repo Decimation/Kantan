@@ -15,6 +15,8 @@ using Kantan.Threading;
 using Kantan.Utilities;
 using static Kantan.Internal.Common;
 
+// ReSharper disable SuggestVarOrType_Elsewhere
+
 #pragma warning disable 8601
 
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
@@ -136,6 +138,28 @@ namespace Kantan.Cli
 			Write(msg);
 		}
 
+		private static void ClearCurrentLineCR()
+		{
+			Console.Write("\r" + new string(' ', Console.WindowWidth - 1) + "\r");
+		}
+
+		public static void OverwriteLine(string s, int newTop)
+		{
+			(int left, int top) = Console.GetCursorPosition();
+			ClearLine(newTop);
+			Console.WriteLine(s);
+			Console.SetCursorPosition(left, top);
+
+		}
+		public static void ClearLine(int newTop)
+		{
+			(int left, int top) = Console.GetCursorPosition();
+			Console.SetCursorPosition(0, newTop);
+			Console.Write(new string(' ', Console.BufferWidth));
+			Console.SetCursorPosition(left,top);
+
+		}
+
 		public static void ClearCurrentLine()
 		{
 			Console.SetCursorPosition(0, Console.CursorTop - 1);
@@ -234,6 +258,10 @@ namespace Kantan.Cli
 			if (option.Color.HasValue) {
 				name = name.AddColor(option.Color.Value);
 			}
+			if (option.ColorBG.HasValue)
+			{
+				name = name.AddColorBG(option.ColorBG.Value);
+			}
 
 			sb.Append($"[{c}]: ");
 
@@ -288,7 +316,7 @@ namespace Kantan.Cli
 		/// <summary>
 		///     Display dialog
 		/// </summary>
-		private static void DisplayDialog(NConsoleDialog dialog, HashSet<object> selectedOptions)
+		private static void DisplayDialog(NConsoleDialog dialog, ConsoleOutputResult output)
 		{
 			Console.Clear();
 
@@ -337,7 +365,8 @@ namespace Kantan.Cli
 			if (dialog.SelectMultiple) {
 				Console.WriteLine();
 
-				string optionsStr = $"{StringConstants.CHEVRON} {selectedOptions.QuickJoin()}".AddColor(ColorOptions);
+				string optionsStr = $"{StringConstants.CHEVRON} {output.Output.QuickJoin()}"
+						.AddColor(ColorOptions);
 
 				Write(true, optionsStr);
 
@@ -359,9 +388,9 @@ namespace Kantan.Cli
 		/// <item><description><see cref="NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
 		/// </list>
 		/// </remarks>
-		public static HashSet<object> ReadInput(NConsoleDialog dialog)
+		public static ConsoleOutputResult ReadInput(NConsoleDialog dialog)
 		{
-			Task<HashSet<object>> task = ReadInputAsync(dialog);
+			var task = ReadInputAsync(dialog);
 			task.Wait();
 			return task.Result;
 		}
@@ -376,9 +405,11 @@ namespace Kantan.Cli
 		/// <item><description><see cref="NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
 		/// </list>
 		/// </remarks>
-		public static async Task<HashSet<object>> ReadInputAsync(NConsoleDialog dialog)
+		public static async Task<ConsoleOutputResult> ReadInputAsync(NConsoleDialog dialog)
 		{
-			var selectedOptions = new HashSet<object>();
+			//var selectedOptions = new HashSet<object>();
+
+			var output = new ConsoleOutputResult { };
 
 			/*
 			 * Handle input
@@ -386,16 +417,14 @@ namespace Kantan.Cli
 
 			ConsoleKeyInfo cki;
 
-			string? dragAndDropFile = null;
-
 			ConsoleInterop.Init();
 			OptionPositions.Clear();
 
 			do {
 
-				DisplayDialog(dialog, selectedOptions);
+				DisplayDialog(dialog, output);
 
-				var t = Task.Run<ConsoleKeyInfo?>(() =>
+				var task = Task.Run(() =>
 				{
 					// Block until input is entered.
 
@@ -410,7 +439,7 @@ namespace Kantan.Cli
 						int currentCount = dialog.Options.Count;
 
 						if (refresh || prevCount != currentCount) {
-							DisplayDialog(dialog, selectedOptions);
+							DisplayDialog(dialog, output);
 							prevCount = currentCount;
 						}
 					}
@@ -426,12 +455,13 @@ namespace Kantan.Cli
 
 							cki2 = ConsoleInterop.GetKeyInfoFromRecord(ir);
 
-							dragAndDropFile = ListenForFile(cki2);
+							var dragAndDropFile = TryReadFile(cki2);
 
 							if (!String.IsNullOrWhiteSpace(dragAndDropFile)) {
 
 								Debug.WriteLine($">> {dragAndDropFile}");
-								return null;
+								output.DragAndDrop = dragAndDropFile;
+								return;
 							}
 
 							break;
@@ -440,48 +470,59 @@ namespace Kantan.Cli
 							var y = ir.MouseEvent.dwMousePosition.Y;
 
 							if (OptionPositions.ContainsKey(y)) {
-								var option = OptionPositions[y];
+								var option  = OptionPositions[y];
+								var indexOf = dialog.Options.IndexOf(option);
+								var c       = GetDisplayOptionFromIndex(indexOf);
 
-								var c = GetDisplayOptionFromIndex(dialog.Options.IndexOf(option));
+								var me = ir.MouseEvent;
 
-								var me    = ir.MouseEvent;
-								var state = me.dwControlKeyState;
-
-								bool shift = (state & ControlKeyState.ShiftPressed) != 0;
-
-								bool alt =
-									(state & (ControlKeyState.LeftAltPressed | ControlKeyState.RightAltPressed)) != 0;
-
-								bool control =
-									(state & (ControlKeyState.LeftCtrlPressed | ControlKeyState.RightCtrlPressed)) != 0;
-
-								cki2 = new ConsoleKeyInfo(c, (ConsoleKey) c, shift, alt, control);
+								// note: KeyChar argument is slightly inaccurate
+								cki2 = ConsoleInterop.GetKeyInfo(c, c, me.dwControlKeyState);
+								
+								
+								// Highlight clicked option
+								/*option.Color   = Color.Black;
+								option.ColorBG = Color.Yellow;
+								DisplayDialog(dialog, output);
+								option.Color   = null;
+								option.ColorBG = null;
+								Thread.Sleep(150);*/
 							}
-
 							else {
-								cki2 = default;
+								goto default;
 							}
 
 							break;
+
 						default:
 							cki2 = default;
 							break;
 					}
 
+					//packet.Input = cki2;
 
-					return cki2;
+					output.Key = cki2;
 				});
 
-				await t;
+				await task;
 
 				// Input was read
 
 				// File path was input via drag-and-drop
-				if (!t.Result.HasValue) {
-					return new HashSet<object> { dragAndDropFile };
+				if (output.DragAndDrop != null) {
+					goto ret;
+
 				}
 
-				cki = t.Result.Value;
+				if (output.Key.HasValue) {
+					cki = output.Key.Value;
+				}
+				else {
+					throw new InvalidOperationException();
+				}
+
+				Debug.WriteLine($"{cki.Key} {cki.KeyChar} | {(int) cki.Key} {(int) cki.KeyChar}");
+
 
 				// Handle special keys
 
@@ -489,9 +530,6 @@ namespace Kantan.Cli
 					int i = cki.Key - ConsoleKey.F1;
 
 					if (dialog.Functions is { } && dialog.Functions.ContainsKey(cki.Key)) {
-						/*if (dialog.Functions.Length > i && i >= 0) {
-							dialog.Functions[i]();
-						}*/
 						dialog.Functions[cki.Key]();
 					}
 				}
@@ -529,18 +567,22 @@ namespace Kantan.Cli
 					if (funcResult != null) {
 						//
 						if (dialog.SelectMultiple) {
-							selectedOptions.Add(funcResult);
+							output.Output.Add(funcResult);
 						}
 						else {
-							return new HashSet<object> { funcResult };
+							output.Output = new HashSet<object>() { funcResult };
+							goto ret;
 						}
 					}
 				}
 
 			} while (cki.Key != NC_GLOBAL_EXIT_KEY);
+			
 
-			return selectedOptions;
+			ret:
+			return output;
 		}
+
 
 		public static string ReadLine(string? prompt = null, Predicate<string>? invalid = null,
 		                              string? errPrompt = null)
@@ -553,7 +595,7 @@ namespace Kantan.Cli
 			do {
 				//https://stackoverflow.com/questions/8946808/can-console-clear-be-used-to-only-clear-a-line-instead-of-whole-console
 
-				Console.Write("\r" + new string(' ', Console.WindowWidth - 1) + "\r");
+				ClearCurrentLineCR();
 
 				if (prompt != null) {
 					string str = $">> {prompt}: ".AddColor(ColorOptions);
@@ -624,7 +666,7 @@ namespace Kantan.Cli
 		///     primary disk letter. If so, then the rest of the buffer is read until the current sequence is a
 		/// string resembling a valid file path.
 		/// </remarks>
-		private static string? ListenForFile(ConsoleKeyInfo cki)
+		private static string? TryReadFile(ConsoleKeyInfo cki)
 		{
 			const char quote = '\"';
 
@@ -704,6 +746,22 @@ namespace Kantan.Cli
 		public static void Print(params object[] args)
 		{
 			Console.WriteLine(args.QuickJoin());
+		}
+	}
+
+	public class ConsoleOutputResult
+	{
+		public HashSet<object> Output { get; internal set; }
+
+		public bool SelectMultiple { get; internal set; }
+
+		public string? DragAndDrop { get; internal set; }
+
+		public ConsoleKeyInfo? Key { get; internal set; }
+
+		public ConsoleOutputResult()
+		{
+			Output = new HashSet<object>();
 		}
 	}
 }

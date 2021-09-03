@@ -81,7 +81,22 @@ namespace Kantan.Text
 			return String.IsNullOrWhiteSpace(str) ? null : str;
 
 		}
+		public static int MeasureRows(string s)
+		{
+			var bufferWidth = Console.BufferWidth;
+			var windowWidth = Console.WindowWidth;
 
+			var n = Math.DivRem(s.Length, bufferWidth, out var rem);
+
+			//(s.Length % b)
+
+			if (rem > 0)
+			{
+				n++;
+			}
+
+			return (int)n;
+		}
 		public static bool StringWraps(string s)
 		{
 			/*

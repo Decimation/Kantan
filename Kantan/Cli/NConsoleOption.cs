@@ -54,7 +54,8 @@ namespace Kantan.Cli
 		public virtual IOutline? Data { get; set; }
 		
 		public virtual Color? Color { get; set; }
-		
+
+		public virtual Color? ColorBG { get; set; }
 
 		public Dictionary<ConsoleModifiers, NConsoleFunction> Functions { get; init; } = new()
 		{

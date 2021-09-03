@@ -25,6 +25,9 @@ using Kantan.Utilities;
 using Microsoft.Win32.SafeHandles;
 using RestSharp;
 
+// ReSharper disable UnusedMember.Local
+#pragma warning disable 4014
+
 // ReSharper disable UnusedParameter.Local
 #pragma warning disable IDE0060, CS1998
 
@@ -35,8 +38,8 @@ namespace Test
 		private static async Task Main(string[] args)
 		{
 			Console.OutputEncoding = CodePagesEncodingProvider.Instance.GetEncoding(437);
-			
-			
+
+
 			/*NativeInput.Init();
 
 			while (!NativeInput.KeyAvailable) {
@@ -48,10 +51,15 @@ namespace Test
 			Console.WriteLine(r);*/
 
 			await ConsoleTest();
+
+			
+			
 		}
 
 
-		class MyClass :IOutline
+		
+
+		class MyClass : IOutline
 		{
 			/// <inheritdoc />
 			public Dictionary<string, object> Outline => new Dictionary<string, object>()
@@ -61,6 +69,7 @@ namespace Test
 
 			};
 		}
+
 		private static async Task ConsoleTest()
 		{
 			var dialog = new NConsoleDialog()
@@ -75,9 +84,14 @@ namespace Test
 					},
 				},
 				//SelectMultiple = true,
-				Options = NConsoleOption.FromArray(new[] { 1, 2, 3 }).ToList()
+				Options = NConsoleOption.FromArray(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 }).ToList()
 			};
 			dialog.Options[0].Data = new MyClass();
+
+			for (int i = 0; i < dialog.Options.Count; i++) {
+				dialog.Options[i].Data = new MyClass();
+			}
+
 			dialog.Options[0].Functions[ConsoleModifiers.Shift] = () =>
 			{
 				Console.WriteLine("butt");
@@ -107,7 +121,7 @@ namespace Test
 
 			await r;
 
-			Console.WriteLine(r.Result.QuickJoin());
+			Console.WriteLine(r.Result.Output.QuickJoin());
 
 		}
 
@@ -139,7 +153,7 @@ namespace Test
 			var r = NConsole.ReadInputAsync(dialog);
 			await r;
 
-			Console.WriteLine(r.Result.QuickJoin());
+			Console.WriteLine(r.Result.Output.QuickJoin());
 
 		}
 	}

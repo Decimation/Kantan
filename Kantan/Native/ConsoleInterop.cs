@@ -11,21 +11,44 @@ namespace Kantan.Native
 {
 	internal static class ConsoleInterop
 	{
-		private static IntPtr _stdHandle;
+		private static IntPtr _stdIn;
 
-		private static int _oldMode;
+		private static ConsoleModes _oldMode;
 
-		private static bool IsKeyDownEvent(INPUT_RECORD ir)
+		private static IntPtr _stdOut;
+
+		/// <summary>
+		/// Reads characters from the screen buffer, starting at the given position.
+		/// </summary>
+		/// <param name="nChars">The number of characters to read.</param>
+		/// <param name="x">Column position of the first character to read.</param>
+		/// <param name="y">Row position of the first character to read.</param>
+		/// <returns>A string containing the characters read from the screen buffer.</returns>
+		internal static string ReadXY(int nChars, int x, int y)
+		{
+			char[] buff      = new char[nChars];
+			int    charsRead = 0;
+
+			if (!ReadConsoleOutputCharacter(_stdOut, buff, nChars,
+			                                new Coord((ushort) x, (ushort) y), ref charsRead)) {
+				throw new System.IO.IOException("Read error", Marshal.GetLastWin32Error());
+			}
+
+			return new string(buff, 0, charsRead);
+		}
+
+		private static bool IsKeyDownEvent(InputRecord ir)
 		{
 			return ir.EventType == ConsoleEventType.KEY_EVENT && ir.KeyEvent.bKeyDown != BOOL.FALSE;
 		}
 
-		private static bool IsMouseEvent(INPUT_RECORD ir)
+		private static bool IsMouseEvent(InputRecord ir)
 		{
-			return ir.EventType == ConsoleEventType.MOUSE_EVENT && ir.MouseEvent.dwButtonState == 0x1;
+			return ir.EventType == ConsoleEventType.MOUSE_EVENT && ir.MouseEvent.dwButtonState == 0x1 /*&&
+			       ir.MouseEvent.dwEventFlags != 0x0008 && ir.MouseEvent.dwEventFlags != 0x0004*/;
 		}
 
-		private static bool IsModKey(INPUT_RECORD ir)
+		private static bool IsModKey(InputRecord ir)
 		{
 			// We should also skip over Shift, Control, and Alt, as well as caps lock.
 			// Apparently we don't need to check for 0xA0 through 0xA5, which are keys like
@@ -37,11 +60,8 @@ namespace Kantan.Native
 
 		private const short AltVKCode = 0x12;
 
-		public static ConsoleKeyInfo GetKeyInfoFromRecord(INPUT_RECORD ir)
+		public static ConsoleKeyInfo GetKeyInfoFromRecord(InputRecord ir)
 		{
-			int numEventsRead = -1;
-
-			bool r;
 
 			// We did NOT have a previous keystroke with repeated characters:
 			while (true) {
@@ -59,7 +79,7 @@ namespace Kantan.Native
 						continue;
 				}
 
-				char ch = (char) ir.KeyEvent.UnicodeChar;
+				char ch = ir.KeyEvent.UnicodeChar;
 
 				// In a Alt+NumPad unicode sequence, when the alt key is released uChar will represent the final unicode character, we need to
 				// surface this. VirtualKeyCode for this event will be Alt from the Alt-Up key event. This is probably not the right code,
@@ -74,37 +94,38 @@ namespace Kantan.Native
 
 				// When Alt is down, it is possible that we are in the middle of a Alt+NumPad unicode sequence.
 				// Escape any intermediate NumPad keys whether NumLock is on or not (notepad behavior)
-				ConsoleKey key = (ConsoleKey) keyCode;
+				var key = (ConsoleKey) keyCode;
 
-				if (IsAltKeyDown(ir) && ((key >= ConsoleKey.NumPad0 && key <= ConsoleKey.NumPad9)
-				                         || key is ConsoleKey.Clear or ConsoleKey.Insert 
-				                         || (key >= ConsoleKey.PageUp && key <= ConsoleKey.DownArrow))) {
+				if (IsAltKeyDown(ir) && key is >= ConsoleKey.NumPad0 and <= ConsoleKey.NumPad9
+					    or ConsoleKey.Clear or ConsoleKey.Insert or >= ConsoleKey.PageUp
+					    and <= ConsoleKey.DownArrow) {
 					continue;
 				}
 
 				if (ir.KeyEvent.wRepeatCount > 1) {
 					ir.KeyEvent.wRepeatCount--;
-					//_cachedInputRecord = ir;
 				}
 
 				break;
 			}
 
-			ControlKeyState state = (ControlKeyState) ir.KeyEvent.dwControlKeyState;
+			var state = (ControlKeyState) ir.KeyEvent.dwControlKeyState;
 
-			bool shift = (state & ControlKeyState.ShiftPressed) != 0;
-			bool alt = (state & (ControlKeyState.LeftAltPressed | ControlKeyState.RightAltPressed)) != 0;
-			bool control = (state & (ControlKeyState.LeftCtrlPressed | ControlKeyState.RightCtrlPressed)) != 0;
-
-			var info = new ConsoleKeyInfo((char) ir.KeyEvent.UnicodeChar,
-			                              (ConsoleKey) ir.KeyEvent.wVirtualKeyCode,
-			                              shift, alt, control);
-			return info;
+			return GetKeyInfo(ir.KeyEvent.UnicodeChar, ir.KeyEvent.wVirtualKeyCode, state);
 
 		}
 
+		internal static ConsoleKeyInfo GetKeyInfo(char c, int k, ControlKeyState state)
+		{
+			bool shift   = (state & ControlKeyState.ShiftPressed) != 0;
+			bool alt     = (state & (ControlKeyState.LeftAltPressed | ControlKeyState.RightAltPressed)) != 0;
+			bool control = (state & (ControlKeyState.LeftCtrlPressed | ControlKeyState.RightCtrlPressed)) != 0;
 
-		private static bool IsAltKeyDown(INPUT_RECORD ir)
+			var info = new ConsoleKeyInfo(c, (ConsoleKey) k, shift, alt, control);
+			return info;
+		}
+
+		private static bool IsAltKeyDown(InputRecord ir)
 		{
 			// For tracking Alt+NumPad unicode key sequence. When you press Alt key down
 			// and press a numpad unicode decimal sequence and then release Alt key, the
@@ -120,27 +141,21 @@ namespace Kantan.Native
 		{
 			get
 			{
-				/*if (_cachedInputRecord.eventType == Interop.KEY_EVENT)
-					return true;*/
-
 				while (true) {
-					bool r = PeekConsoleInput(_stdHandle, out INPUT_RECORD ir, 1, out uint numEventsRead);
 
-					if (!r) {
-						//
+					if (!PeekConsoleInput(_stdIn, out InputRecord ir, 1, out uint numEventsRead)) {
 						throw new Win32Exception();
 					}
 
-					if (numEventsRead == 0)
+					if (numEventsRead == 0) {
 						return false;
-
+					}
 
 					// Skip non key-down && mod key events.
 					if (!IsMouseEvent(ir) && (!IsKeyDownEvent(ir) || IsModKey(ir))) {
-						var rg = new INPUT_RECORD[1];
-						r = ReadConsoleInput(_stdHandle, rg, 1, out numEventsRead);
+						var rg = new InputRecord[1];
 
-						if (!r)
+						if (!ReadConsoleInput(_stdIn, rg, 1, out numEventsRead))
 							throw new Win32Exception();
 					}
 					else {
@@ -148,14 +163,14 @@ namespace Kantan.Native
 					}
 
 				}
-			} // get
+			}
 		}
 
-		internal static INPUT_RECORD ReadInput()
+		internal static InputRecord ReadInput()
 		{
-			var record = new INPUT_RECORD[1];
+			var record = new InputRecord[1];
 
-			if (!ReadConsoleInput(_stdHandle, record, 1, out uint lpNumberOfEventsRead)) {
+			if (!ReadConsoleInput(_stdIn, record, 1, out uint lpNumberOfEventsRead)) {
 				throw new Win32Exception();
 			}
 
@@ -167,67 +182,102 @@ namespace Kantan.Native
 
 		internal static void Close()
 		{
-			SetConsoleMode(_stdHandle, _oldMode);
-			_stdHandle = IntPtr.Zero;
-			_oldMode   = 0;
+			SetConsoleMode(_stdIn, _oldMode);
+			_stdIn   = IntPtr.Zero;
+			_stdOut  = IntPtr.Zero;
+			_oldMode = 0;
 		}
 
 		internal static void Init()
 		{
-			_stdHandle = GetStdHandle(STD_INPUT_HANDLE);
-			int mode = 0;
+			_stdOut = GetStdHandle(StandardHandle.STD_OUTPUT_HANDLE);
+			_stdIn  = GetStdHandle(StandardHandle.STD_INPUT_HANDLE);
 
-			if (!GetConsoleMode(_stdHandle, ref mode)) {
+			if (!GetConsoleMode(_stdIn, out ConsoleModes mode)) {
 				throw new Win32Exception();
 			}
 
 			_oldMode = mode;
 
-			mode |= ENABLE_MOUSE_INPUT;
-			mode &= ~ENABLE_QUICK_EDIT_MODE;
-			mode |= ENABLE_EXTENDED_FLAGS;
+			mode |= ConsoleModes.ENABLE_MOUSE_INPUT;
+			mode &= ~ConsoleModes.ENABLE_QUICK_EDIT_MODE;
+			mode |= ConsoleModes.ENABLE_EXTENDED_FLAGS;
 
-			if (!SetConsoleMode(_stdHandle, mode)) {
+			if (!SetConsoleMode(_stdIn, mode)) {
 				throw new Win32Exception();
 			}
 		}
 
 		[DllImport(KERNEL32_DLL, CharSet = CharSet.Unicode, SetLastError = true)]
-		internal static extern bool PeekConsoleInput(IntPtr hConsoleInput,
-		                                             out INPUT_RECORD lpBuffer,
-		                                             uint nLength,
-		                                             out uint lpNumberOfEventsRead);
+		[return: MarshalAs(UnmanagedType.Bool)]
+		internal static extern bool PeekConsoleInput(IntPtr hConsoleInput, out InputRecord lpBuffer,
+		                                             uint nLength, out uint lpNumberOfEventsRead);
 
 		[DllImport(KERNEL32_DLL, SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
-		internal static extern bool GetConsoleMode(IntPtr hConsoleHandle, ref int lpMode);
+		internal static extern bool GetConsoleMode(IntPtr hConsoleHandle, out ConsoleModes lpMode);
 
 		[DllImport(KERNEL32_DLL, SetLastError = true)]
-		internal static extern IntPtr GetStdHandle(int nStdHandle);
+		internal static extern IntPtr GetStdHandle(StandardHandle nStdHandle);
 
 		[DllImport(KERNEL32_DLL, CharSet = CharSet.Unicode)]
 		[return: MarshalAs(UnmanagedType.Bool)]
-		internal static extern bool WriteConsoleInput(IntPtr hConsoleInput, INPUT_RECORD[] lpBuffer, uint nLength,
+		internal static extern bool WriteConsoleInput(IntPtr hConsoleInput, InputRecord[] lpBuffer, uint nLength,
 		                                              out uint lpNumberOfEventsWritten);
 
 		[DllImport(KERNEL32_DLL, CharSet = CharSet.Unicode)]
 		[return: MarshalAs(UnmanagedType.Bool)]
-		internal static extern bool ReadConsoleInput(IntPtr hConsoleInput,
-		                                             [Out] INPUT_RECORD[] lpBuffer,
-		                                             uint nLength,
-		                                             out uint lpNumberOfEventsRead);
+		internal static extern bool ReadConsoleInput(IntPtr hConsoleInput, [Out] InputRecord[] lpBuffer,
+		                                             uint nLength, out uint lpNumberOfEventsRead);
 
 		[DllImport(KERNEL32_DLL, SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
-		internal static extern bool SetConsoleMode(IntPtr hConsoleHandle, int dwMode);
+		internal static extern bool SetConsoleMode(IntPtr hConsoleHandle, ConsoleModes dwMode);
 
-		internal const int STD_INPUT_HANDLE = -10;
+		[DllImport(KERNEL32_DLL, SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		internal static extern bool ReadConsoleOutputCharacter(IntPtr hConsoleOutput,
+		                                                       [Out] [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 2)]
+		                                                       char[] lpCharacter, int nLength, Coord dwReadCoord,
+		                                                       ref int lpNumberOfCharsRead);
 
-		internal const int ENABLE_MOUSE_INPUT     = 0x0010;
-		internal const int ENABLE_QUICK_EDIT_MODE = 0x0040;
-		internal const int ENABLE_EXTENDED_FLAGS  = 0x0080;
 
 		private const string KERNEL32_DLL = "kernel32.dll";
+	}
+
+	internal enum StandardHandle : int
+	{
+		STD_ERROR_HANDLE  = -12,
+		STD_INPUT_HANDLE  = -10,
+		STD_OUTPUT_HANDLE = -11,
+	}
+
+	[Flags]
+	internal enum ConsoleModes : uint
+	{
+		#region Input
+
+		ENABLE_PROCESSED_INPUT = 0x0001,
+		ENABLE_LINE_INPUT      = 0x0002,
+		ENABLE_ECHO_INPUT      = 0x0004,
+		ENABLE_WINDOW_INPUT    = 0x0008,
+		ENABLE_MOUSE_INPUT     = 0x0010,
+		ENABLE_INSERT_MODE     = 0x0020,
+		ENABLE_QUICK_EDIT_MODE = 0x0040,
+		ENABLE_EXTENDED_FLAGS  = 0x0080,
+		ENABLE_AUTO_POSITION   = 0x0100,
+
+		#endregion
+
+		#region Output
+
+		ENABLE_PROCESSED_OUTPUT            = 0x0001,
+		ENABLE_WRAP_AT_EOL_OUTPUT          = 0x0002,
+		ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004,
+		DISABLE_NEWLINE_AUTO_RETURN        = 0x0008,
+		ENABLE_LVB_GRID_WORLDWIDE          = 0x0010
+
+		#endregion
 	}
 
 	[Flags]
@@ -266,41 +316,37 @@ namespace Kantan.Native
 	}
 
 	[DebuggerDisplay("{X}, {Y}")]
-	internal struct COORD
+	internal struct Coord
 	{
 		public ushort X;
 		public ushort Y;
-	}
 
-	
+		public Coord(ushort x, ushort y)
+		{
+			X = x;
+			Y = y;
+		}
+	}
 
 	[DebuggerDisplay("EventType: {EventType}")]
 	[StructLayout(LayoutKind.Explicit)]
-	internal struct INPUT_RECORD
+	internal struct InputRecord
 	{
 		[FieldOffset(0)]
 		public ConsoleEventType EventType;
 
 		[FieldOffset(4)]
-		public KEY_EVENT_RECORD KeyEvent;
+		public KeyEventRecord KeyEvent;
 
 		[FieldOffset(4)]
-		public MOUSE_EVENT_RECORD MouseEvent;
-
-		/// <inheritdoc />
-		public override string ToString()
-		{
-			var s = EventType == ConsoleEventType.KEY_EVENT ? KeyEvent.ToString() : MouseEvent.ToString();
-			return $"{EventType}\n" + s;
-		}
+		public MouseEventRecord MouseEvent;
 	}
 
 	[DebuggerDisplay("KeyCode: {wVirtualKeyCode}")]
 	[StructLayout(LayoutKind.Explicit)]
-	internal struct KEY_EVENT_RECORD
+	internal struct KeyEventRecord
 	{
 		[FieldOffset(0)]
-		//[MarshalAs(UnmanagedType.Bool)]
 		public BOOL bKeyDown;
 
 		[FieldOffset(4)]
@@ -335,12 +381,12 @@ namespace Kantan.Native
 	};
 
 	[DebuggerDisplay("{dwMousePosition.X}, {dwMousePosition.Y}")]
-	internal struct MOUSE_EVENT_RECORD
+	internal struct MouseEventRecord
 	{
-		public COORD dwMousePosition;
-		public int   dwButtonState;
-		public ControlKeyState   dwControlKeyState;
-		public int   dwEventFlags;
+		public Coord           dwMousePosition;
+		public int             dwButtonState;
+		public ControlKeyState dwControlKeyState;
+		public int             dwEventFlags;
 
 		/// <inheritdoc />
 		public override string ToString()
