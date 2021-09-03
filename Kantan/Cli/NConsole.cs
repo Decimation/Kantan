@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Kantan.Native;
+using Kantan.Native.Structures;
 using Kantan.Text;
 using Kantan.Threading;
 using Kantan.Utilities;
@@ -386,7 +387,10 @@ namespace Kantan.Cli
 		{
 			//var selectedOptions = new HashSet<object>();
 
-			var output = new ConsoleOutputResult { };
+			var output = new ConsoleOutputResult
+			{
+				SelectMultiple = dialog.SelectMultiple,
+			};
 
 			/*
 			 * Handle input
@@ -431,7 +435,6 @@ namespace Kantan.Cli
 							// Key was read
 
 							cki2 = ConsoleInterop.GetKeyInfoFromRecord(ir);
-
 							var dragAndDropFile = TryReadFile(cki2);
 
 							if (!String.IsNullOrWhiteSpace(dragAndDropFile)) {
@@ -756,7 +759,7 @@ namespace Kantan.Cli
 		 */
 	}
 
-	public class ConsoleOutputResult
+	public sealed class ConsoleOutputResult
 	{
 		public HashSet<object> Output { get; internal set; }
 
