@@ -252,10 +252,9 @@ namespace Kantan.Utilities
 
 		public static string AddHighlight(this string s, Color c)
 		{
-			
-
 			return s.AddColorBG(c);
 		}
+
 		public static string AddHighlight(this string s)
 		{
 			var c = Console.BackgroundColor.ToColor();
@@ -263,6 +262,7 @@ namespace Kantan.Utilities
 
 			return s.AddColorBG(f).AddColor(c);
 		}
+
 		public static string AddUnderline(this string s)
 		{
 			//\x1b[36mTEST\x1b[0m

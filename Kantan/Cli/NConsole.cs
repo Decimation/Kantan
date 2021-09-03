@@ -200,6 +200,8 @@ namespace Kantan.Cli
 		[StringFormatMethod(STRING_FORMAT_ARG)]
 		public static string FormatString(string? delim, string msg, bool repDelim = true)
 		{
+			//Debug.WriteLine(l.FuncJoin((s) => $"[{s}]"));
+
 			string[] split = msg.Split(StringConstants.NativeNewLine);
 
 			bool d1 = false;
@@ -214,7 +216,6 @@ namespace Kantan.Cli
 					if (i == 0 && split.Length == 2) {
 						delim = StringConstants.Horizontal;
 					}
-					// fixme: WHAT THE FUCK
 					else delim = Strings.GetUnicodeBoxPipe(split, i);
 				}
 
@@ -501,7 +502,7 @@ namespace Kantan.Cli
 					throw new InvalidOperationException();
 				}
 
-				//Debug.WriteLine($"{cki.Key} {cki.KeyChar} | {(int) cki.Key} {(int) cki.KeyChar}");
+				Debug.WriteLine($"{cki.Key} {cki.KeyChar} | {(int) cki.Key} {(int) cki.KeyChar}");
 
 
 				// Handle special keys

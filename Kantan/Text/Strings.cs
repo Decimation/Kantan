@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,7 @@ using JetBrains.Annotations;
 using Kantan.Model;
 using static Kantan.Internal.Common;
 using static Kantan.Text.StringConstants;
+// ReSharper disable InconsistentNaming
 
 #pragma warning disable 8509
 
@@ -81,6 +83,7 @@ namespace Kantan.Text
 			return String.IsNullOrWhiteSpace(str) ? null : str;
 
 		}
+
 		public static int MeasureRows(string s)
 		{
 			var bufferWidth = Console.BufferWidth;
@@ -90,13 +93,13 @@ namespace Kantan.Text
 
 			//(s.Length % b)
 
-			if (rem > 0)
-			{
+			if (rem > 0) {
 				n++;
 			}
 
-			return (int)n;
+			return (int) n;
 		}
+
 		public static bool StringWraps(string s)
 		{
 			/*
@@ -256,7 +259,6 @@ namespace Kantan.Text
 		{
 			string[] split = s.Split('\n');
 
-
 			string j = String.Join($"\n{indent}", split);
 
 			return indent + j;
@@ -340,10 +342,11 @@ namespace Kantan.Text
 		#endregion
 
 		#region Join
-
+		
 		public static string FormatJoin<T>(this IEnumerable<T> values, string format, IFormatProvider provider = null,
 		                                   string delim = JOIN_COMMA) where T : IFormattable
 		{
+			
 			return values.Select(v => v.ToString(format, provider)).QuickJoin(delim);
 		}
 
@@ -371,10 +374,19 @@ namespace Kantan.Text
 
 		#endregion
 
-		public static string EncodingConvert(Encoding src, Encoding dest, string a)
+		private static readonly Encoding EncodingOEM =
+			CodePagesEncodingProvider.Instance.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
+
+		public static string EncodingConvert(Encoding src, Encoding dest, string str)
 		{
-			return dest.GetString(Encoding.Convert(src, dest, src.GetBytes(a)));
+			return dest.GetString(Encoding.Convert(src, dest, src.GetBytes(str)));
 		}
+
+		public static string EncodingConvert(Encoding src, string str)
+		{
+			return EncodingConvert(src, EncodingOEM, str);
+		}
+
 
 		public static bool IsCharInRange(short c, UnicodeRange r) => IsCharInRange((char) c, r);
 
@@ -383,7 +395,17 @@ namespace Kantan.Text
 
 		internal static string GetUnicodeBoxPipe(IList<string> l, int i)
 		{
+			
 			string delim;
+			
+
+
+			//string.IsNullOrWhiteSpace(l[i]) ||l[i].All(c =>  (c == '\n') || (char.IsControl(c)))
+			//l.Skip(i).All(c=>string.IsNullOrWhiteSpace(c)||c.All(x=>char.IsControl(x)||x=='\n'))
+
+			if (l.Skip(i+1).All(c=>string.IsNullOrWhiteSpace(c))) {
+				return BottomLeftCorner;
+			}
 
 			if (l is { Count: 1 }) {
 				delim = Horizontal;
@@ -398,9 +420,7 @@ namespace Kantan.Text
 			}
 
 			else {
-				if (l.Skip(i).All(x => string.IsNullOrWhiteSpace(x) || x == "\n" || x == "\r")) {
-					return BottomLeftCorner;
-				}
+				
 
 				delim = i switch
 				{
@@ -409,7 +429,7 @@ namespace Kantan.Text
 					_   => BottomLeftCorner,
 				};
 			}
-
+			ret:
 			return delim;
 		}
 	}

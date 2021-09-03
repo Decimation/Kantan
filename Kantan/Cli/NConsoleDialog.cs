@@ -4,6 +4,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using System.Threading;
 using System.Threading.Tasks;
+// ReSharper disable EmptyConstructor
 
 // ReSharper disable UnusedMember.Global
 

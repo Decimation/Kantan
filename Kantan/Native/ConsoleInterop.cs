@@ -13,11 +13,18 @@ namespace Kantan.Native
 {
 	internal static partial class ConsoleInterop
 	{
-		// Note: some code comes from:
-		// .NET BCL
-		// http://mischel.com/pubs/consoledotnet/consoledotnet.zip,
-		// https://www.medo64.com/2013/05/console-mouse-input-in-c/
+		/*
+		 * Note: some code comes from:
+		 * Novus
+		 * .NET BCL
+		 * http://mischel.com/pubs/consoledotnet/consoledotnet.zip,
+		 * https://www.medo64.com/2013/05/console-mouse-input-in-c/
+		 */
+		[DllImport(KERNEL32_DLL, SetLastError = true)]
+		internal static extern int GetConsoleOutputCP();
 
+		[DllImport(KERNEL32_DLL, SetLastError = true)]
+		internal static extern bool SetConsoleCP(int wCodePageID);
 
 		[DllImport(KERNEL32_DLL, CharSet = CharSet.Unicode, SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
