@@ -81,6 +81,13 @@ namespace Kantan.Cli
 		 * https://github.com/Decimation/SimpleCore/blob/2d6009cfc498de07d5f507192c3cbe1983ff1a11/SimpleCore.Cli/NConsole.cs
 		 * https://gist.github.com/ZacharyPatten/798ed612d692a560bdd529367b6a7dbd
 		 * https://github.com/ZacharyPatten/Towel
+		 *
+		 *
+		 * https://stackoverflow.com/questions/888533/how-can-i-update-the-current-line-in-a-c-sharp-windows-console-app
+		 * https://stackoverflow.com/questions/5435460/console-application-how-to-update-the-display-without-flicker
+		 * https://github.com/migueldeicaza/gui.cs
+		 * https://github.com/TomaszRewak/C-sharp-console-gui-framework
+		 * https://github.com/goblinfactory/konsole
 		 */
 
 		/*
@@ -340,10 +347,11 @@ namespace Kantan.Cli
 
 				string s = FormatOption(option, i);
 
-				OptionPositions[Console.CursorTop] = option;
 
+				OptionPositions[Console.CursorTop] = option;
 				Write(false, s);
 
+				// sb.Append(s);
 				// Write(false, s);
 				/*sb.Append(s);
 				var rows      = Strings.MeasureRows(sb.ToString())+sb.ToString().Count(c=>c=='\n');

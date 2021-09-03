@@ -45,10 +45,10 @@ namespace Test
 			Console.WriteLine(s);
 			Console.WriteLine(f);*/
 
-			for (int i = 0; i <=50; i++) {
-				Console.WriteLine(i);
-			}
-
+			/*var s = new string('-', Console.BufferWidth + 1) + '\n';
+			Console.WriteLine(s);
+			Debug.WriteLine(Strings.MeasureRows(s));
+			Debug.WriteLine(Console.CursorTop);*/
 			await ConsoleTest();
 			//ConsoleInterop.Init();
 			
