@@ -1,8 +1,11 @@
 ﻿// ReSharper disable UnusedMember.Global
+
 namespace Kantan.Text
 {
 	public static class StringConstants
 	{
+		#region Join
+
 		public const string JOIN_COMMA = ", ";
 
 		/// <summary>
@@ -12,14 +15,18 @@ namespace Kantan.Text
 
 		public const string JOIN_SPACE = " ";
 
-		public const string ELLIPSES = "...";
+		#endregion
 
-		public const string CHEVRON = ">>";
+		#region Punctuation
 
 		public const char PERIOD      = '.';
 		public const char ASTERISK    = '*';
 		public const char EXCLAMATION = '!';
 		public const char SPACE       = ' ';
+
+		#endregion
+
+		#region Arrow
 
 		public const char ARROW_DOWN       = '\u2193';
 		public const char ARROW_LEFT       = '\u2190';
@@ -27,6 +34,25 @@ namespace Kantan.Text
 		public const char ARROW_RIGHT      = '\u2192';
 		public const char ARROW_UP         = '\u2191';
 		public const char ARROW_UP_DOWN    = '\u2195';
+
+		#endregion
+
+		#region Control
+
+		public const char NULL_CHAR = '\0';
+
+		public static readonly string NativeNewLine = '\n'.ToString();
+
+		/// <summary>
+		/// Constant <see cref="string.Empty"/>
+		/// </summary>
+		public const string Empty = "";
+
+		#endregion
+
+		public const string ELLIPSES = "...";
+
+		public const string CHEVRON = ">>";
 
 		public const char BALLOT_X       = '\u2717';
 		public const char HEAVY_BALLOT_X = '\u2718';
@@ -38,23 +64,25 @@ namespace Kantan.Text
 
 		public const char MUL_SIGN  = '\u00D7';
 		public const char MUL_SIGN2 = '\u2715';
-
-		public const char NULL_CHAR = '\0';
-
-		public const char RAD_SIGN = '\u221A';
+		public const char RAD_SIGN  = '\u221A';
 
 		public const char RELOAD = '\u21bb';
 
 		public const char SUN = '\u263c';
 
-
-		public static readonly string NativeNewLine = '\n'.ToString();
-
 		public const string Alphanumeric = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-		/// <summary>
-		/// Constant <see cref="string.Empty"/>
-		/// </summary>
-		public const string Empty = "";
+		#region Box
+
+		public const string UpperLeftCorner       = "\u250c";
+		public const string BottomLeftCorner      = "\u2514";
+		public const string Vertical              = "\u2502";
+		public const string Horizontal            = "\u2500";
+		public const string HorizontalMidVertical = "\u251c";
+
+		#endregion
+
+		public static string Separator   { get; set; } = new('-', 20);
+		public static string Indentation { get; set; } = new(' ', 5);
 	}
 }

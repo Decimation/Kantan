@@ -17,6 +17,7 @@ using Kantan.Collections;
 using Kantan.Diagnostics;
 using Kantan.Internal;
 using Kantan.Model;
+using Kantan.Native;
 using Kantan.Net;
 using Kantan.Numeric;
 using Kantan.Text;
@@ -34,16 +35,23 @@ namespace Test
 		private static async Task Main(string[] args)
 		{
 			Console.OutputEncoding = CodePagesEncodingProvider.Instance.GetEncoding(437);
+			
+			
+			/*NativeInput.Init();
 
-			Console.WriteLine("\u250c\n\u2502");
+			while (!NativeInput.KeyAvailable) {
+				
+			}
+
+			var r=NativeInput.Read();
+
+			Console.WriteLine(r);*/
 
 			await ConsoleTest();
-
-
 		}
 
 
-		class MyClass:IOutline
+		class MyClass :IOutline
 		{
 			/// <inheritdoc />
 			public Dictionary<string, object> Outline => new Dictionary<string, object>()
@@ -66,7 +74,7 @@ namespace Test
 
 					},
 				},
-				
+				//SelectMultiple = true,
 				Options = NConsoleOption.FromArray(new[] { 1, 2, 3 }).ToList()
 			};
 			dialog.Options[0].Data = new MyClass();

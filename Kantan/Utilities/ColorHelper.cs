@@ -18,6 +18,10 @@ namespace Kantan.Utilities
 		public static readonly Color AbsoluteGreen = Color.FromArgb(Byte.MaxValue, 0, Byte.MaxValue, 0);
 		public static readonly Color AbsoluteBlue  = Color.FromArgb(Byte.MaxValue, 0, 0, Byte.MaxValue);
 
+		public static Color Invert(this Color c)
+		{
+			return Color.FromArgb(0xFF - c.R, 0xFF - c.G, 0xFF - c.B);
+		}
 
 		/// <summary>
 		/// Creates color with corrected brightness.
@@ -37,15 +41,16 @@ namespace Kantan.Utilities
 			float blue  = color.B;
 
 			if (correctionFactor < 0) {
-				correctionFactor =  1 + correctionFactor;
-				red              *= correctionFactor;
-				green            *= correctionFactor;
-				blue             *= correctionFactor;
+				correctionFactor = 1 + correctionFactor;
+
+				red   *= correctionFactor;
+				green *= correctionFactor;
+				blue  *= correctionFactor;
 			}
 			else {
-				red   = (Byte.MaxValue - red)   * correctionFactor + red;
+				red   = (Byte.MaxValue - red) * correctionFactor + red;
 				green = (Byte.MaxValue - green) * correctionFactor + green;
-				blue  = (Byte.MaxValue - blue)  * correctionFactor + blue;
+				blue  = (Byte.MaxValue - blue) * correctionFactor + blue;
 			}
 
 			return Color.FromArgb(color.A, (int) red, (int) green, (int) blue);

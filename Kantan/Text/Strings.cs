@@ -1,5 +1,6 @@
 #nullable disable
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -10,6 +11,8 @@ using JetBrains.Annotations;
 using Kantan.Model;
 using static Kantan.Internal.Common;
 using static Kantan.Text.StringConstants;
+
+#pragma warning disable 8509
 
 // ReSharper disable UnusedMember.Local
 
@@ -30,10 +33,6 @@ namespace Kantan.Text
 	/// <seealso cref="UnicodeRanges"/>
 	public static class Strings
 	{
-		private const string UpperLeftCorner = "\u250c";
-		private const string BottomLeft      = "\u2514";
-		private const string MidPipe         = "\u2502";
-
 		public static string Center(string str, int width)
 		{
 			//https://stackoverflow.com/questions/48621267/is-there-a-way-to-center-text-in-powershell
@@ -53,7 +52,6 @@ namespace Kantan.Text
 		{
 			return s.Where(fn).Aggregate(String.Empty, (current, t) => current + t);
 		}
-
 
 		public static string CleanString(this string s)
 		{
@@ -119,10 +117,8 @@ namespace Kantan.Text
 			}
 		}
 
-		public static string RemoveLastOccurrence(this string s, string s2)
-		{
-			return s.Remove(s.LastIndexOf(s2, StringComparison.Ordinal));
-		}
+		public static string RemoveLastOccurrence(this string s, string s2) =>
+			s.Remove(s.LastIndexOf(s2, StringComparison.Ordinal));
 
 		/// <summary>
 		///     Compute the Levenshtein distance (approximate string matching) between <paramref name="s"/> and <paramref name="t"/>
@@ -239,31 +235,12 @@ namespace Kantan.Text
 
 		#region Outline
 
-		public static string Separator { get; set; } = new('-', 20);
-
-		public static string Indentation { get; set; } = new(' ', 5);
-
-		public static string Indent(string s)
-		{
-			return Indent(s, Indentation);
-		}
+		public static string Indent(string s) => Indent(s, Indentation);
 
 		public static string Indent(string s, string indent)
 		{
-			//return s.Replace("\n", "\n" + Indent);
-
 			string[] split = s.Split('\n');
 
-			// split[0]  = UpperLeftCorner + split[0];
-			// split[^1] = BottomLeft + split[^1];
-			//
-			// if (split.Length > 2) {
-			// 	for (int i = 1; i < split.Length-1; i++) {
-			// 		split[i] = MidPipe + split[i];
-			// 	}
-			//
-			// }
-			// indent = indent[1..];
 
 			string j = String.Join($"\n{indent}", split);
 
@@ -274,7 +251,6 @@ namespace Kantan.Text
 		public static string OutlineString(IOutline view)
 		{
 			var esb = new StringBuilder();
-
 
 			foreach (var (key, value) in view.Outline) {
 				switch (value) {
@@ -390,14 +366,35 @@ namespace Kantan.Text
 		public static bool IsCharInRange(char c, UnicodeRange r) =>
 			c < (r.FirstCodePoint + r.Length) && c >= r.FirstCodePoint;
 
-		internal static string GetUnicodeBoxPipe(int l, int i)
+		internal static string GetUnicodeBoxPipe(IList<string> l, int i)
 		{
-			var delim = i switch
-			{
-				0                  => UpperLeftCorner,
-				> 0 when i < l - 1 => MidPipe,
-				_                  => BottomLeft
-			};
+			string delim;
+
+			if (l is { Count: 1 }) {
+				delim = Horizontal;
+			}
+
+			else if (l is { Count: 2 }) {
+				delim = i switch
+				{
+					0 => UpperLeftCorner,
+					1 => BottomLeftCorner,
+				};
+			}
+
+			else {
+				if (l.Skip(i).All(x => string.IsNullOrWhiteSpace(x) || x == "\n" || x == "\r")) {
+					return BottomLeftCorner;
+				}
+
+				delim = i switch
+				{
+					0   => UpperLeftCorner,
+					> 0 => Vertical,
+					_   => BottomLeftCorner,
+				};
+			}
+
 			return delim;
 		}
 	}

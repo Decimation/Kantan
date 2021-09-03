@@ -192,7 +192,11 @@ namespace Kantan.Cli
 				string b;
 
 				if (dx) {
-					delim = Strings.GetUnicodeBoxPipe(split.Length, i);
+					if (i == 0 && split.Length == 2) {
+						delim = StringConstants.Horizontal;
+					}
+					// fixme: WHAT THE FUCK
+					else delim = Strings.GetUnicodeBoxPipe(split, i);
 				}
 
 				if (String.IsNullOrWhiteSpace(a)) {
@@ -248,7 +252,7 @@ namespace Kantan.Cli
 				sb.AppendLine();
 			}
 
-			string f = FormatString(StringConstants.ASTERISK.ToString(), sb.ToString());
+			string f = FormatString(null, sb.ToString(), true);
 
 
 			return f;
@@ -310,9 +314,10 @@ namespace Kantan.Cli
 
 				string s = FormatOption(option, i);
 
+				OptionPositions[Console.CursorTop] = option;
+
 				Write(false, s);
 
-				OptionPositions[Console.CursorTop - 1] = option;
 			}
 
 			Console.WriteLine();
@@ -328,18 +333,18 @@ namespace Kantan.Cli
 			}
 
 			// Show options
+
 			if (dialog.SelectMultiple) {
 				Console.WriteLine();
 
 				string optionsStr = $"{StringConstants.CHEVRON} {selectedOptions.QuickJoin()}".AddColor(ColorOptions);
 
 				Write(true, optionsStr);
+
+				Console.WriteLine();
+				Write($"Press {NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.");
 			}
 
-			if (dialog.SelectMultiple) {
-				Console.WriteLine();
-				Write($"Press {NC_GLOBAL_EXIT_KEY.ToString().AddUnderline()} to save selected values.");
-			}
 		}
 
 		#endregion
@@ -398,7 +403,7 @@ namespace Kantan.Cli
 					int prevCount = dialog.Options.Count;
 
 
-					while (!Console.KeyAvailable) {
+					while ( /*!Console.KeyAvailable*/ !NativeInput.KeyAvailable) {
 
 						bool refresh = AtomicHelper.Exchange(ref Status, ConsoleStatus.Ok) == ConsoleStatus.Refresh;
 
@@ -413,12 +418,11 @@ namespace Kantan.Cli
 
 						// TODO !!!!!!! TODO WIP WIP !!!!!!!!!
 
-						var inputRecord = NativeInput.Read();
+						/*var inputRecord = NativeInput.Read();
 
-						if (!inputRecord.Equals(default) && inputRecord.EventType == NativeInput.MOUSE_EVENT &&
+						if (!inputRecord.Equals(default) && inputRecord.EventType == ConsoleEventType.MOUSE_EVENT &&
 						    inputRecord.MouseEvent.dwButtonState == 0x1) {
 
-							// Debug.WriteLine("click");
 
 							var y = inputRecord.MouseEvent.dwMousePosition.Y;
 
@@ -432,33 +436,51 @@ namespace Kantan.Cli
 
 						else {
 							clickOption = null;
-						}
+						}*/
 
 					}
+
+					var ir = NativeInput.Read();
+
+					Debug.WriteLine(ir);
 
 					ConsoleKeyInfo cki2;
 
-					if (clickOption is { }) {
-						var i = GetDisplayOptionFromIndex(dialog.Options.IndexOf(clickOption));
+					switch (ir.EventType) {
 
-						cki2 = new ConsoleKeyInfo(i, (ConsoleKey) i, false, false, false);
+						case ConsoleEventType.KEY_EVENT:
+							// Key was read
+
+							//cki2 = Console.ReadKey(true);
+							//cki2            = new ConsoleKeyInfo(ir.KeyEvent.UnicodeChar, (ConsoleKey) ir.KeyEvent.wVirtualKeyCode, ir.KeyEvent.)
+
+							cki2 = NativeInput.ReadKey(ir);
+
+							dragAndDropFile = ListenForFile(cki2);
+
+							if (!String.IsNullOrWhiteSpace(dragAndDropFile)) {
+
+								Debug.WriteLine($">> {dragAndDropFile}");
+								return null;
+							}
+
+							break;
+						case ConsoleEventType.MOUSE_EVENT:
+							var y = ir.MouseEvent.dwMousePosition.Y;
+
+							if (OptionPositions.ContainsKey(y)) {
+								var option = OptionPositions[y];
+								clickOption = option;
+							}
+
+							var i = GetDisplayOptionFromIndex(dialog.Options.IndexOf(clickOption));
+
+							cki2 = new ConsoleKeyInfo(i, (ConsoleKey) i, false, false, false);
+							break;
+						default:
+							throw new ArgumentOutOfRangeException();
 					}
-					else {
-						// Key was read
 
-						cki2 = Console.ReadKey(true);
-
-						dragAndDropFile = ListenForFile(cki2);
-
-						if (!String.IsNullOrWhiteSpace(dragAndDropFile)) {
-
-							Debug.WriteLine($">> {dragAndDropFile}");
-							return null;
-						}
-					}
-
-
-					//Debug.WriteLine($"{cki2.Key} | {cki2.KeyChar}");
 
 					return cki2;
 				});
