@@ -209,7 +209,7 @@ namespace Kantan.Cli
 		{
 			//Debug.WriteLine(l.FuncJoin((s) => $"[{s}]"));
 
-			string[] split = msg.Split(StringConstants.NativeNewLine);
+			string[] split = msg.Split(StringConstants.NEW_LINE);
 
 			bool d1     = false;
 			bool useBox = delim is null;
@@ -246,7 +246,7 @@ namespace Kantan.Cli
 				split[i] = c;
 			}
 
-			return String.Join(StringConstants.NativeNewLine, split);
+			return String.Join(StringConstants.NEW_LINE, split);
 		}
 
 		private static string FormatOption(NConsoleOption option, int i)
@@ -277,7 +277,7 @@ namespace Kantan.Cli
 				sb.Append($"{Strings.Indent(Strings.OutlineString(option.Data))}");
 			}
 
-			if (!sb.ToString().EndsWith(StringConstants.NativeNewLine)) {
+			if (!sb.ToString().EndsWith(StringConstants.NEW_LINE)) {
 				sb.AppendLine();
 			}
 
@@ -437,7 +437,7 @@ namespace Kantan.Cli
 				var task = Task.Run(() =>
 				{
 					// Block until input is entered.
-
+					_ReadInput:
 					int prevCount = dialog.Options.Count;
 
 					while (!ConsoleInterop.InputAvailable) {
@@ -473,6 +473,20 @@ namespace Kantan.Cli
 								return;
 							}
 
+							break;
+						case ConsoleEventType.MOUSE_EVENT when ConsoleInterop.IsMouseScroll(ir):
+
+							bool scrollDown = ir.MouseEvent.dwButtonState.HasFlag(ButtonState.ScrollDown);
+							var  increment  = scrollDown ? ScrollIncrement : -ScrollIncrement;
+
+							var canScroll = increment + Console.WindowTop > Console.BufferHeight ||
+							                increment + Console.WindowTop < 0;
+
+							if (!canScroll) {
+								Console.SetWindowPosition(0, increment + Console.WindowTop);
+							}
+
+							goto _ReadInput;
 							break;
 						case ConsoleEventType.MOUSE_EVENT:
 							// Mouse was read
@@ -749,6 +763,8 @@ namespace Kantan.Cli
 		///     Interface status
 		/// </summary>
 		private static ConsoleStatus Status;
+
+		public static int ScrollIncrement = 3;
 
 		private enum ConsoleStatus
 		{

@@ -41,7 +41,7 @@ namespace Kantan.Text
 
 		public const char NULL_CHAR = '\0';
 
-		public static readonly string NativeNewLine = '\n'.ToString();
+		public const char NEW_LINE = '\n';
 
 		/// <summary>
 		/// Constant <see cref="string.Empty"/>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using Kantan.Native.Structures;
 // ReSharper disable IdentifierTypo
 
@@ -39,14 +40,23 @@ namespace Kantan.Native
 			return ir.EventType == ConsoleEventType.KEY_EVENT && keyEvent.bKeyDown != BOOL.FALSE;
 		}
 
-		private static bool IsMouseEvent(InputRecord ir)
+		internal static bool IsMouseScroll(InputRecord ir)
 		{
 			var mouseEvent = ir.MouseEvent;
 
+			var mouseWheel = mouseEvent.dwEventFlags == EventFlags.MOUSE_WHEELED ||
+			                 mouseEvent.dwEventFlags == EventFlags.MOUSE_HWHEELED;
+
 			return ir.EventType == ConsoleEventType.MOUSE_EVENT &&
-			       mouseEvent.dwEventFlags != EventFlags.MOUSE_MOVED &&
-			       mouseEvent.dwEventFlags != EventFlags.MOUSE_WHEELED &&
-			       mouseEvent.dwEventFlags != EventFlags.MOUSE_HWHEELED;
+			       mouseEvent.dwEventFlags != EventFlags.MOUSE_MOVED && mouseWheel;
+		}
+
+		private static bool IsMouseEvent(InputRecord ir)
+		{
+			var mouseEvent = ir.MouseEvent;
+			
+			return ir.EventType == ConsoleEventType.MOUSE_EVENT &&
+			       mouseEvent.dwEventFlags != EventFlags.MOUSE_MOVED || IsMouseScroll(ir);
 		}
 
 		private static bool IsModKey(InputRecord ir)
@@ -154,7 +164,9 @@ namespace Kantan.Native
 						return false;
 					}
 
+
 					// Skip non key-down && mod key events.
+					
 					if (!IsMouseEvent(ir) && (!IsKeyDownEvent(ir) || IsModKey(ir))) {
 						var rg = new InputRecord[1];
 
@@ -164,7 +176,6 @@ namespace Kantan.Native
 					else {
 						return true;
 					}
-
 				}
 			}
 		}

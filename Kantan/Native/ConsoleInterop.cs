@@ -133,6 +133,14 @@ namespace Kantan.Native
 		FROM_LEFT_3RD_BUTTON_PRESSED = 0x0008,
 		FROM_LEFT_4TH_BUTTON_PRESSED = 0x0010,
 		RIGHTMOST_BUTTON_PRESSED     = 0x0002,
+
+		/// <summary>
+		/// For mouse wheel events, if this flag is set,
+		/// the wheel was scrolled down.  If cleared,
+		/// the wheel was scrolled up.
+		/// This is not officially documented.
+		/// </summary>
+		ScrollDown = unchecked((int)0xFF000000)
 	}
 
 
