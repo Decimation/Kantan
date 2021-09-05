@@ -203,9 +203,9 @@ namespace UnitTest
 		[Test]
 		public void StringTest()
 		{
-			Assert.Null(Strings.NullIfNullOrWhiteSpace("    "));
-			Assert.Null(Strings.NullIfNullOrWhiteSpace(""));
-			Assert.Null(Strings.NullIfNullOrWhiteSpace(null));
+			Assert.Null(Strings.NormalizeNull("    "));
+			Assert.Null(Strings.NormalizeNull(""));
+			Assert.Null(Strings.NormalizeNull(null));
 		}
 
 		[Test]

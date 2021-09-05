@@ -39,7 +39,6 @@ namespace Test
 	{
 		private static async Task Main(string[] args)
 		{
-
 			/*var s = new string('-', Console.BufferWidth)+'\n'+'\n';
 			int    f = Strings.MeasureRows(s);
 			Console.WriteLine(s);
@@ -49,18 +48,18 @@ namespace Test
 			Console.WriteLine(s);
 			Debug.WriteLine(Strings.MeasureRows(s));
 			Debug.WriteLine(Console.CursorTop);*/
-			await ConsoleTest();
-			//ConsoleInterop.Init();
 			
+
+			await ConsoleTest();
+
+			//ConsoleInterop.Init();
 		}
 
-		
 
-
-		class MyClass : IOutline
+		private class MyClass : IOutline
 		{
 			/// <inheritdoc />
-			public Dictionary<string, object> Outline => new Dictionary<string, object>()
+			public Dictionary<string, object> Outline => new()
 			{
 				["a"] = "g",
 				["x"] = "d",

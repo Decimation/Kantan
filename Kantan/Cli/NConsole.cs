@@ -97,9 +97,6 @@ namespace Kantan.Cli
 		public static void Init()
 		{
 			//Console.OutputEncoding = Encoding.Unicode;
-			//ListenThread.Start();
-
-			//ThreadPool.QueueUserWorkItem(KeyWatch);
 		}
 
 		/// <summary>
@@ -168,12 +165,15 @@ namespace Kantan.Cli
 			Console.SetCursorPosition(left, top);
 		}
 
-		public static void ClearLine(int newTop)
+		public static void ClearLine(int newTop, int? top = null)
 		{
-			(int left, int top) = Console.GetCursorPosition();
+			(int left, int top1) = Console.GetCursorPosition();
+
+			top ??= top1;
+
 			Console.SetCursorPosition(0, newTop);
 			Console.Write(new string(' ', Console.BufferWidth));
-			Console.SetCursorPosition(left, top);
+			Console.SetCursorPosition(left, top.Value);
 
 		}
 
@@ -182,17 +182,21 @@ namespace Kantan.Cli
 			Console.SetCursorPosition(0, Console.CursorTop - 1);
 
 			int top = Console.CursorTop;
-			Console.SetCursorPosition(0, Console.CursorTop);
+			/*Console.SetCursorPosition(0, Console.CursorTop);
 			Console.Write(new string(' ', Console.BufferWidth));
-			Console.SetCursorPosition(0, top);
+			Console.SetCursorPosition(0, top);*/
+			ClearLine(Console.CursorTop, top);
+
 		}
 
 		public static void ClearLastLine()
 		{
-			var top = Console.CursorTop;
+			/*var top = Console.CursorTop;
 			Console.SetCursorPosition(0, top - 1);
 			Console.Write(new string(' ', Console.BufferWidth));
-			Console.SetCursorPosition(0, top);
+			Console.SetCursorPosition(0, top);*/
+
+			ClearLine(Console.CursorTop - 1);
 		}
 
 		#endregion
@@ -312,13 +316,14 @@ namespace Kantan.Cli
 			return INVALID;
 		}
 
-		private static readonly Dictionary<int, NConsoleOption> OptionPositions = new();
-
 		/// <summary>
 		///     Display dialog
 		/// </summary>
 		private static void DisplayDialog(NConsoleDialog dialog, ConsoleOutputResult output)
 		{
+			// todo: atomic write operations (i.e., instead of incremental)
+
+
 			Console.Clear();
 
 			// Console.SetCursorPosition(0,0);
@@ -396,10 +401,6 @@ namespace Kantan.Cli
 			// Console.Write(sb);
 		}
 
-		// todo: atomic write operations (i.e., instead of incremental)
-
-		// todo: fix scrolling
-
 		#endregion
 
 		/// <summary>
@@ -476,18 +477,18 @@ namespace Kantan.Cli
 							break;
 						case ConsoleEventType.MOUSE_EVENT when ConsoleInterop.IsMouseScroll(ir):
 
-							bool scrollDown = ir.MouseEvent.dwButtonState.HasFlag(ButtonState.ScrollDown);
+							bool scrollDown = ir.MouseEvent.dwButtonState.HasFlag(ButtonState.SCROLL_DOWN);
 							var  increment  = scrollDown ? ScrollIncrement : -ScrollIncrement;
 
-							var canScroll = increment + Console.WindowTop > Console.BufferHeight ||
-							                increment + Console.WindowTop < 0;
+							var b = increment + Console.WindowTop > Console.BufferHeight ||
+							        increment + Console.WindowTop < 0;
 
-							if (!canScroll) {
+							if (!b) {
+								// note: Still seems to throw an exception when attempting to scrolling past end ???
 								Console.SetWindowPosition(0, increment + Console.WindowTop);
 							}
 
 							goto _ReadInput;
-							break;
 						case ConsoleEventType.MOUSE_EVENT:
 							// Mouse was read
 							var y = ir.MouseEvent.dwMousePosition.Y;
@@ -728,6 +729,10 @@ namespace Kantan.Cli
 			return sb.ToString().Trim(quote);
 		}
 
+		private static readonly Dictionary<int, NConsoleOption> OptionPositions = new();
+
+		public static int ScrollIncrement { get; set; } = 3;
+
 		#region Keys
 
 		/// <summary>
@@ -763,8 +768,6 @@ namespace Kantan.Cli
 		///     Interface status
 		/// </summary>
 		private static ConsoleStatus Status;
-
-		public static int ScrollIncrement = 3;
 
 		private enum ConsoleStatus
 		{

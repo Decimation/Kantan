@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Kantan.Native.Structures;
 
@@ -119,7 +118,7 @@ namespace Kantan.Native
 		#endregion
 	}
 
-	internal enum StandardHandle : int
+	internal enum StandardHandle
 	{
 		STD_ERROR_HANDLE  = -12,
 		STD_INPUT_HANDLE  = -10,
@@ -135,12 +134,11 @@ namespace Kantan.Native
 		RIGHTMOST_BUTTON_PRESSED     = 0x0002,
 
 		/// <summary>
-		/// For mouse wheel events, if this flag is set,
-		/// the wheel was scrolled down.  If cleared,
-		/// the wheel was scrolled up.
+		/// For mouse wheel events, if this flag is set, the wheel was scrolled down.
+		/// If cleared, the wheel was scrolled up.
 		/// This is not officially documented.
 		/// </summary>
-		ScrollDown = unchecked((int)0xFF000000)
+		SCROLL_DOWN = unchecked((int) 0xFF000000)
 	}
 
 
@@ -167,7 +165,7 @@ namespace Kantan.Native
 	/// as BOOL. It is best to never compare BOOL to TRUE. Always use bResult != BOOL.FALSE
 	/// or bResult == BOOL.FALSE .
 	/// </remarks>
-	internal enum BOOL : int
+	internal enum BOOL
 	{
 		FALSE = 0,
 		TRUE  = 1,

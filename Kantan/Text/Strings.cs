@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -77,12 +78,11 @@ namespace Kantan.Text
 
 			return value.Length <= maxLength ? value : value[..maxLength];
 		}
-
+		
 		[CanBeNull]
-		public static string NullIfNullOrWhiteSpace([CanBeNull] string str)
+		public static string NormalizeNull([CanBeNull] string str)
 		{
 			return String.IsNullOrWhiteSpace(str) ? null : str;
-
 		}
 
 		public static int MeasureRows(string s)
@@ -98,7 +98,6 @@ namespace Kantan.Text
 				n++;
 			}
 
-			return (int) n;
 			/*int l = s.Length;
 			int c = 1;
 			while (--l>0) {
@@ -112,6 +111,8 @@ namespace Kantan.Text
 			}
 
 			return c;*/
+
+			return n;
 		}
 
 		public static bool StringWraps(string s)

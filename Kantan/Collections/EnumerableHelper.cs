@@ -39,6 +39,20 @@ namespace Kantan.Collections
 		public static bool StartsWith<T>(this IList<T> list, IList<T> sequence) =>
 			list.Take(sequence.Count).SequenceEqual(sequence);
 
+		public static T[] Generate<T>(Func<T, T> f, int n)
+		{
+			var rg = new T[n];
+
+			for (int i = 0; i < n; i++) {
+				T t = i == 0 ? default : rg[i - 1];
+				rg[i] = f(t);
+			}
+
+			return rg;
+		}
+
+		public static T[] Generate<T>(Func<T> f, int n) => Generate<T>(x => f(), n);
+
 		/// <summary>
 		/// Retrieves a random element from <paramref name="list"/>.
 		/// </summary>
@@ -233,19 +247,6 @@ namespace Kantan.Collections
 
 		#endregion
 
-		/*public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dic,
-															 TKey k, TValue d = default)
-		{
-
-			if (!dic.ContainsKey(k)) {
-				dic.Add(k, d);
-
-				// for performance
-				return d;
-			}
-
-			return dic[k];
-		}*/
 
 		public static bool TryCastDictionary<T>(T obj, out Map buf) where T : IDictionary
 		{
