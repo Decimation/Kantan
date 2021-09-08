@@ -85,6 +85,13 @@ namespace Kantan.Native
 		                                                      SmallRect lpClipRectangle, Coord dwDestinationOrigin,
 		                                                      ref ConsoleCharInfo lpFill);
 
+		[DllImport(KERNEL32_DLL, SetLastError = true)]
+		internal static extern bool WriteConsoleOutputCharacter(IntPtr hConsoleOutput,
+		                                                        [In]
+		                                                        [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 2)]
+		                                                        char[] lpCharacter, int nLength,
+		                                                        Coord dwWriteCoord, ref int lpNumberOfCharsWritten);
+
 		private const string KERNEL32_DLL = "kernel32.dll";
 	}
 

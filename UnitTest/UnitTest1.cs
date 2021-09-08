@@ -22,6 +22,77 @@ using NUnit.Framework;
 namespace UnitTest
 {
 	[TestFixture]
+	public class EnumerableTests
+	{
+		[Test]
+		public void IndexOf()
+		{
+			var s = "foobarfoobar";
+			Assert.True(s.AllIndexesOf("foo").SequenceEqual(new[] { 0, 6 }));
+		}
+
+		[Test]
+		public void IndexOf2()
+		{
+			var l = new List<int>() { 0, 1, 2, 4, 1, 4 };
+			Assert.True(l.AllIndexesOf(1).SequenceEqual(new[] { 1, 4 }));
+		}
+
+		[Test]
+		public void CollectionsTest2()
+		{
+			var rg      = new List<int> { 1, 2, 3, 9, 9, 9, 1, 2, 3 };
+			var search  = new List<int> { 1, 2, 3 };
+			var replace = new List<int> { 3, 2, 1 };
+
+			var rg2  = rg.ReplaceAllSequences(search, replace);
+			var rg2x = new List<int> { 3, 2, 1, 9, 9, 9, 3, 2, 1 };
+
+			Assert.True(rg2.SequenceEqual(rg2x));
+
+			var rg3 = new List<int>()
+			{
+				1, 2, 3, 3, 2, 1, 5, 6, 1, 2, 3, 5, 5, 5, 1, 2, 3
+			};
+
+			var rg3x = rg3.ReplaceAllSequences(new List<int>() { 1, 2, 3 }, new List<int>() { 4, 5, 6 });
+
+			Assert.True(rg3x.SequenceEqual(new List<int>()
+			{
+				4, 5, 6, 3, 2, 1, 5, 6, 4, 5, 6, 5, 5, 5, 4, 5, 6
+			}));
+		}
+
+
+		[Test]
+		public void CollectionsTest()
+		{
+			var rg      = new List<int> { 1, 2, 3, 4, 5, 6, 3, 4, 5 };
+			var search  = new List<int> { 3, 4, 5 };
+			var replace = new List<int> { 5, 4, 3 };
+
+			rg.ReplaceAllSequences(search, replace);
+
+			TestContext.WriteLine($"{rg.QuickJoin()}");
+
+			var rgNew = new List<int> { 1, 2, 5, 4, 3, 6, 5, 4, 3 };
+
+			Assert.True(rg.SequenceEqual(rgNew));
+
+			// var rg2      = new[] {"a", "foo", "bar", "hi"};
+			// var search2  = new[] {"foo", "bar"};
+			// var replace2 = new[] {"goo"};
+			//
+			//
+			// rg2 = rg2.ReplaceAllSequences(search2, replace2);
+			//
+			// //TestContext.WriteLine($"{rg2.QuickJoin()}");
+			// var rg2New = new[] {"a", "goo", "hi"};
+			// Assert.True(rg2.SequenceEqual(rg2New));
+		}
+	}
+
+	[TestFixture]
 	public class Tests
 	{
 		[SetUp]
@@ -115,7 +186,7 @@ namespace UnitTest
 
 			Assert.AreEqual(MathHelper.Multiply(2, 2), 4);
 			Assert.AreEqual(MathHelper.Divide(10, 5), 2);
-			
+
 		}
 
 		[Test]
@@ -196,7 +267,7 @@ namespace UnitTest
 			Assert.False(Strings.IsCharInRange(0x04FF + 1, UnicodeRanges.Cyrillic));
 			Assert.False(Strings.IsCharInRange(0x0, UnicodeRanges.Cyrillic));
 			Assert.True(Strings.IsCharInRange('A', UnicodeRanges.BasicLatin));
-			Assert.True(Strings.IsCharInRange(StringConstants.CHECK_MARK, UnicodeRanges.Dingbats));
+			Assert.True(Strings.IsCharInRange(Strings.Constants.CHECK_MARK, UnicodeRanges.Dingbats));
 
 		}
 
@@ -206,58 +277,6 @@ namespace UnitTest
 			Assert.Null(Strings.NormalizeNull("    "));
 			Assert.Null(Strings.NormalizeNull(""));
 			Assert.Null(Strings.NormalizeNull(null));
-		}
-
-		[Test]
-		public void CollectionsTest2()
-		{
-			var rg      = new List<int> { 1, 2, 3, 9, 9, 9, 1, 2, 3 };
-			var search  = new List<int> { 1, 2, 3 };
-			var replace = new List<int> { 3, 2, 1 };
-
-			var rg2  = rg.ReplaceAllSequences(search, replace);
-			var rg2x = new List<int> { 3, 2, 1, 9, 9, 9, 3, 2, 1 };
-
-			Assert.True(rg2.SequenceEqual(rg2x));
-
-			var rg3 = new List<int>()
-			{
-				1, 2, 3, 3, 2, 1, 5, 6, 1, 2, 3, 5, 5, 5, 1, 2, 3
-			};
-
-			var rg3x = rg3.ReplaceAllSequences(new List<int>() { 1, 2, 3 }, new List<int>() { 4, 5, 6 });
-
-			Assert.True(rg3x.SequenceEqual(new List<int>()
-			{
-				4, 5, 6, 3, 2, 1, 5, 6, 4, 5, 6, 5, 5, 5, 4, 5, 6
-			}));
-		}
-
-		[Test]
-		public void CollectionsTest()
-		{
-			var rg      = new List<int> { 1, 2, 3, 4, 5, 6, 3, 4, 5 };
-			var search  = new List<int> { 3, 4, 5 };
-			var replace = new List<int> { 5, 4, 3 };
-
-			rg.ReplaceAllSequences(search, replace);
-
-			TestContext.WriteLine($"{rg.QuickJoin()}");
-
-			var rgNew = new List<int> { 1, 2, 5, 4, 3, 6, 5, 4, 3 };
-
-			Assert.True(rg.SequenceEqual(rgNew));
-
-			// var rg2      = new[] {"a", "foo", "bar", "hi"};
-			// var search2  = new[] {"foo", "bar"};
-			// var replace2 = new[] {"goo"};
-			//
-			//
-			// rg2 = rg2.ReplaceAllSequences(search2, replace2);
-			//
-			// //TestContext.WriteLine($"{rg2.QuickJoin()}");
-			// var rg2New = new[] {"a", "goo", "hi"};
-			// Assert.True(rg2.SequenceEqual(rg2New));
 		}
 	}
 

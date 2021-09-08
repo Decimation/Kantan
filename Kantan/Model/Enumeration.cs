@@ -2,18 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Enum = System.Enum;
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
-
 
 namespace Kantan.Model
 {
 	public abstract class Enumeration : IComparable
 	{
-		public string Name { get; private init; }
+		public string Name { get; protected set; }
 
-		public int Id { get; private init; }
+		public int Id { get; protected set; }
 
 		protected Enumeration(int id, string name)
 		{
@@ -21,36 +21,36 @@ namespace Kantan.Model
 			Name = name;
 		}
 
-		
-
 		public static int GetNextId<T>() where T : Enumeration
 		{
-			var t = GetAll<T>().Last();
-			return t.Id + 1;
-		}
+			var all = GetAll<T>();
 
-		public override string ToString() => $"{Name} ({Id})";
+			var last = all.OrderBy(x => x.Id).Last();
+
+			return last.Id + 1;
+		}
 
 		public static IEnumerable<T> GetAll<T>() where T : Enumeration
 		{
-			var fields = typeof(T).GetFields(BindingFlags.Public |
-			                                 BindingFlags.Static |
-			                                 BindingFlags.DeclaredOnly)
-				.Where(r => r.FieldType == typeof(T));
+			return GetAll<T>(typeof(T));
+		}
+
+		public static IEnumerable<T> GetAll<T>(Type t) where T : Enumeration
+		{
+			const BindingFlags flags = BindingFlags.Public |
+			                           BindingFlags.Static |
+			                           BindingFlags.DeclaredOnly;
+
+			var fields = typeof(T).GetFields(flags).Where(r => r.FieldType == t);
 
 			return fields.Select(f => f.GetValue(null)).Cast<T>();
 		}
 
+		public override string ToString() => $"{Name} ({Id})";
+
 		public override bool Equals(object obj)
 		{
-
-			if (obj is not Enumeration otherValue)
-				return false;
-
-			var typeMatches  = GetType() == obj.GetType();
-			var valueMatches = Id.Equals(otherValue.Id);
-
-			return typeMatches && valueMatches;
+			return obj is Enumeration otherValue && Equals(otherValue);
 		}
 
 		protected bool Equals(Enumeration other)

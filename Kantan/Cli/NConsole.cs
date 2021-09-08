@@ -14,6 +14,7 @@ using Kantan.Native.Structures;
 using Kantan.Text;
 using Kantan.Threading;
 using Kantan.Utilities;
+using static Kantan.Diagnostics.LogCategories;
 using static Kantan.Internal.Common;
 
 // ReSharper disable SwitchStatementHandlesSomeKnownEnumValuesWithDefault
@@ -213,13 +214,13 @@ namespace Kantan.Cli
 		{
 			//Debug.WriteLine(l.FuncJoin((s) => $"[{s}]"));
 
-			string[] split = msg.Split(StringConstants.NEW_LINE);
+			string[] split = msg.Split(Strings.Constants.NEW_LINE);
 
 			bool d1     = false;
 			bool useBox = delim is null;
 
 			for (int i = 0; i < split.Length; i++) {
-				string a = StringConstants.SPACE + split[i];
+				string a = Strings.Constants.SPACE + split[i];
 
 				string b;
 
@@ -244,13 +245,13 @@ namespace Kantan.Cli
 				string c = b.Truncate(BufferLimit);
 
 				if (c.Length < b.Length) {
-					c += StringConstants.ELLIPSES;
+					c += Strings.Constants.ELLIPSES;
 				}
 
 				split[i] = c;
 			}
 
-			return String.Join(StringConstants.NEW_LINE, split);
+			return String.Join(Strings.Constants.NEW_LINE, split);
 		}
 
 		private static string FormatOption(NConsoleOption option, int i)
@@ -281,7 +282,7 @@ namespace Kantan.Cli
 				sb.Append($"{Strings.Indent(Strings.OutlineString(option.Data))}");
 			}
 
-			if (!sb.ToString().EndsWith(StringConstants.NEW_LINE)) {
+			if (!sb.ToString().EndsWith(Strings.Constants.NEW_LINE)) {
 				sb.AppendLine();
 			}
 
@@ -335,7 +336,7 @@ namespace Kantan.Cli
 
 			if (dialog.Subtitle != null) {
 
-				string subStr = FormatString(StringConstants.CHEVRON, dialog.Subtitle, false).AddColor(ColorOptions);
+				string subStr = FormatString(Strings.Constants.CHEVRON, dialog.Subtitle, false).AddColor(ColorOptions);
 				// string subStr = FormatString(null, dialog.Subtitle, true).AddColor(ColorOptions);
 
 				Write(true, subStr);
@@ -386,7 +387,7 @@ namespace Kantan.Cli
 
 				// sb.AppendLine();
 
-				string optionsStr = $"{StringConstants.CHEVRON} {output.Output.QuickJoin()}"
+				string optionsStr = $"{Strings.Constants.CHEVRON} {output.Output.QuickJoin()}"
 					.AddColor(ColorOptions);
 
 				Write(true, optionsStr);
@@ -491,7 +492,7 @@ namespace Kantan.Cli
 							goto _ReadInput;
 						case ConsoleEventType.MOUSE_EVENT:
 							// Mouse was read
-							var y = ir.MouseEvent.dwMousePosition.Y;
+							var (x,y) = (ir.MouseEvent.dwMousePosition.X,ir.MouseEvent.dwMousePosition.Y);
 
 							if (OptionPositions.ContainsKey(y)) {
 								var option  = OptionPositions[y];
@@ -502,7 +503,7 @@ namespace Kantan.Cli
 
 								// note: KeyChar argument is slightly inaccurate
 								cki2 = ConsoleInterop.GetKeyInfo(c, c, me.dwControlKeyState);
-
+								
 
 								// Highlight clicked option
 								/*option.Color   = Color.Black;
@@ -545,7 +546,7 @@ namespace Kantan.Cli
 				}
 
 				Debug.WriteLine($"{nameof(NConsole)}: ({cki.Key} {(int) cki.Key}) " +
-				                $"| ({cki.KeyChar} {(int) cki.KeyChar})");
+				                $"| ({cki.KeyChar} {(int) cki.KeyChar})", C_DEBUG);
 
 
 				// Handle special keys
@@ -669,7 +670,7 @@ namespace Kantan.Cli
 		[StringFormatMethod(STRING_FORMAT_ARG)]
 		public static bool ReadConfirmation(string msg, params object[] args)
 		{
-			Write($"{StringConstants.ASTERISK} {String.Format(msg, args)} ({OPTION_Y}/{OPTION_N}): ");
+			Write($"{Strings.Constants.ASTERISK} {String.Format(msg, args)} ({OPTION_Y}/{OPTION_N}): ");
 
 			char key = Char.ToUpper(Console.ReadKey().KeyChar);
 

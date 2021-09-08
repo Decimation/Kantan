@@ -3,8 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using static Kantan.Internal.Common;
 using Map = System.Collections.Generic.Dictionary<object, object>;
+
+// ReSharper disable SuggestVarOrType_Elsewhere
 
 // ReSharper disable AssignNullToNotNullAttribute
 
@@ -26,8 +29,8 @@ namespace Kantan.Collections
 		/// <param name="list">Larger <see cref="List{T}"/></param>
 		/// <param name="sequence">Smaller <see cref="List{T}"/></param>
 		/// <returns><c>true</c> if <paramref name="list"/> ends with <paramref name="sequence"/>; <c>false</c> otherwise</returns>
-		public static bool EndsWith<T>(this IList<T> list, IList<T> sequence) =>
-			list.TakeLast(sequence.Count).SequenceEqual(sequence);
+		public static bool EndsWith<T>(this IList<T> list, IList<T> sequence)
+			=> list.TakeLast(sequence.Count).SequenceEqual(sequence);
 
 		/// <summary>
 		/// Determines whether <paramref name="list"/> starts with <paramref name="sequence"/>.
@@ -36,8 +39,8 @@ namespace Kantan.Collections
 		/// <param name="list">Larger <see cref="List{T}"/></param>
 		/// <param name="sequence">Smaller <see cref="List{T}"/></param>
 		/// <returns><c>true</c> if <paramref name="list"/> starts with <paramref name="sequence"/>; <c>false</c> otherwise</returns>
-		public static bool StartsWith<T>(this IList<T> list, IList<T> sequence) =>
-			list.Take(sequence.Count).SequenceEqual(sequence);
+		public static bool StartsWith<T>(this IList<T> list, IList<T> sequence)
+			=> list.Take(sequence.Count).SequenceEqual(sequence);
 
 		public static T[] Generate<T>(Func<T, T> f, int n)
 		{
@@ -74,15 +77,20 @@ namespace Kantan.Collections
 			return rg;
 		}
 
-		public static IEnumerable<int> AllIndexesOf<T>(this List<T> list, T search)
+		public delegate int IndexOfCallback<in T>(T search, int start);
+
+		public static IEnumerable<int> AllIndexesOf<T>(IndexOfCallback<T> callback, int inc, T search)
 		{
-			int minIndex = list.IndexOf(search);
+			int minIndex = callback(search, 0);
 
 			while (minIndex != -1) {
 				yield return minIndex;
-				minIndex = list.IndexOf(search, minIndex + 1);
+				minIndex = callback(search, minIndex + inc);
 			}
 		}
+
+		public static IEnumerable<int> AllIndexesOf<T>(this List<T> list, T search)
+			=> AllIndexesOf(list.IndexOf, 1, search);
 
 		/// <summary>
 		/// Replaces all occurrences of sequence <paramref name="sequence"/> within <paramref name="rg"/> with <paramref name="replace"/>.
@@ -91,15 +99,42 @@ namespace Kantan.Collections
 		/// <param name="sequence">Sequence to search for</param>
 		/// <param name="replace">Replacement sequence</param>
 		public static IList<T> ReplaceAllSequences<T>(this List<T> rg, IList<T> sequence, IList<T> replace)
+			where T : IEquatable<T>
 		{
+
+			/*
+			 	| Method |     Mean |   Error |   StdDev |
+				|------- |---------:|--------:|---------:|
+				|   Test | 454.5 ns | 8.87 ns | 10.56 ns |
+			 */
+
+			/*
+			 	| Method |     Mean |   Error |  StdDev |
+				|------- |---------:|--------:|--------:|
+				|   Test | 236.0 ns | 1.93 ns | 1.81 ns |
+			 */
+
+			/*
+			 	| Method |     Mean |   Error |  StdDev |
+				|------- |---------:|--------:|--------:|
+				|   Test | 219.9 ns | 1.06 ns | 0.94 ns |
+			 */
+
 			int i = 0;
+
+			var seqSpan = CollectionsMarshal.AsSpan(sequence as List<T>);
+			var rgSpan  = CollectionsMarshal.AsSpan(rg);
 
 			do {
 				//i = rg.IndexOf(sequence[0], i);
 
-				var b = rg.GetRange(i, sequence.Count).SequenceEqual(sequence);
+				// var sp = new Span<T>(rg, i, sequence.Count);
+				// var b  = rg.GetRange(i, sequence.Count).SequenceEqual(sequence);
+
+				var b = rgSpan.Slice(i, sequence.Count).SequenceEqual(seqSpan);
 
 				if (b) {
+
 					rg.RemoveRange(i, sequence.Count);
 					rg.InsertRange(i, replace);
 					i += sequence.Count;
@@ -128,9 +163,7 @@ namespace Kantan.Collections
 		}
 
 		public static IEnumerable<T> Difference<T>(this IEnumerable<T> a, IEnumerable<T> b)
-		{
-			return b.Where(c => !a.Contains(c));
-		}
+			=> b.Where(c => !a.Contains(c));
 
 #if !NET6_0_OR_GREATER
 
@@ -166,9 +199,7 @@ namespace Kantan.Collections
 		/// comparing them by the specified key projection.</returns>
 		public static IEnumerable<TSource> DistinctBy<TSource, TKey>(this IEnumerable<TSource> source,
 		                                                             Func<TSource, TKey> keySelector)
-		{
-			return source.DistinctBy(keySelector, null);
-		}
+			=> source.DistinctBy(keySelector, null);
 
 		/// <summary>
 		/// Returns all distinct elements of the given source, where "distinctness"
@@ -191,8 +222,13 @@ namespace Kantan.Collections
 		                                                             Func<TSource, TKey> keySelector,
 		                                                             IEqualityComparer<TKey> comparer)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+			if (source == null) {
+				throw new ArgumentNullException(nameof(source));
+			}
+
+			if (keySelector == null) {
+				throw new ArgumentNullException(nameof(keySelector));
+			}
 
 			return _();
 

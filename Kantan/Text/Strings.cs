@@ -1,18 +1,17 @@
 #nullable disable
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Text.Unicode;
 using JetBrains.Annotations;
+using Kantan.Collections;
 using Kantan.Model;
 using static Kantan.Internal.Common;
-using static Kantan.Text.StringConstants;
+
+// ReSharper disable ArrangeObjectCreationWhenTypeNotEvident
 
 // ReSharper disable InconsistentNaming
 
@@ -35,21 +34,8 @@ namespace Kantan.Text
 	/// <seealso cref="CharUnicodeInfo"/>
 	/// <seealso cref="UnicodeCategory"/>
 	/// <seealso cref="UnicodeRanges"/>
-	public static class Strings
+	public static partial class Strings
 	{
-		public static string Center(string str, int width)
-		{
-			//https://stackoverflow.com/questions/48621267/is-there-a-way-to-center-text-in-powershell
-
-
-			var count = (int) (Math.Max(0, width / 2) - Math.Floor((double) str.Length / 2));
-
-			return $"{new string(' ', count)}{str}";
-
-		}
-
-		public static string Center(string str) => Center(str, Console.BufferWidth);
-
 		public static string SelectOnlyDigits(this string s) => s.SelectOnly(Char.IsDigit);
 
 		public static string SelectOnly(this string s, Func<char, bool> fn)
@@ -78,7 +64,7 @@ namespace Kantan.Text
 
 			return value.Length <= maxLength ? value : value[..maxLength];
 		}
-		
+
 		[CanBeNull]
 		public static string NormalizeNull([CanBeNull] string str)
 		{
@@ -135,19 +121,15 @@ namespace Kantan.Text
 
 		public static string CreateRandom(int length)
 		{
-			return new(Enumerable.Repeat(Alphanumeric, length)
+			return new(Enumerable.Repeat(Constants.Alphanumeric, length)
 			                     .Select(s => s[RandomInstance.Next(s.Length)])
 			                     .ToArray());
 		}
 
 		public static IEnumerable<int> AllIndexesOf(this string str, string search)
 		{
-			int minIndex = str.IndexOf(search);
-
-			while (minIndex != -1) {
-				yield return minIndex;
-				minIndex = str.IndexOf(search, minIndex + search.Length, StringComparison.Ordinal);
-			}
+			return EnumerableHelper.AllIndexesOf((s, i) => str.IndexOf(s, i, StringComparison.Ordinal),
+			                                     search.Length, search);
 		}
 
 		public static string RemoveLastOccurrence(this string s, string s2) =>
@@ -265,10 +247,24 @@ namespace Kantan.Text
 
 		#endregion
 
+		#region Formatting
+
+		public static string Center(string str, int width)
+		{
+			//https://stackoverflow.com/questions/48621267/is-there-a-way-to-center-text-in-powershell
+
+
+			var count = (int) (Math.Max(0, width / 2) - Math.Floor((double) str.Length / 2));
+
+			return $"{new string(' ', count)}{str}";
+
+		}
+
+		public static string Center(string str) => Center(str, Console.BufferWidth);
 
 		#region Outline
 
-		public static string Indent(string s) => Indent(s, Indentation);
+		public static string Indent(string s) => Indent(s, Constants.Indentation);
 
 		public static string Indent(string s, string indent)
 		{
@@ -302,7 +298,6 @@ namespace Kantan.Text
 		}
 
 		#endregion
-
 
 		#region Hex
 
@@ -356,10 +351,13 @@ namespace Kantan.Text
 
 		#endregion
 
+		#endregion
+
+
 		#region Join
 
 		public static string FormatJoin<T>(this IEnumerable<T> values, string format, IFormatProvider provider = null,
-		                                   string delim = JOIN_COMMA) where T : IFormattable
+		                                   string delim = Constants.JOIN_COMMA) where T : IFormattable
 		{
 
 			return values.Select(v => v.ToString(format, provider)).QuickJoin(delim);
@@ -376,13 +374,13 @@ namespace Kantan.Text
 		/// <param name="delim">Delimiter</param>
 		/// <typeparam name="T">Element type</typeparam>
 		public static string FuncJoin<T>(this IEnumerable<T> values, Func<T, string> toString,
-		                                 string delim = JOIN_COMMA)
+		                                 string delim = Constants.JOIN_COMMA)
 		{
 			return values.Select(toString).QuickJoin(delim);
 		}
 
 
-		public static string QuickJoin<T>(this IEnumerable<T> enumerable, string delim = JOIN_COMMA)
+		public static string QuickJoin<T>(this IEnumerable<T> enumerable, string delim = Constants.JOIN_COMMA)
 		{
 			return String.Join(delim, enumerable);
 		}
@@ -393,14 +391,9 @@ namespace Kantan.Text
 			CodePagesEncodingProvider.Instance.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
 
 		public static string EncodingConvert(Encoding src, Encoding dest, string str)
-		{
-			return dest.GetString(Encoding.Convert(src, dest, src.GetBytes(str)));
-		}
+			=> dest.GetString(Encoding.Convert(src, dest, src.GetBytes(str)));
 
-		public static string EncodingConvert(Encoding src, string str)
-		{
-			return EncodingConvert(src, EncodingOEM, str);
-		}
+		public static string EncodingConvert(Encoding src, string str) => EncodingConvert(src, EncodingOEM, str);
 
 
 		public static bool IsCharInRange(short c, UnicodeRange r) => IsCharInRange((char) c, r);
@@ -413,30 +406,30 @@ namespace Kantan.Text
 			string delim;
 
 			if (i == 0 && l.Count == 2) {
-				delim = StringConstants.Horizontal;
+				delim = Constants.Horizontal;
 				return delim;
 			}
 
 			if (l.Skip(i + 1).All(string.IsNullOrWhiteSpace)) {
-				return BottomLeftCorner;
+				return Constants.BottomLeftCorner;
 			}
 
 			delim = l switch
 			{
-				{ Count: 1 } => Horizontal,
+				{ Count: 1 } => Constants.Horizontal,
 				{ Count: 2 } => i switch
 				{
-					0 => UpperLeftCorner,
-					1 => BottomLeftCorner,
+					0 => Constants.UpperLeftCorner,
+					1 => Constants.BottomLeftCorner,
 				},
 				_ => i switch
 				{
-					0   => UpperLeftCorner,
-					> 0 => Vertical,
-					_   => BottomLeftCorner,
+					0   => Constants.UpperLeftCorner,
+					> 0 => Constants.Vertical,
+					_   => Constants.BottomLeftCorner,
 				}
 			};
-			
+
 			return delim;
 		}
 	}

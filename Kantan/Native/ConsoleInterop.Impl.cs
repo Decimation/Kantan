@@ -1,7 +1,9 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Kantan.Native.Structures;
+
 // ReSharper disable IdentifierTypo
 
 // ReSharper disable UnusedMember.Global
@@ -11,9 +13,10 @@ namespace Kantan.Native
 {
 	internal static partial class ConsoleInterop
 	{
-		internal static IntPtr       _stdIn;
-		private static  ConsoleModes _oldMode;
-		internal static IntPtr       _stdOut;
+		internal static IntPtr _stdIn;
+		internal static IntPtr _stdOut;
+
+		private static ConsoleModes _oldMode;
 
 		/// <summary>
 		/// Reads characters from the screen buffer, starting at the given position.
@@ -34,6 +37,41 @@ namespace Kantan.Native
 			return new string(buff, 0, charsRead);
 		}
 
+		/// <summary>
+		/// Writes characters to the buffer at the given position.
+		/// The cursor position is not updated.
+		/// </summary>
+		/// <param name="text">The string to be output.</param>
+		/// <param name="x">Column position of the starting location.</param>
+		/// <param name="y">Row position of the starting location.</param>
+		/// <returns></returns>
+		internal static int WriteXY(string text, int x, int y) => WriteXY(text.ToCharArray(), text.Length, x, y);
+
+		/// <summary>
+		/// Writes characters from a character array to the screen buffer at the given cursor position.
+		/// </summary>
+		/// <param name="text">An array containing the characters to be written.</param>
+		/// <param name="nChars">The number of characters to be written.</param>
+		/// <param name="x">Column position in which to write the first character.</param>
+		/// <param name="y">Row position in which to write the first character.</param>
+		/// <returns>Returns the number of characters written.</returns>
+		internal static int WriteXY(char[] text, int nChars, int x, int y)
+		{
+			if (nChars > text.Length) {
+				throw new ArgumentException("Cannot be larger than the array length.", nameof(nChars));
+			}
+
+			int charsWritten = 0;
+
+			var writePos = new Coord((ushort) x, (ushort) y);
+
+			if (!WriteConsoleOutputCharacter(_stdOut, text, nChars, writePos, ref charsWritten)) {
+				throw new Win32Exception();
+			}
+
+			return charsWritten;
+		}
+
 		private static bool IsKeyDownEvent(InputRecord ir)
 		{
 			var keyEvent = ir.KeyEvent;
@@ -44,8 +82,8 @@ namespace Kantan.Native
 		{
 			var mouseEvent = ir.MouseEvent;
 
-			var mouseWheel = mouseEvent.dwEventFlags == EventFlags.MOUSE_WHEELED ||
-			                 mouseEvent.dwEventFlags == EventFlags.MOUSE_HWHEELED;
+			var mouseWheel = mouseEvent.dwEventFlags is EventFlags.MOUSE_WHEELED 
+				                 or EventFlags.MOUSE_HWHEELED;
 
 			return ir.EventType == ConsoleEventType.MOUSE_EVENT &&
 			       mouseEvent.dwEventFlags != EventFlags.MOUSE_MOVED && mouseWheel;
@@ -54,7 +92,7 @@ namespace Kantan.Native
 		private static bool IsMouseEvent(InputRecord ir)
 		{
 			var mouseEvent = ir.MouseEvent;
-			
+
 			return ir.EventType == ConsoleEventType.MOUSE_EVENT &&
 			       mouseEvent.dwEventFlags != EventFlags.MOUSE_MOVED || IsMouseScroll(ir);
 		}
@@ -166,7 +204,7 @@ namespace Kantan.Native
 
 
 					// Skip non key-down && mod key events.
-					
+
 					if (!IsMouseEvent(ir) && (!IsKeyDownEvent(ir) || IsModKey(ir))) {
 						var rg = new InputRecord[1];
 

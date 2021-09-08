@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
+using Kantan.Collections;
 
 namespace Benchmark
 {
@@ -26,11 +27,27 @@ namespace Benchmark
 		}
 	}
 
+
+	public class Benchmarks2
+	{
+		[Benchmark]
+		public IList<int> Test()
+		{
+			var rg      = new List<int> { 1, 2, 3, 4, 5, 6, 3, 4, 5 };
+			var search  = new List<int> { 3, 4, 5 };
+			var replace = new List<int> { 5, 4, 3 };
+
+			return rg.ReplaceAllSequences(search, replace);
+
+
+		}
+	}
+
 	public static class Program
 	{
 		public static void Main(string[] args)
 		{
-			BenchmarkRunner.Run<Benchmarks1>();
+			BenchmarkRunner.Run<Benchmarks2>();
 
 		}
 	}

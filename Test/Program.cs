@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -11,6 +13,7 @@ using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Kantan.Cli;
@@ -48,23 +51,46 @@ namespace Test
 			Console.WriteLine(s);
 			Debug.WriteLine(Strings.MeasureRows(s));
 			Debug.WriteLine(Console.CursorTop);*/
-			
 
-			await ConsoleTest();
+
+			var s = "foo".AddColor(Color.Aqua);
+			Console.WriteLine(s);
+
+			var s2 = Pastel.Remove(s);
+			Console.WriteLine(s2);
+			// await ConsoleTest();
 
 			//ConsoleInterop.Init();
+
+			var enumeration = new c(1 << 0, null);
+			var v           = new c(1 << 1, null) | enumeration;
+			Console.WriteLine(v);
+			Console.WriteLine(v.HasFlag(enumeration));
+			Console.WriteLine(v.GetNextFlagId());
 		}
 
+		class c : FlagsEnumeration
+		{
+			public c(int id, string name) : base(id, name) { }
+
+			public static readonly c a  = new c(0 << 0, null);
+			public static readonly c b  = new c(1 << 0, null);
+			public static readonly c c1 = new c(1 << 1, null);
+			public static readonly c d  = new c(1 << 2, null);
+
+			public override c Copy() => new(Id, Name);
+		}
 
 		private class MyClass : IOutline
 		{
 			/// <inheritdoc />
-			public Dictionary<string, object> Outline => new()
-			{
-				["a"] = "g",
-				["x"] = "d",
+			public Dictionary<string, object> Outline
+				=> new()
+				{
+					["a"] = "g",
+					["x"] = "d",
 
-			};
+				};
 		}
 
 		private static async Task ConsoleTest()

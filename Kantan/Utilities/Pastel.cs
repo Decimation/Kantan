@@ -250,17 +250,14 @@ namespace Kantan.Utilities
 			return HexColorFormatFunctions[_enabled][ColorPlane.Background](input, hexColor);
 		}
 
-		public static string AddHighlight(this string s, Color c)
-		{
-			return s.AddColorBG(c);
-		}
+		
 
-		public static string AddHighlight(this string s)
+		public static string AddHighlight(this string s, Color? c = null)
 		{
-			var c = Console.BackgroundColor.ToColor();
-			var f = c.Invert();
+			c ??= Console.BackgroundColor.ToColor();
+			var f = c.Value.Invert();
 
-			return s.AddColorBG(f).AddColor(c);
+			return s.AddColorBG(f).AddColor(c.Value);
 		}
 
 		public static string AddUnderline(this string s)
@@ -269,6 +266,12 @@ namespace Kantan.Utilities
 
 			s = $"\x1b[4m{s}{ANSI_RESET}";
 			return s;
+		}
+
+		public static string Remove(string s)
+		{
+			return Regex.Replace(s, "(\x9B|\x1B\\[)[0-?]*[ -/]*[@-~]", String.Empty);
+
 		}
 
 		private const string ANSI_RESET = "\u001b[0m";
