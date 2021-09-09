@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using Kantan.Native;
 
 // ReSharper disable UnusedVariable
 
@@ -22,19 +23,13 @@ namespace Kantan.Utilities
 	{
 		//https://github.com/silkfire/Pastel/blob/master/src/ConsoleExtensions.cs
 
-		private const int STD_OUTPUT_HANDLE = -11;
-
-		private const uint ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004;
-
-		private const string K32 = "kernel32.dll";
-
 		private const string FORMAT_STRING_START   = "\u001b[{0};2;";
 		private const string FORMAT_STRING_COLOR   = "{1};{2};{3}m";
 		private const string FORMAT_STRING_CONTENT = "{4}";
 		private const string FORMAT_STRING_END     = "\u001b[0m";
 
 
-		private static bool _enabled;
+		public static bool Enabled { get; set; }
 
 		private static readonly string FormatStringFull =
 			$"{FORMAT_STRING_START}{FORMAT_STRING_COLOR}{FORMAT_STRING_CONTENT}{FORMAT_STRING_END}";
@@ -53,21 +48,18 @@ namespace Kantan.Utilities
 
 		private static readonly Regex CloseNestedPastelStringRegex2 = new(
 			$"(?<!^)(?<!{FORMAT_STRING_END.Replace("[", @"\[")})(?<!{String.Format($"{FORMAT_STRING_START.Replace("[", @"\[")}{FORMAT_STRING_COLOR}", new[] { $"(?:{PlaneFormatModifiers[ColorPlane.Foreground]}|{PlaneFormatModifiers[ColorPlane.Background]})" }.Concat(Enumerable.Repeat(@"\d{1,3}", 3)).Cast<object>().ToArray())})(?:{String.Format(FORMAT_STRING_START.Replace("[", @"\["), $"(?:{PlaneFormatModifiers[ColorPlane.Foreground]}|{PlaneFormatModifiers[ColorPlane.Background]})")})"
-			,
-			RegexOptions.Compiled);
+			, RegexOptions.Compiled);
 
 		private static readonly ReadOnlyDictionary<ColorPlane, Regex> CloseNestedPastelStringRegex3 =
 			new(new Dictionary<ColorPlane, Regex>
 			{
 				[ColorPlane.Foreground] =
 					new(
-						$"(?:{FORMAT_STRING_END.Replace("[", @"\[")})(?!{String.Format(FORMAT_STRING_START.Replace("[", @"\["), PlaneFormatModifiers[ColorPlane.Foreground])})(?!$)"
-						,
+						$"(?:{FORMAT_STRING_END.Replace("[", @"\[")})(?!{String.Format(FORMAT_STRING_START.Replace("[", @"\["), PlaneFormatModifiers[ColorPlane.Foreground])})(?!$)",
 						RegexOptions.Compiled),
 				[ColorPlane.Background] =
 					new(
-						$"(?:{FORMAT_STRING_END.Replace("[", @"\[")})(?!{String.Format(FORMAT_STRING_START.Replace("[", @"\["), PlaneFormatModifiers[ColorPlane.Background])})(?!$)"
-						,
+						$"(?:{FORMAT_STRING_END.Replace("[", @"\[")})(?!{String.Format(FORMAT_STRING_START.Replace("[", @"\["), PlaneFormatModifiers[ColorPlane.Background])})(?!$)",
 						RegexOptions.Compiled)
 			});
 
@@ -138,48 +130,22 @@ namespace Kantan.Utilities
 
 		static Pastel()
 		{
+
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-				var iStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+				var iStdOut = Win32.GetStdHandle(StandardHandle.STD_OUTPUT_HANDLE);
 
 
-				bool enable = GetConsoleMode(iStdOut, out uint outConsoleMode)
-				              && SetConsoleMode(iStdOut, outConsoleMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+				bool enable = Win32.GetConsoleMode(iStdOut, out var outConsoleMode)
+				              && Win32.SetConsoleMode(iStdOut, outConsoleMode | ConsoleModes.ENABLE_VIRTUAL_TERMINAL_PROCESSING);
 			}
 
 
 			if (Environment.GetEnvironmentVariable("NO_COLOR") == null) {
-				Enable();
+				Enabled = true;
 			}
 			else {
-				Disable();
+				Enabled = false;
 			}
-		}
-
-
-		[DllImport(K32)]
-		private static extern bool GetConsoleMode(IntPtr hConsoleHandle, out uint lpMode);
-
-		[DllImport(K32)]
-		private static extern bool SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
-
-		[DllImport(K32, SetLastError = true)]
-		private static extern IntPtr GetStdHandle(int nStdHandle);
-
-
-		/// <summary>
-		///     Enables any future console color output produced by Pastel.
-		/// </summary>
-		public static void Enable()
-		{
-			_enabled = true;
-		}
-
-		/// <summary>
-		///     Disables any future console color output produced by Pastel.
-		/// </summary>
-		public static void Disable()
-		{
-			_enabled = false;
 		}
 
 
@@ -212,7 +178,7 @@ namespace Kantan.Utilities
 		/// <param name="color">The color to use on the specified string.</param>
 		public static string AddColor(this string input, Color color)
 		{
-			return ColorFormatFunctions[_enabled][ColorPlane.Foreground](input, color);
+			return ColorFormatFunctions[Enabled][ColorPlane.Foreground](input, color);
 		}
 
 		/// <summary>
@@ -224,7 +190,7 @@ namespace Kantan.Utilities
 		/// </param>
 		public static string AddColor(this string input, string hexColor)
 		{
-			return HexColorFormatFunctions[_enabled][ColorPlane.Foreground](input, hexColor);
+			return HexColorFormatFunctions[Enabled][ColorPlane.Foreground](input, hexColor);
 		}
 
 
@@ -235,7 +201,7 @@ namespace Kantan.Utilities
 		/// <param name="color">The color to use on the specified string.</param>
 		public static string AddColorBG(this string input, Color color)
 		{
-			return ColorFormatFunctions[_enabled][ColorPlane.Background](input, color);
+			return ColorFormatFunctions[Enabled][ColorPlane.Background](input, color);
 		}
 
 		/// <summary>
@@ -247,10 +213,9 @@ namespace Kantan.Utilities
 		/// </param>
 		public static string AddColorBG(this string input, string hexColor)
 		{
-			return HexColorFormatFunctions[_enabled][ColorPlane.Background](input, hexColor);
+			return HexColorFormatFunctions[Enabled][ColorPlane.Background](input, hexColor);
 		}
 
-		
 
 		public static string AddHighlight(this string s, Color? c = null)
 		{
@@ -264,7 +229,7 @@ namespace Kantan.Utilities
 		{
 			//\x1b[36mTEST\x1b[0m
 
-			s = $"\x1b[4m{s}{ANSI_RESET}";
+			s = $"{ANSI_UNDERLINE}{s}{ANSI_RESET}";
 			return s;
 		}
 
@@ -274,6 +239,7 @@ namespace Kantan.Utilities
 
 		}
 
-		private const string ANSI_RESET = "\u001b[0m";
+		private const string ANSI_RESET     = "\x1b[0m";
+		private const string ANSI_UNDERLINE = "\x1b[4m";
 	}
 }

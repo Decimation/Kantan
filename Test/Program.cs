@@ -64,24 +64,24 @@ namespace Test
 
 			//ConsoleInterop.Init();
 
-			var x = c.b | c.c1;
+			var x = TestClass1.b | TestClass1.c1;
 			Console.WriteLine(x);
 			Console.WriteLine((1|2));
-			Console.WriteLine(c.b.GetNextId());
-			Console.WriteLine(c.b);
-			Console.WriteLine(c.c1);
+			Console.WriteLine(TestClass1.b.GetNextId());
+			Console.WriteLine(TestClass1.b);
+			Console.WriteLine(TestClass1.c1);
 		}
 
-		class c : FlagsEnumeration
+		class TestClass1 : FlagsEnumeration
 		{
-			public c(int id, string name) : base(id, name) { }
+			public TestClass1(int id, string name) : base(id, name) { }
 
-			public static readonly c z  = new c(0 << 0, null);
-			public static readonly c b  = new c(1 << 0, null);
-			public static readonly c c1 = new c(1 << 1, null);
-			public static readonly c d  = new c(1 << 2, null);
+			public static readonly TestClass1 z  = new TestClass1(0 << 0, null);
+			public static readonly TestClass1 b  = new TestClass1(1 << 0, null);
+			public static readonly TestClass1 c1 = new TestClass1(1 << 1, null);
+			public static readonly TestClass1 d  = new TestClass1(1 << 2, null);
 
-			public override c Copy() => new(Id, Name);
+			public override TestClass1 Copy() => new(Id, Name);
 		}
 
 		private class MyClass : IOutline
