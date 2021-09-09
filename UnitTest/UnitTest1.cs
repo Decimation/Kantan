@@ -25,21 +25,21 @@ namespace UnitTest
 	public class EnumerableTests
 	{
 		[Test]
-		public void IndexOf()
+		public void AllIndexesOfTest()
 		{
 			var s = "foobarfoobar";
 			Assert.True(s.AllIndexesOf("foo").SequenceEqual(new[] { 0, 6 }));
 		}
 
 		[Test]
-		public void IndexOf2()
+		public void AllIndexesOfTest2()
 		{
 			var l = new List<int>() { 0, 1, 2, 4, 1, 4 };
 			Assert.True(l.AllIndexesOf(1).SequenceEqual(new[] { 1, 4 }));
 		}
 
 		[Test]
-		public void CollectionsTest2()
+		public void ReplaceAllSequencesTest2()
 		{
 			var rg      = new List<int> { 1, 2, 3, 9, 9, 9, 1, 2, 3 };
 			var search  = new List<int> { 1, 2, 3 };
@@ -65,7 +65,7 @@ namespace UnitTest
 
 
 		[Test]
-		public void CollectionsTest()
+		public void ReplaceAllSequencesTest()
 		{
 			var rg      = new List<int> { 1, 2, 3, 4, 5, 6, 3, 4, 5 };
 			var search  = new List<int> { 3, 4, 5 };

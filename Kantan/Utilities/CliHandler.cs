@@ -2,21 +2,16 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Kantan.Collections;
 using Kantan.Diagnostics;
 using Kantan.Text;
-using Kantan.Utilities;
 using static Kantan.Diagnostics.LogCategories;
 // ReSharper disable EmptyConstructor
 
 // ReSharper disable UnusedMember.Global
 
-namespace Kantan.Cli
+namespace Kantan.Utilities
 {
 	public class CliHandler
 	{

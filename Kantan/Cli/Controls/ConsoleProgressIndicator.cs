@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 // ReSharper disable UnusedMember.Global
 #pragma warning disable CA1416, CA2211
-namespace Kantan.Cli
+namespace Kantan.Cli.Controls
 {
-	public static class NConsoleProgress
+	public static class ConsoleProgressIndicator
 	{
 		/*
 		 * https://github.com/sindresorhus/cli-spinners/blob/main/spinners.json
@@ -16,6 +14,11 @@ namespace Kantan.Cli
 		 * https://jsbin.com/tofehujixe/1/edit?js,output
 		 * https://www.npmjs.com/package/cli-spinners
 		 * https://www.fileformat.info/info/unicode/block/braille_patterns/images.htm
+		 */
+		/*
+		 * https://github.com/sindresorhus/cli-spinners/blob/main/spinners.json
+		 * https://github.com/sindresorhus/cli-spinners
+		 * https://www.npmjs.com/package/cli-spinners
 		 */
 
 		#region Spinners
@@ -498,10 +501,12 @@ namespace Kantan.Cli
 
 		private static bool _isRunning;
 
+		private static CancellationTokenSource _cts;
+
 		public static void ForTask(Task t)
 		{
 			var cts = new CancellationTokenSource();
-			Queue(cts);
+			Start(cts);
 			// ReSharper disable once MethodSupportsCancellation
 			t.Wait();
 			cts.Cancel();
@@ -509,10 +514,15 @@ namespace Kantan.Cli
 			_isRunning = false;
 		}
 
-		public static void Queue(CancellationTokenSource cts)
+		public static void Start(CancellationTokenSource cts = null)
 		{
 			if (_isRunning) {
 				return;
+			}
+
+			if (cts == null) {
+				_cts ??= new CancellationTokenSource();
+				cts  =   _cts;
 			}
 
 			// Pass the token to the cancelable operation.
@@ -520,8 +530,16 @@ namespace Kantan.Cli
 			_isRunning = true;
 		}
 
+		public static void Stop()
+		{
+			_cts.Cancel();
 
-		public static void Show(object obj)
+			_cts       = null;
+			_isRunning = false;
+		}
+
+
+		private static void Show(object obj)
 		{
 			var token = (CancellationToken) obj;
 

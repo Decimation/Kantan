@@ -17,6 +17,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Kantan.Cli;
+using Kantan.Cli.Controls;
 using Kantan.Collections;
 using Kantan.Diagnostics;
 using Kantan.Internal;
@@ -58,15 +59,16 @@ namespace Test
 
 			var s2 = Pastel.Remove(s);
 			Console.WriteLine(s2);
-			// await ConsoleTest();
+
+			await ConsoleTest();
 
 			//ConsoleInterop.Init();
 
-			var enumeration = new c(1 << 0, null);
-			var v           = new c(1 << 1, null) | enumeration;
-			Console.WriteLine(v);
-			Console.WriteLine(v.HasFlag(enumeration));
-			Console.WriteLine(v.GetNextFlagId());
+
+			ConsoleProgressIndicator.Start();
+
+			Thread.Sleep(5000);
+			ConsoleProgressIndicator.Stop();
 		}
 
 		class c : FlagsEnumeration
@@ -95,7 +97,7 @@ namespace Test
 
 		private static async Task ConsoleTest()
 		{
-			var dialog = new NConsoleDialog()
+			var dialog = new ConsoleDialog()
 			{
 				Subtitle = "a\nb\nc",
 				Functions = new()
@@ -107,7 +109,7 @@ namespace Test
 					},
 				},
 				//SelectMultiple = true,
-				Options = NConsoleOption.FromArray(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 }).ToList()
+				Options = ConsoleOption.FromArray(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 }).ToList()
 			};
 			dialog.Options[0].Data = new MyClass();
 
@@ -133,18 +135,19 @@ namespace Test
 				return null;
 			};
 
-			var r = NConsole.ReadInputAsync(dialog);
+			var r = ConsoleManager.ReadInputAsync(dialog);
 
 
 			Task.Factory.StartNew(() =>
 			{
 				Thread.Sleep(1000);
-				dialog.Options.Add(new NConsoleOption() { Name = "butt" });
+				dialog.Options.Add(new ConsoleOption() { Name = "butt" });
 			});
 
 			await r;
 
 			Console.WriteLine(r.Result.Output.QuickJoin());
+			Console.WriteLine(r.Result.DragAndDrop);
 
 		}
 
@@ -158,7 +161,7 @@ namespace Test
 
 		private static async Task ConsoleTest2()
 		{
-			var dialog = new NConsoleDialog()
+			var dialog = new ConsoleDialog()
 			{
 				Functions = new()
 				{
@@ -169,11 +172,11 @@ namespace Test
 					},
 				},
 				SelectMultiple = true,
-				Options        = NConsoleOption.FromEnum<MyEnum>().ToList()
+				Options        = ConsoleOption.FromEnum<MyEnum>().ToList()
 			};
 
 
-			var r = NConsole.ReadInputAsync(dialog);
+			var r = ConsoleManager.ReadInputAsync(dialog);
 			await r;
 
 			Console.WriteLine(r.Result.Output.QuickJoin());

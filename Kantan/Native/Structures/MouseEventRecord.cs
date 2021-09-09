@@ -12,6 +12,8 @@ namespace Kantan.Native.Structures
 		public ControlKeyState dwControlKeyState;
 		public EventFlags      dwEventFlags;
 
+
+
 		/// <inheritdoc />
 		public override string ToString()
 		{

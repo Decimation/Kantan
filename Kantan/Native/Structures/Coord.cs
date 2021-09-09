@@ -10,6 +10,8 @@ namespace Kantan.Native.Structures
 		public ushort X;
 		public ushort Y;
 
+		
+
 		public Coord(ushort x, ushort y)
 		{
 			X = x;

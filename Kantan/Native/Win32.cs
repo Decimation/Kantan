@@ -10,7 +10,7 @@ using Kantan.Native.Structures;
 
 namespace Kantan.Native
 {
-	internal static partial class ConsoleInterop
+	internal static class Win32
 	{
 		/*
 		 * Note: some code comes from:

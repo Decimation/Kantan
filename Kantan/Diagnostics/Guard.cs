@@ -54,20 +54,19 @@ namespace Kantan.Diagnostics
 
 		#region Contract annotations
 
-		private const string VALUE_NULL_HALT = "value:null => halt";
-
+		private const string VALUE_NULL_HALT    = "value:null => halt";
 		private const string VALUE_NOTNULL_HALT = "value:notnull => halt";
-
-		private const string COND_FALSE_HALT = "condition:false => halt";
-
+		private const string COND_FALSE_HALT    = "condition:false => halt";
 		private const string UNCONDITIONAL_HALT = "=> halt";
+
+		private const ACT ACT_TRUE     = ACT.IS_TRUE;
+		private const ACT ACT_NOT_NULL = ACT.IS_NOT_NULL;
 
 		#endregion
 
 		[DNR]
 		[DH, AM]
-		[CA(UNCONDITIONAL_HALT)]
-		[SFM(STRING_FORMAT_ARG)]
+		[CA(UNCONDITIONAL_HALT), SFM(STRING_FORMAT_ARG)]
 		public static void Fail(string? msg = null, params object[] args) => Fail<Exception>(msg, args);
 
 		/// <summary>
@@ -75,8 +74,7 @@ namespace Kantan.Diagnostics
 		/// </summary>
 		[DNR]
 		[DH, AM]
-		[CA(UNCONDITIONAL_HALT)]
-		[SFM(STRING_FORMAT_ARG)]
+		[CA(UNCONDITIONAL_HALT), SFM(STRING_FORMAT_ARG)]
 		public static void Fail<TException>(string? msg = null, params object[] args)
 			where TException : Exception, new()
 		{
@@ -96,7 +94,7 @@ namespace Kantan.Diagnostics
 
 		[DH, AM]
 		[CA(COND_FALSE_HALT)]
-		public static void Assert([AC(ACT.IS_TRUE)] [DNRI(false)] bool condition,
+		public static void Assert([AC(ACT_TRUE)] [DNRI(false)] bool condition,
 		                          string? msg = null, params object[] args)
 			=> Assert<Exception>(condition, msg, args);
 
@@ -104,9 +102,8 @@ namespace Kantan.Diagnostics
 		/// Root assertion function
 		/// </summary>
 		[DH, AM]
-		[CA(COND_FALSE_HALT)]
-		[SFM(STRING_FORMAT_ARG)]
-		public static void Assert<TException>([AC(ACT.IS_TRUE)] [DNRI(false)] bool condition,
+		[CA(COND_FALSE_HALT), SFM(STRING_FORMAT_ARG)]
+		public static void Assert<TException>([AC(ACT_TRUE)] [DNRI(false)] bool condition,
 		                                      string? msg = null, params object[] args)
 			where TException : Exception, new()
 		{
@@ -117,25 +114,25 @@ namespace Kantan.Diagnostics
 
 		[DH, AM]
 		[CA(COND_FALSE_HALT)]
-		public static void AssertArgument([AC(ACT.IS_TRUE)] [DNRI(false)] bool condition,
+		public static void AssertArgument([AC(ACT_TRUE)] [DNRI(false)] bool condition,
 		                                  string? name = null)
 			=> Assert<ArgumentException>(condition, name);
 
 		[DH, AM]
 		[CA(VALUE_NULL_HALT)]
-		public static void AssertArgumentNotNull([NN] [AC(ACT.IS_NOT_NULL)] object? value,
+		public static void AssertArgumentNotNull([NN] [AC(ACT_NOT_NULL)] object? value,
 		                                         string? name = null)
 			=> Assert<ArgumentNullException>(value != null, name);
 
 		[DH, AM]
 		[CA(VALUE_NULL_HALT)]
-		public static void AssertNotNull([NN] [AC(ACT.IS_NOT_NULL)] object? value, string? name = null)
+		public static void AssertNotNull([NN] [AC(ACT_NOT_NULL)] object? value, string? name = null)
 			=> Assert<NullReferenceException>(value != null, name);
 
 		[DH, AM]
 		[CA(VALUE_NULL_HALT)]
-		public static void AssertNotNullOrWhiteSpace([NN] [AC(ACT.IS_NOT_NULL)] string? value, string? name = null)
-			=> Assert<NullReferenceException>(!string.IsNullOrWhiteSpace(value), name);
+		public static void AssertNotNullOrWhiteSpace([NN] [AC(ACT_NOT_NULL)] string? value, string? name = null)
+			=> Assert<NullReferenceException>(!String.IsNullOrWhiteSpace(value), name);
 
 		[DH, AM]
 		public static void AssertEqual(object a, object b) => Assert(a.Equals(b));
@@ -151,6 +148,7 @@ namespace Kantan.Diagnostics
 
 		[DH, AM]
 		public static void AssertPositive([NNV] long value, string? name = null) => Assert(value > 0, name);
+
 
 		[DH, AM]
 		public static void AssertThrows<T>(Action f) where T : Exception
@@ -170,7 +168,7 @@ namespace Kantan.Diagnostics
 		}
 
 		[DH, AM]
-		public static void AssertAll([DNRI(false)] [AC(ACT.IS_TRUE)] params bool[] conditions)
+		public static void AssertAll([DNRI(false)] [AC(ACT_TRUE)] params bool[] conditions)
 		{
 			foreach (bool condition in conditions) {
 				Assert(condition);
