@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -121,7 +122,7 @@ namespace Kantan.Collections
 			 */
 
 			int i = 0;
-
+			
 			var seqSpan = CollectionsMarshal.AsSpan(sequence as List<T>);
 			var rgSpan  = CollectionsMarshal.AsSpan(rg);
 
@@ -293,12 +294,12 @@ namespace Kantan.Collections
 				return false;
 			}
 
-			var ex = obj.GetEnumerator();
+			var enumerator = obj.GetEnumerator();
 
 			buf = new Map();
 
-			while (ex.MoveNext()) {
-				buf.Add(ex.Key, ex.Value);
+			while (enumerator.MoveNext()) {
+				buf.Add(enumerator.Key, enumerator.Value);
 
 			}
 

@@ -60,22 +60,23 @@ namespace Test
 			var s2 = Pastel.Remove(s);
 			Console.WriteLine(s2);
 
-			await ConsoleTest();
+			// await ConsoleTest();
 
 			//ConsoleInterop.Init();
 
-
-			ConsoleProgressIndicator.Start();
-
-			Thread.Sleep(5000);
-			ConsoleProgressIndicator.Stop();
+			var x = c.b | c.c1;
+			Console.WriteLine(x);
+			Console.WriteLine((1|2));
+			Console.WriteLine(c.b.GetNextId());
+			Console.WriteLine(c.b);
+			Console.WriteLine(c.c1);
 		}
 
 		class c : FlagsEnumeration
 		{
 			public c(int id, string name) : base(id, name) { }
 
-			public static readonly c a  = new c(0 << 0, null);
+			public static readonly c z  = new c(0 << 0, null);
 			public static readonly c b  = new c(1 << 0, null);
 			public static readonly c c1 = new c(1 << 1, null);
 			public static readonly c d  = new c(1 << 2, null);

@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using Enum = System.Enum;
+
+// ReSharper disable NonReadonlyMemberInGetHashCode
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
@@ -15,36 +19,56 @@ namespace Kantan.Model
 
 		public int Id { get; protected set; }
 
-		protected Enumeration(int id, string name)
+		
+
+		protected Enumeration(int id,string name)
 		{
 			Id   = id;
 			Name = name;
+
+			Update();
+			
 		}
 
-		public static int GetNextId<T>() where T : Enumeration
+		private void Update()
 		{
-			var all = GetAll<T>();
+			var fields = GetAllFields();
+
+			foreach (var info in fields) {
+				var     p     = info.FieldType.GetProperty("Name");
+				var o = p.GetValue(this);
+
+				if (o is null) {
+					p.SetValue(this,info.Name);
+					Debug.WriteLine($"{info.Name}");
+				}
+			}
+		}
+
+		public static MemberInfo memberof<T>(Expression<Func<T>> expression)
+		{
+			var body = (MemberExpression)expression.Body;
+			return body.Member;
+		}
+
+		public static FieldInfo fieldof<T>(Expression<Func<T>> expression)
+		{
+			return (FieldInfo)memberof(expression);
+		}
+
+		public static PropertyInfo propertyof<T>(Expression<Func<T>> expression)
+		{
+			return (PropertyInfo)memberof(expression);
+		}
+		public virtual int GetNextId()
+		{
+			var all = GetAll<Enumeration>();
 
 			var last = all.OrderBy(x => x.Id).Last();
 
 			return last.Id + 1;
 		}
 
-		public static IEnumerable<T> GetAll<T>() where T : Enumeration
-		{
-			return GetAll<T>(typeof(T));
-		}
-
-		public static IEnumerable<T> GetAll<T>(Type t) where T : Enumeration
-		{
-			const BindingFlags flags = BindingFlags.Public |
-			                           BindingFlags.Static |
-			                           BindingFlags.DeclaredOnly;
-
-			var fields = typeof(T).GetFields(flags).Where(r => r.FieldType == t);
-
-			return fields.Select(f => f.GetValue(null)).Cast<T>();
-		}
 
 		public override string ToString() => $"{Name} ({Id})";
 
@@ -65,6 +89,14 @@ namespace Kantan.Model
 
 		public int CompareTo(object other) => Id.CompareTo(((Enumeration) other).Id);
 
-		// Other utility methods ...
+
+		public IEnumerable<TEnumeration> GetAll<TEnumeration>()
+			where TEnumeration : Enumeration
+			=> GetAllFields().Select(x => x.GetValue(this)).Cast<TEnumeration>();
+
+
+		protected IEnumerable<FieldInfo> GetAllFields()
+			=> GetType().GetRuntimeFields().Where(x => x.FieldType == GetType() && x.IsStatic && x.IsInitOnly);
+		
 	}
 }

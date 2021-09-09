@@ -13,13 +13,13 @@ namespace Kantan.Model
 {
 	public abstract class FlagsEnumeration : Enumeration
 	{
-		protected FlagsEnumeration(int id, string name) : base(id, name) { }
-
-		public int GetNextFlagId()
+		protected FlagsEnumeration(int id, string name) : base(id, name)
 		{
-			var all = GetAll<FlagsEnumeration>(GetType());
-
-			// a =a.OrderBy(x => BitOperations.TrailingZeroCount((uint) x.Id));
+		}
+		
+		public override int GetNextId()
+		{
+			var all = GetAll<FlagsEnumeration>();
 
 			all = all.OrderByDescending(x => x.Id);
 
@@ -44,6 +44,12 @@ namespace Kantan.Model
 			return this;
 		}
 
+		public FlagsEnumeration Xor(FlagsEnumeration f)
+		{
+			Id ^= f.Id;
+			return this;
+		}
+
 		public bool HasFlag(FlagsEnumeration f)
 		{
 			return (Id & f.Id) != 0;
@@ -55,7 +61,18 @@ namespace Kantan.Model
 
 		public static FlagsEnumeration operator |(FlagsEnumeration f, FlagsEnumeration f2) => f.Copy().Or(f2);
 
-		public static   FlagsEnumeration operator ~(FlagsEnumeration f) => f.Copy().Not();
-		public override string ToString()                               => $"{Name} ({Id})";
+		public static FlagsEnumeration operator ^(FlagsEnumeration f, FlagsEnumeration f2) => f.Copy().Xor(f2);
+
+		public static FlagsEnumeration operator ~(FlagsEnumeration f) => f.Copy().Not();
+
+		public override string ToString()
+		{
+			// var a     = GetAll<FlagsEnumeration>(GetType());
+			// var a = GetType().GetRuntimeFields().Where(x => x.FieldType == GetType()).Select(x=>x.GetValue(null)).Cast<FlagsEnumeration>();
+
+			// var s = a.Where(x => x.HasFlag(this)).Select(s => s.Name).QuickJoin();
+
+			return $"{Name} ({Id}) ({Convert.ToString(Id, 2)})";
+		}
 	}
 }
