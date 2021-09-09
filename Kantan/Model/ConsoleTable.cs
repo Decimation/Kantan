@@ -29,7 +29,6 @@ namespace Kantan.Model
 
 		public Type[] ColumnTypes { get; private set; }
 
-
 		public static HashSet<Type> NumericTypes = new()
 		{
 			typeof(int), typeof(double), typeof(decimal),
@@ -276,11 +275,11 @@ namespace Kantan.Model
 
 		private static IEnumerable<string> GetColumns<T>() => typeof(T).GetProperties().Select(x => x.Name).ToArray();
 
-		private static object GetColumnValue<T>(object target, string column) =>
-			typeof(T).GetProperty(column).GetValue(target, null);
+		private static object GetColumnValue<T>(object target, string column)
+			=> typeof(T).GetProperty(column).GetValue(target, null);
 
-		private static IEnumerable<Type> GetColumnsType<T>() =>
-			typeof(T).GetProperties().Select(x => x.PropertyType).ToArray();
+		private static IEnumerable<Type> GetColumnsType<T>()
+			=> typeof(T).GetProperties().Select(x => x.PropertyType).ToArray();
 	}
 
 	public class ConsoleTableOptions

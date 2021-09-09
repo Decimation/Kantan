@@ -228,11 +228,12 @@ namespace Kantan.Cli
 
 			Console.Clear();
 
+			var t=Console.CursorTop;
 			// Console.SetCursorPosition(0,0);
-			// var sb = new StringBuilder();
+			var sb = new StringBuilder();
 			if (dialog.Header != null) {
 				Write(false, dialog.Header.AddColor(ColorHeader));
-				// sb.Append(dialog.Header.AddColor(ColorHeader));
+				sb.Append(dialog.Header.AddColor(ColorHeader));
 			}
 
 			if (dialog.Subtitle != null) {
@@ -242,7 +243,7 @@ namespace Kantan.Cli
 
 				Write(true, subStr);
 				Console.WriteLine();
-				// sb.AppendLine(subStr).AppendLine();
+				sb.AppendLine(subStr).AppendLine();
 			}
 
 			int clamp = Math.Clamp(dialog.Options.Count, 0, MAX_DISPLAY_OPTIONS);
@@ -252,12 +253,17 @@ namespace Kantan.Cli
 
 				//string delim = Strings.GetUnicodeBoxPipe(clamp, i);
 
-				string s = FormatOption(option, i);
+				string s   = FormatOption(option, i);
 
-				OptionPositions[Console.CursorTop] = option;
+				var    top = Console.CursorTop;
+				OptionPositions[top] = option;
+				// t+=MeasureRows(s)+(i-1);
+				Debug.WriteLine($"{top} | {((MeasureRows(sb.ToString())))} | {MeasureRows(s)} | {t} | {i} | {MeasureRows(sb.ToString())-MeasureRows(s)-i}");
+				// Debug.WriteLine(Console.CursorTop);
+				sb.Append(s);
 				Write(false, s);
 
-				// sb.Append(s);
+
 				// Write(false, s);
 				/*sb.Append(s);
 				var rows      = Strings.MeasureRows(sb.ToString())+sb.ToString().Count(c=>c=='\n');
@@ -266,18 +272,18 @@ namespace Kantan.Cli
 			}
 
 			Console.WriteLine();
-			// sb.AppendLine();
+			sb.AppendLine();
 
 			if (dialog.Status != null) {
 				Write(dialog.Status);
-				// sb.AppendLine(dialog.Status);
+				sb.AppendLine(dialog.Status);
 			}
 
 			if (dialog.Description != null) {
 				Console.WriteLine();
 
 				Write(dialog.Description);
-				// sb.AppendLine().AppendLine(dialog.Description);
+				sb.AppendLine().AppendLine(dialog.Description);
 			}
 
 			// Show options
@@ -285,19 +291,19 @@ namespace Kantan.Cli
 			if (dialog.SelectMultiple) {
 				Console.WriteLine();
 
-				// sb.AppendLine();
+				sb.AppendLine();
 
 				string optionsStr = $"{Constants.CHEVRON} {output.Output.QuickJoin()}"
 					.AddColor(ColorOptions);
 
 				Write(true, optionsStr);
 
-				// sb.AppendLine(optionsStr).AppendLine();
+				sb.AppendLine(optionsStr).AppendLine();
 
 				Console.WriteLine();
 				Write($"Press {NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.");
 
-				// sb.AppendLine($"Press {NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.");
+				sb.AppendLine($"Press {NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.");
 			}
 			// Console.Write(sb);
 		}
@@ -356,7 +362,7 @@ namespace Kantan.Cli
 						}
 					}
 
-					InputRecord ir = ReadNativeInput();
+					InputRecord ir = ReadInputRecord();
 
 					ConsoleKeyInfo cki2;
 
@@ -388,6 +394,9 @@ namespace Kantan.Cli
 							// Mouse was read
 							var (x, y) = (ir.MouseEvent.dwMousePosition.X, ir.MouseEvent.dwMousePosition.Y);
 
+							// var vs = ReadXY(Console.BufferWidth, 0, y);
+							// Debug.WriteLine($"{vs}");
+
 							if (OptionPositions.ContainsKey(y)) {
 								var option  = OptionPositions[y];
 								var indexOf = dialog.Options.IndexOf(option);
@@ -397,14 +406,7 @@ namespace Kantan.Cli
 
 								// note: KeyChar argument is slightly inaccurate (case insensitive; always uppercase)
 								cki2 = GetKeyInfo(c, c, me.dwControlKeyState);
-
-								// Highlight clicked option
-								/*option.Color   = Color.Black;
-								option.ColorBG = Color.Yellow;
-								DisplayDialog(dialog, output);
-								option.Color   = null;
-								option.ColorBG = null;
-								Thread.Sleep(150);*/
+								
 							}
 							else {
 								goto default;
@@ -1015,7 +1017,7 @@ namespace Kantan.Cli
 			}
 		}
 
-		private static InputRecord ReadNativeInput()
+		private static InputRecord ReadInputRecord()
 		{
 			var record = new InputRecord[1];
 
@@ -1029,7 +1031,7 @@ namespace Kantan.Cli
 
 		}
 
-		public static void CloseNative()
+		private static void CloseNative()
 		{
 			Win32.SetConsoleMode(_stdIn, _oldMode);
 			_stdIn   = IntPtr.Zero;
@@ -1037,7 +1039,7 @@ namespace Kantan.Cli
 			_oldMode = 0;
 		}
 
-		public static void InitNative()
+		private static void InitNative()
 		{
 			_stdOut = Win32.GetStdHandle(StandardHandle.STD_OUTPUT_HANDLE);
 			_stdIn  = Win32.GetStdHandle(StandardHandle.STD_INPUT_HANDLE);

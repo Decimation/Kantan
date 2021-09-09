@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -133,15 +134,12 @@ namespace Kantan.Collections
 				// var b  = rg.GetRange(i, sequence.Count).SequenceEqual(sequence);
 
 				var b = rgSpan.Slice(i, sequence.Count).SequenceEqual(seqSpan);
-
+				
 				if (b) {
-
 					rg.RemoveRange(i, sequence.Count);
 					rg.InsertRange(i, replace);
 					i += sequence.Count;
 				}
-
-
 			} while (!(++i >= rg.Count));
 
 			return rg;

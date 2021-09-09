@@ -25,20 +25,27 @@ namespace Kantan.Model
 			Name = name;
 		}
 
-		public virtual int GetNextId()
+		public static int GetNextId<TEnumeration>() where TEnumeration : Enumeration
 		{
-
-			var last = GetAll<Enumeration>().OrderBy(x => x.Id).Last();
+			var last = GetAll<TEnumeration>().OrderBy(x => x.Id).Last();
 
 			return last.Id + 1;
 		}
 
+		public static IEnumerable<Enumeration> GetAll(Type t)
+			=> GetAllFields(t).Select(x => x.GetValue(null)).Cast<Enumeration>();
+
 		public static IEnumerable<TEnumeration> GetAll<TEnumeration>()
 			where TEnumeration : Enumeration
-			=> GetAllFields<TEnumeration>().Select(x => x.GetValue(null)).Cast<TEnumeration>();
+			=> GetAll(typeof(TEnumeration)).Cast<TEnumeration>();
 
-		public static IEnumerable<FieldInfo> GetAllFields<T>()
-			=> typeof(T).GetRuntimeFields().Where(x => x.FieldType == typeof(T) /* && x.IsStatic && x.IsInitOnly*/);
+		public static IEnumerable<FieldInfo> GetAllFields(Type t)
+			=> t.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly)
+			    .Where(r => r.FieldType == t);
+
+		public static IEnumerable<FieldInfo> GetAllFields<TEnumeration>()
+			where TEnumeration : Enumeration
+			=> GetAllFields(typeof(TEnumeration));
 
 		public override bool Equals(object obj)
 		{

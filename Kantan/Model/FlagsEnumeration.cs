@@ -44,7 +44,7 @@ namespace Kantan.Model
 			return (Id & f.Id) != 0;
 		}
 
-		public override int GetNextId()
+		public static int GetNextFlagId()
 		{
 			var all = GetAll<FlagsEnumeration>();
 

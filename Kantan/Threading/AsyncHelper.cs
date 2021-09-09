@@ -118,7 +118,8 @@ namespace Kantan.Threading
 
 						if (InnerException != null) // the method threw an exception
 						{
-							throw new AggregateException($"{nameof(AsyncHelper)} method threw an exception.", InnerException);
+							throw new AggregateException($"{nameof(AsyncHelper)} method threw an exception.",
+							                             InnerException);
 						}
 					}
 					else {

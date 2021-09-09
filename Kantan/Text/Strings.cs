@@ -38,6 +38,8 @@ namespace Kantan.Text
 	{
 		public static string SelectOnlyDigits(this string s) => s.SelectOnly(Char.IsDigit);
 
+		public static string StripControl(this string s) => s.SelectOnly(c => !Char.IsControl(c));
+
 		public static string SelectOnly(this string s, Func<char, bool> fn)
 		{
 			return s.Where(fn).Aggregate(String.Empty, (current, t) => current + t);
@@ -76,13 +78,39 @@ namespace Kantan.Text
 			var bufferWidth = Console.BufferWidth;
 			var windowWidth = Console.WindowWidth;
 
-			var n = Math.DivRem(s.Length, bufferWidth, out var rem);
+			var nc  = s.Count(c => char.IsControl(c));
+			
+			//var nc = s.Count(c => c=='\n'||c=='\r');
+			int nc1 = 0;
+			for (int i = 0; i < s.Length-1; i++) {
+				if (s[i]=='\r'&&s[i+1]=='\n') {
+					nc1++;
+				}
+				else if (s[i] == '\n') nc1++;
+				
+			}
+
+			// var nc1 = s.Count(c => c == '\n');
+
+			// var nc2 = Regex.Matches(s, Environment.NewLine).Count;
+			// var nc2x = s.Split(Environment.NewLine).Length;
+
+
+			var length = s.Length - nc;
+
+			// var length = s.Length - nc1;
+			// var length = s.Length;
+
+			var n       = Math.DivRem(length, bufferWidth, out var rem);
 
 			//(s.Length % b)
 
 			if (rem > 0) {
 				n++;
 			}
+
+			n += nc1;
+			// n += nc2;
 
 			/*int l = s.Length;
 			int c = 1;
@@ -132,8 +160,8 @@ namespace Kantan.Text
 			                                     search.Length, search);
 		}
 
-		public static string RemoveLastOccurrence(this string s, string s2) =>
-			s.Remove(s.LastIndexOf(s2, StringComparison.Ordinal));
+		public static string RemoveLastOccurrence(this string s, string s2)
+			=> s.Remove(s.LastIndexOf(s2, StringComparison.Ordinal));
 
 		/// <summary>
 		///     Compute the Levenshtein distance (approximate string matching) between <paramref name="s"/> and <paramref name="t"/>
@@ -309,7 +337,6 @@ namespace Kantan.Text
 			{
 				fmt ??= FMT_P;
 
-
 				fmt = fmt.ToUpper(CultureInfo.InvariantCulture);
 				string hexStr;
 
@@ -346,8 +373,8 @@ namespace Kantan.Text
 			public const string FMT_P = "P";
 		}
 
-		public static string ToHexString<T>(T t, string s = HexFormatter.FMT_P) =>
-			Hex.Format(s, t, CultureInfo.CurrentCulture);
+		public static string ToHexString<T>(T t, string s = HexFormatter.FMT_P)
+			=> Hex.Format(s, t, CultureInfo.CurrentCulture);
 
 		#endregion
 
@@ -379,7 +406,6 @@ namespace Kantan.Text
 			return values.Select(toString).QuickJoin(delim);
 		}
 
-
 		public static string QuickJoin<T>(this IEnumerable<T> enumerable, string delim = Constants.JOIN_COMMA)
 		{
 			return String.Join(delim, enumerable);
@@ -395,11 +421,10 @@ namespace Kantan.Text
 
 		public static string EncodingConvert(Encoding src, string str) => EncodingConvert(src, EncodingOEM, str);
 
-
 		public static bool IsCharInRange(short c, UnicodeRange r) => IsCharInRange((char) c, r);
 
-		public static bool IsCharInRange(char c, UnicodeRange r) =>
-			c < (r.FirstCodePoint + r.Length) && c >= r.FirstCodePoint;
+		public static bool IsCharInRange(char c, UnicodeRange r)
+			=> c < r.FirstCodePoint + r.Length && c >= r.FirstCodePoint;
 
 		internal static string GetUnicodeBoxPipe(IList<string> l, int i)
 		{

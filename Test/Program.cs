@@ -53,36 +53,12 @@ namespace Test
 			Debug.WriteLine(Strings.MeasureRows(s));
 			Debug.WriteLine(Console.CursorTop);*/
 
+			
 
-			var s = "foo".AddColor(Color.Aqua);
-			Console.WriteLine(s);
-
-			var s2 = Pastel.Remove(s);
-			Console.WriteLine(s2);
-
-			// await ConsoleTest();
-
-			//ConsoleInterop.Init();
-
-			var x = TestClass1.b | TestClass1.c1;
-			Console.WriteLine(x);
-			Console.WriteLine((1|2));
-			Console.WriteLine(TestClass1.b.GetNextId());
-			Console.WriteLine(TestClass1.b);
-			Console.WriteLine(TestClass1.c1);
+			await ConsoleTest();
 		}
 
-		class TestClass1 : FlagsEnumeration
-		{
-			public TestClass1(int id, string name) : base(id, name) { }
-
-			public static readonly TestClass1 z  = new TestClass1(0 << 0, null);
-			public static readonly TestClass1 b  = new TestClass1(1 << 0, null);
-			public static readonly TestClass1 c1 = new TestClass1(1 << 1, null);
-			public static readonly TestClass1 d  = new TestClass1(1 << 2, null);
-
-			public override TestClass1 Copy() => new(Id, Name);
-		}
+		
 
 		private class MyClass : IOutline
 		{

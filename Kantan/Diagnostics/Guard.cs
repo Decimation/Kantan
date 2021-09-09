@@ -151,14 +151,14 @@ namespace Kantan.Diagnostics
 
 
 		[DH, AM]
-		public static void AssertThrows<T>(Action f) where T : Exception
+		public static void AssertThrows<TException>(Action f) where TException : Exception
 		{
 			bool throws = false;
 
 			try {
 				f();
 			}
-			catch (T) {
+			catch (TException) {
 				throws = true;
 			}
 
