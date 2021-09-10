@@ -228,9 +228,10 @@ namespace Kantan.Cli
 
 			Console.Clear();
 
-			var t=Console.CursorTop;
+			var t = Console.CursorTop;
 			// Console.SetCursorPosition(0,0);
 			var sb = new StringBuilder();
+
 			if (dialog.Header != null) {
 				Write(false, dialog.Header.AddColor(ColorHeader));
 				sb.Append(dialog.Header.AddColor(ColorHeader));
@@ -253,12 +254,12 @@ namespace Kantan.Cli
 
 				//string delim = Strings.GetUnicodeBoxPipe(clamp, i);
 
-				string s   = FormatOption(option, i);
+				string s = FormatOption(option, i);
 
-				var    top = Console.CursorTop;
+				var top = Console.CursorTop;
 				OptionPositions[top] = option;
 				// t+=MeasureRows(s)+(i-1);
-				Debug.WriteLine($"{top} | {((MeasureRows(sb.ToString())))} | {MeasureRows(s)} | {t} | {i} | {MeasureRows(sb.ToString())-MeasureRows(s)-i}");
+				//Debug.WriteLine($"{top} | {((MeasureRows(sb.ToString())))} | {MeasureRows(s)} | {t} | {i} | {MeasureRows(sb.ToString())-MeasureRows(s)-i}");
 				// Debug.WriteLine(Console.CursorTop);
 				sb.Append(s);
 				Write(false, s);
@@ -406,7 +407,7 @@ namespace Kantan.Cli
 
 								// note: KeyChar argument is slightly inaccurate (case insensitive; always uppercase)
 								cki2 = GetKeyInfo(c, c, me.dwControlKeyState);
-								
+
 							}
 							else {
 								goto default;

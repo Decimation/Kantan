@@ -53,8 +53,10 @@ namespace Test
 			Debug.WriteLine(Strings.MeasureRows(s));
 			Debug.WriteLine(Console.CursorTop);*/
 
-			
 
+			/*string fooBar = "foo\nbar\n".AddColor(Color.Aquamarine);
+			Console.Write(fooBar);
+			Debug.WriteLine(Strings.MeasureRows(fooBar));*/
 			await ConsoleTest();
 		}
 
