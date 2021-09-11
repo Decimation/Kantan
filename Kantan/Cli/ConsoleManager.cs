@@ -45,6 +45,7 @@ using static Kantan.Text.Strings;
 
 #pragma warning disable 8602, CA1416, CS8604, IDE0059
 #nullable enable
+#pragma warning disable IDE0051 // Remove unused private members
 
 namespace Kantan.Cli
 {
@@ -106,62 +107,6 @@ namespace Kantan.Cli
 		}
 
 		#region IO
-
-		#region Display/formatting
-
-		/// <summary>
-		///     Root formatting function.
-		/// </summary>
-		[StringFormatMethod(STRING_FORMAT_ARG)]
-		internal static string FormatString(string? delim, string msg, bool repDelim = true)
-		{
-			//Debug.WriteLine(l.FuncJoin((s) => $"[{s}]"));
-
-			string[] split = msg.Split(Constants.NEW_LINE);
-
-			bool d1     = false;
-			bool useBox = delim is null;
-
-			for (int i = 0; i < split.Length; i++) {
-				string a = Constants.SPACE + split[i];
-
-				string b;
-
-				if (useBox) {
-
-					delim = GetUnicodeBoxPipe(split, i);
-				}
-
-				if (String.IsNullOrWhiteSpace(a)) {
-					b = String.Empty;
-				}
-				else {
-					if (repDelim || !d1) {
-						b  = delim + a;
-						d1 = true;
-					}
-
-					else b = new string(' ', delim.Length) + a;
-
-				}
-
-				string c = b.Truncate(BufferLimit);
-
-				if (c.Length < b.Length) {
-					c += Constants.ELLIPSES;
-				}
-
-				split[i] = c;
-			}
-
-			return String.Join(Constants.NEW_LINE, split);
-		}
-
-		#endregion
-
-		
-
-		
 
 		public static string ReadLine(string? prompt = null, Predicate<string>? invalid = null,
 		                              string? errPrompt = null)
@@ -283,24 +228,18 @@ namespace Kantan.Cli
 
 		#endregion
 
-		#region Options
-
-		private const char OPTION_N = 'N';
-
-		private const char OPTION_Y = 'Y';
-
-		#endregion Options
-
 		#endregion IO
 
 		#region
 
 		internal static readonly Dictionary<int, ConsoleOption> OptionPositions = new();
 
+		internal static readonly Dictionary<int, ConsoleOptionFunction> OtherPositions = new();
+
 		public static int ScrollIncrement { get; set; } = 3;
 
 		/// <summary>
-		///     Exits <see cref="ReadInput" />
+		///     Exits <see cref="ConsoleDialog.ReadInput" />
 		/// </summary>
 		public const ConsoleKey NC_GLOBAL_EXIT_KEY = ConsoleKey.Escape;
 
@@ -308,6 +247,13 @@ namespace Kantan.Cli
 		///     <see cref="Refresh" />
 		/// </summary>
 		public const ConsoleKey NC_GLOBAL_REFRESH_KEY = ConsoleKey.F5;
+
+		internal static readonly ConsoleKeyInfo ExitKeyInfo =
+			new((char) NC_GLOBAL_EXIT_KEY, NC_GLOBAL_EXIT_KEY, false, false, false);
+
+		private const char OPTION_N = 'N';
+
+		private const char OPTION_Y = 'Y';
 
 		/// <summary>
 		///     Interface status
@@ -327,7 +273,60 @@ namespace Kantan.Cli
 			Ok,
 		}
 
+		internal enum ConsoleSignal
+		{
+			Exit
+		}
+
 		public static void Refresh() => AtomicHelper.Exchange(ref _status, ConsoleStatus.Refresh);
+
+		/// <summary>
+		///     Root formatting function.
+		/// </summary>
+		[StringFormatMethod(STRING_FORMAT_ARG)]
+		internal static string FormatString(string? delim, string msg, bool repDelim = true)
+		{
+			//Debug.WriteLine(l.FuncJoin((s) => $"[{s}]"));
+
+			string[] split = msg.Split(Constants.NEW_LINE);
+
+			bool d1     = false;
+			bool useBox = delim is null;
+
+			for (int i = 0; i < split.Length; i++) {
+				string a = Constants.SPACE + split[i];
+
+				string b;
+
+				if (useBox) {
+
+					delim = GetUnicodeBoxPipe(split, i);
+				}
+
+				if (String.IsNullOrWhiteSpace(a)) {
+					b = String.Empty;
+				}
+				else {
+					if (repDelim || !d1) {
+						b  = delim + a;
+						d1 = true;
+					}
+
+					else b = new string(' ', delim.Length) + a;
+
+				}
+
+				string c = b.Truncate(BufferLimit);
+
+				if (c.Length < b.Length) {
+					c += Constants.ELLIPSES;
+				}
+
+				split[i] = c;
+			}
+
+			return String.Join(Constants.NEW_LINE, split);
+		}
 
 		#endregion
 
@@ -451,10 +450,62 @@ namespace Kantan.Cli
 			return canResize;
 		}
 
+		public static bool InputAvailable
+		{
+			get
+			{
+				while (true) {
+
+					if (!Win32.PeekConsoleInput(_stdIn, out InputRecord ir, 1, out uint numEventsRead)) {
+						throw new Win32Exception();
+					}
+
+					//Debug.WriteLine(ir);
+
+					if (numEventsRead == 0) {
+						return false;
+					}
+
+					// Skip non key-down && mod key events.
+
+					if (!ir.IsMouseButtonEvent() && (!ir.IsKeyDownEvent() || ir.IsModKey())) {
+						var rg = new InputRecord[1];
+
+						if (!Win32.ReadConsoleInput(_stdIn, rg, 1, out numEventsRead))
+							throw new Win32Exception();
+					}
+					else {
+						return true;
+					}
+				}
+			}
+		}
+
 		internal static bool         _click;
-		private static IntPtr       _stdIn;
-		private static IntPtr       _stdOut;
-		private static ConsoleModes _oldMode;
+		private static  IntPtr       _stdIn;
+		private static  IntPtr       _stdOut;
+		private static  ConsoleModes _oldMode;
+
+
+		internal static InputRecord[] _inputBuffer = new InputRecord[1];
+
+
+		internal static InputRecord ReadInputRecord()
+		{
+			var record = new InputRecord[1];
+
+			if (!Win32.ReadConsoleInput(_stdIn, record, 1, out uint lpNumberOfEventsRead)) {
+				throw new Win32Exception();
+			}
+
+			var read = record[0];
+
+			var c = Math.Clamp((int) lpNumberOfEventsRead, 0, _inputBuffer.Length);
+			Array.Copy(record, 0, _inputBuffer, 0, c);
+
+			return read;
+
+		}
 
 		/// <summary>
 		/// Reads characters from the screen buffer, starting at the given position.
@@ -511,42 +562,6 @@ namespace Kantan.Cli
 			return charsWritten;
 		}
 
-		private static bool IsKeyDownEvent(InputRecord ir)
-		{
-			var keyEvent = ir.KeyEvent;
-			return ir.EventType == ConsoleEventType.KEY_EVENT && keyEvent.bKeyDown != BOOL.FALSE;
-		}
-
-		internal static bool IsMouseScroll(InputRecord ir)
-		{
-			var mouseEvent = ir.MouseEvent;
-
-			var mouseWheel = mouseEvent.dwEventFlags is MouseEventFlags.MOUSE_WHEELED
-				                 or MouseEventFlags.MOUSE_HWHEELED;
-
-			return ir.EventType == ConsoleEventType.MOUSE_EVENT &&
-			       mouseEvent.dwEventFlags != MouseEventFlags.MOUSE_MOVED && mouseWheel;
-		}
-
-		private static bool IsMouseEvent(InputRecord ir)
-		{
-			var mouseEvent = ir.MouseEvent;
-
-			return ir.EventType == ConsoleEventType.MOUSE_EVENT &&
-			       mouseEvent.dwEventFlags != MouseEventFlags.MOUSE_MOVED || IsMouseScroll(ir);
-		}
-
-		private static bool IsModKey(InputRecord ir)
-		{
-			// We should also skip over Shift, Control, and Alt, as well as caps lock.
-			// Apparently we don't need to check for 0xA0 through 0xA5, which are keys like
-			// Left Control & Right Control. See the ConsoleKey enum for these values.
-			var keyCode = (VirtualKey) ir.KeyEvent.wVirtualKeyCode;
-
-			return keyCode is >= VirtualKey.SHIFT and <= VirtualKey.MENU or VirtualKey.CAPITAL
-				       or VirtualKey.NUMLOCK or VirtualKey.SCROLL;
-		}
-
 		internal static ConsoleKeyInfo GetKeyInfoFromRecord(InputRecord ir)
 		{
 
@@ -560,7 +575,7 @@ namespace Kantan.Cli
 				// the Alt key is released (i.e when the sequence is complete). To avoid noise, when the Alt key is down, we should eat up
 				// any intermediate key strokes (from NumPad) that collectively forms the Unicode character.
 
-				if (!IsKeyDownEvent(ir)) {
+				if (!ir.IsKeyDownEvent()) {
 					// REVIEW: Unicode IME input comes through as KeyUp event with no accompanying KeyDown.
 					if (keyCode != VirtualKey.MENU)
 						continue;
@@ -575,7 +590,7 @@ namespace Kantan.Cli
 
 				if (ch == 0) {
 					// Skip mod keys.
-					if (IsModKey(ir)) {
+					if (ir.IsModKey()) {
 						continue;
 					}
 				}
@@ -584,7 +599,7 @@ namespace Kantan.Cli
 				// Escape any intermediate NumPad keys whether NumLock is on or not (notepad behavior)
 				var key = (ConsoleKey) keyCode;
 
-				if (IsAltKeyDown(ir) && key is >= ConsoleKey.NumPad0 and <= ConsoleKey.NumPad9
+				if (ir.IsAltKeyDown() && key is >= ConsoleKey.NumPad0 and <= ConsoleKey.NumPad9
 					    or ConsoleKey.Clear or ConsoleKey.Insert or >= ConsoleKey.PageUp
 					    and <= ConsoleKey.DownArrow) {
 					continue;
@@ -611,63 +626,6 @@ namespace Kantan.Cli
 
 			var info = new ConsoleKeyInfo(c, (ConsoleKey) k, shift, alt, control);
 			return info;
-		}
-
-		private static bool IsAltKeyDown(InputRecord ir)
-		{
-			// For tracking Alt+NumPad unicode key sequence. When you press Alt key down
-			// and press a numpad unicode decimal sequence and then release Alt key, the
-			// desired effect is to translate the sequence into one Unicode KeyPress.
-			// We need to keep track of the Alt+NumPad sequence and surface the final
-			// unicode char alone when the Alt key is released.
-
-			return (ir.KeyEvent.dwControlKeyState &
-			        (ControlKeyState.LeftAltPressed | ControlKeyState.RightAltPressed)) != 0;
-		}
-
-		public static bool InputAvailable
-		{
-			get
-			{
-				while (true) {
-
-					if (!Win32.PeekConsoleInput(_stdIn, out InputRecord ir, 1, out uint numEventsRead)) {
-						throw new Win32Exception();
-					}
-
-					//Debug.WriteLine(ir);
-
-					if (numEventsRead == 0) {
-						return false;
-					}
-
-					// Skip non key-down && mod key events.
-
-					if (!IsMouseEvent(ir) && (!IsKeyDownEvent(ir) || IsModKey(ir))) {
-						var rg = new InputRecord[1];
-
-						if (!Win32.ReadConsoleInput(_stdIn, rg, 1, out numEventsRead))
-							throw new Win32Exception();
-					}
-					else {
-						return true;
-					}
-				}
-			}
-		}
-
-		internal static InputRecord ReadInputRecord()
-		{
-			var record = new InputRecord[1];
-
-			if (!Win32.ReadConsoleInput(_stdIn, record, 1, out uint lpNumberOfEventsRead)) {
-				throw new Win32Exception();
-			}
-
-			var read = record[0];
-
-			return read;
-
 		}
 
 		private static void CloseNative()

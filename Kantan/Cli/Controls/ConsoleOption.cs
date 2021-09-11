@@ -3,7 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
+using System.Text;
+using Kantan.Internal;
 using Kantan.Model;
+using Kantan.Text;
+using Kantan.Utilities;
+#pragma warning disable 8604
 
 #pragma warning disable 8603
 
@@ -47,7 +52,7 @@ namespace Kantan.Cli.Controls
 		///     Information about this <see cref="ConsoleOption" />
 		/// </summary>
 		public virtual IOutline? Data { get; set; }
-		
+
 		public virtual Color? Color { get; set; }
 
 		public virtual Color? ColorBG { get; set; }
@@ -88,5 +93,71 @@ namespace Kantan.Cli.Controls
 		}
 
 		#endregion
+
+		internal static string FormatOption(ConsoleOption option, int i)
+		{
+			var  sb = new StringBuilder();
+			char c  = GetDisplayOptionFromIndex(i);
+
+			string? name = option.Name;
+
+			if (option.Color.HasValue) {
+				name = name.AddColor(option.Color.Value);
+			}
+
+			if (option.ColorBG.HasValue) {
+				name = name.AddColorBG(option.ColorBG.Value);
+			}
+
+			sb.Append($"[{c}]: ");
+
+			if (name != null) {
+				sb.Append($"{name} ");
+			}
+
+			if (option.Data != null) {
+
+				sb.AppendLine();
+
+				sb.Append($"{Strings.Indent(Strings.OutlineString(option.Data))}");
+			}
+
+			if (!sb.ToString().EndsWith(Strings.Constants.NEW_LINE)) {
+				sb.AppendLine();
+			}
+
+			string f = ConsoleManager.FormatString(null, sb.ToString());
+
+			return f;
+		}
+
+		internal static char GetDisplayOptionFromIndex(int i)
+		{
+			if (i < MAX_OPTION_N) {
+				return Char.Parse(i.ToString());
+			}
+
+			int d = OPTION_LETTER_START + (i - MAX_OPTION_N);
+
+			return (char) d;
+		}
+
+		internal static int GetIndexFromDisplayOption(char c)
+		{
+			if (Char.IsNumber(c)) {
+				return (int) Char.GetNumericValue(c);
+			}
+
+			if (Char.IsLetter(c)) {
+				c = Char.ToUpper(c);
+				return MAX_OPTION_N + (c - OPTION_LETTER_START);
+			}
+
+			return Common.INVALID;
+		}
+
+		internal const int  MAX_OPTION_N        = 10;
+		internal const char OPTION_LETTER_START = 'A';
+		internal const int  MAX_DISPLAY_OPTIONS = 36;
 	}
 }

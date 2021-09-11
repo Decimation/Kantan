@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -12,6 +13,11 @@ using Kantan.Native.Structures;
 using Kantan.Text;
 using Kantan.Threading;
 using Kantan.Utilities;
+#pragma warning disable 8605
+
+// ReSharper disable SuggestVarOrType_SimpleTypes
+#pragma warning disable 8618
+#pragma warning disable 8604
 
 // ReSharper disable EmptyConstructor
 
@@ -69,23 +75,19 @@ namespace Kantan.Cli.Controls
 		///     executes the <see cref="ConsoleOption.Function" /> with the appropriate modifiers
 		/// </summary>
 		/// <remarks>
-		///     <see cref="ConsoleManager.MAX_DISPLAY_OPTIONS" />
+		///     <see cref="ConsoleOption.MAX_DISPLAY_OPTIONS" />
 		/// </remarks>
 		public IList<ConsoleOption> Options { get; init; }
 
 		public bool SelectMultiple { get; init; }
 
-		[CanBeNull]
-		public string Header { get; set; }
+		public string? Header { get; set; }
 
-		[CanBeNull]
-		public string Status { get; set; }
+		public string? Status { get; set; }
 
-		[CanBeNull]
-		public string Description { get; set; }
+		public string? Description { get; set; }
 
-		[CanBeNull]
-		public string Subtitle { get; set; }
+		public string? Subtitle { get; set; }
 
 		/// <summary>
 		///     <c>F*</c> keys
@@ -99,12 +101,12 @@ namespace Kantan.Cli.Controls
 		/// <list type="number">
 		/// <item><description><see cref="ConsoleOption.Function" /> returns a non-<c>null</c> value</description></item>
 		/// <item><description>A file path is dragged-and-dropped</description></item>
-		/// <item><description><see cref="NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
+		/// <item><description><see cref="ConsoleManager.NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
 		/// </list>
 		/// </remarks>
-		public ConsoleOutputResult Read()
+		public ConsoleOutputResult ReadInput()
 		{
-			var task = ReadAsync();
+			var task = ReadInputAsync();
 			task.Wait();
 			return task.Result;
 		}
@@ -116,15 +118,15 @@ namespace Kantan.Cli.Controls
 		/// <list type="number">
 		/// <item><description><see cref="ConsoleOption.Function" /> returns a non-<c>null</c> value</description></item>
 		/// <item><description>A file path is dragged-and-dropped</description></item>
-		/// <item><description><see cref="NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
+		/// <item><description><see cref="ConsoleManager.NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
 		/// </list>
 		/// </remarks>
-		public async Task<ConsoleOutputResult> ReadAsync()
+		public async Task<ConsoleOutputResult> ReadInputAsync()
 		{
 			//var selectedOptions = new HashSet<object>();
 			var output = new ConsoleOutputResult
 			{
-				SelectMultiple = this.SelectMultiple,
+				SelectMultiple = SelectMultiple,
 			};
 
 			/*
@@ -138,13 +140,13 @@ namespace Kantan.Cli.Controls
 
 			do {
 
-				DisplayDialog( output);
+				DisplayDialog(output);
 
 				var task = Task.Run(() =>
 				{
 					// Block until input is entered.
 					_ReadInput:
-					int prevCount = this.Options.Count;
+					int prevCount = Options.Count;
 
 					while (!ConsoleManager.InputAvailable) {
 
@@ -154,10 +156,10 @@ namespace Kantan.Cli.Controls
 
 						// Refresh buffer if collection was updated
 
-						int currentCount = this.Options.Count;
+						int currentCount = Options.Count;
 
 						if (refresh || prevCount != currentCount) {
-							DisplayDialog( output);
+							DisplayDialog(output);
 							prevCount = currentCount;
 						}
 					}
@@ -184,7 +186,7 @@ namespace Kantan.Cli.Controls
 							}
 
 							break;
-						case ConsoleEventType.MOUSE_EVENT when ConsoleManager.IsMouseScroll(ir):
+						case ConsoleEventType.MOUSE_EVENT when ir.IsMouseScrollEvent():
 
 							bool scrollDown = me.dwButtonState.HasFlag(ButtonState.SCROLL_DOWN);
 
@@ -202,6 +204,8 @@ namespace Kantan.Cli.Controls
 							// Debug.WriteLine($"{vs}");
 
 							// hack: wtf
+
+
 							if (me.dwButtonState == ButtonState.FROM_LEFT_1ST_BUTTON_PRESSED) {
 								ConsoleManager._click = true;
 							}
@@ -212,12 +216,22 @@ namespace Kantan.Cli.Controls
 
 							if (ConsoleManager.OptionPositions.ContainsKey(y)) {
 								var option  = ConsoleManager.OptionPositions[y];
-								var indexOf = this.Options.IndexOf(option);
-								var c       = GetDisplayOptionFromIndex(indexOf);
+								var indexOf = Options.IndexOf(option);
+								var c       = ConsoleOption.GetDisplayOptionFromIndex(indexOf);
 
 								// note: KeyChar argument is slightly inaccurate (case insensitive; always uppercase)
 								cki2 = ConsoleManager.GetKeyInfo(c, c, me.dwControlKeyState);
 								// Thread.Sleep(1000);
+							}
+							else if (ConsoleManager.OtherPositions.ContainsKey(y)) {
+								var option = ConsoleManager.OtherPositions[y];
+
+								var signal = (ConsoleManager.ConsoleSignal) option();
+
+								if (signal == ConsoleManager.ConsoleSignal.Exit) {
+									cki2 = ConsoleManager.ExitKeyInfo;
+								}
+								else goto default;
 							}
 							else {
 								goto default;
@@ -259,8 +273,8 @@ namespace Kantan.Cli.Controls
 				if (cki.Key is <= ConsoleKey.F12 and >= ConsoleKey.F1) {
 					int i = cki.Key - ConsoleKey.F1;
 
-					if (this.Functions is { } && this.Functions.ContainsKey(cki.Key)) {
-						var function = this.Functions[cki.Key];
+					if (Functions is { } && Functions.ContainsKey(cki.Key)) {
+						var function = Functions[cki.Key];
 						function();
 					}
 				}
@@ -282,10 +296,10 @@ namespace Kantan.Cli.Controls
 
 				// Handle option
 
-				int idx = GetIndexFromDisplayOption(keyChar);
+				int idx = ConsoleOption.GetIndexFromDisplayOption(keyChar);
 
-				if (idx < this.Options.Count && idx >= 0) {
-					var option = this.Options[idx];
+				if (idx < Options.Count && idx >= 0) {
+					var option = Options[idx];
 
 					if (!option.Functions.ContainsKey(modifiers)) {
 						continue;
@@ -297,11 +311,11 @@ namespace Kantan.Cli.Controls
 
 					if (funcResult != null) {
 						//
-						if (this.SelectMultiple) {
+						if (SelectMultiple) {
 							output.Output.Add(funcResult);
 						}
 						else {
-							output.Output = new HashSet<object>() { funcResult };
+							output.Output = new HashSet<object> { funcResult };
 							goto _Return;
 						}
 					}
@@ -311,24 +325,6 @@ namespace Kantan.Cli.Controls
 
 			_Return:
 			return output;
-		}
-
-		public override int GetHashCode()
-		{
-			var h = new HashCode();
-
-			IEnumerable<int> hx = Options.Select(o => o.GetHashCode());
-
-			foreach (int i in hx) {
-				h.Add(i);
-			}
-
-			h.Add(Status?.GetHashCode());
-			h.Add(Description?.GetHashCode());
-			h.Add(Header?.GetHashCode());
-			h.Add(Subtitle?.GetHashCode());
-
-			return h.ToHashCode();
 		}
 
 		/// <summary>
@@ -345,14 +341,16 @@ namespace Kantan.Cli.Controls
 			var sb = new StringBuilder();
 
 			if (Header != null) {
-				ConsoleManager.Write(false, Header.AddColor(ConsoleManager.ColorHeader));
-				sb.Append(Header.AddColor(ConsoleManager.ColorHeader));
+				var msg = Header.AddColor(ConsoleManager.ColorHeader);
+				ConsoleManager.Write(false, msg);
+				sb.Append(msg);
 			}
 
 			if (Subtitle != null) {
 
 				string subStr = ConsoleManager.FormatString(Strings.Constants.CHEVRON, Subtitle, false)
 				                              .AddColor(ConsoleManager.ColorOptions);
+
 				// string subStr = FormatString(null, Subtitle, true).AddColor(ColorOptions);
 
 				ConsoleManager.Write(true, subStr);
@@ -360,14 +358,14 @@ namespace Kantan.Cli.Controls
 				sb.AppendLine(subStr).AppendLine();
 			}
 
-			int clamp = Math.Clamp(Options.Count, (int) 0, (int) MAX_DISPLAY_OPTIONS);
+			int clamp = Math.Clamp(Options.Count, 0, ConsoleOption.MAX_DISPLAY_OPTIONS);
 
 			for (int i = 0; i < clamp; i++) {
 				ConsoleOption? option = Options[i];
 
 				//string delim = Strings.GetUnicodeBoxPipe(clamp, i);
 
-				string s = FormatOption(option, i);
+				string s = ConsoleOption.FormatOption(option, i);
 
 				var top = Console.CursorTop;
 				ConsoleManager.OptionPositions[top] = option;
@@ -416,79 +414,37 @@ namespace Kantan.Cli.Controls
 
 				Console.WriteLine();
 
-				ConsoleManager.Write(
-					$"Press {ConsoleManager.NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.");
+				var msg =
+					$"Press {ConsoleManager.NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.";
 
-				sb.AppendLine(
-					$"Press {ConsoleManager.NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.");
+				ConsoleManager.OtherPositions[Console.CursorTop] = () =>
+				{
+					return ConsoleManager.ConsoleSignal.Exit;
+				};
+
+				ConsoleManager.Write(msg);
+
+				sb.AppendLine(msg);
 			}
 			// Console.Write(sb);
 		}
 
-		private const int  MAX_OPTION_N        = 10;
-		private const char OPTION_LETTER_START = 'A';
-		private const int  MAX_DISPLAY_OPTIONS = 36;
-
-		private static char GetDisplayOptionFromIndex(int i)
+		public override int GetHashCode()
 		{
-			if (i < ConsoleDialog.MAX_OPTION_N) {
-				return Char.Parse(i.ToString());
+			var h = new HashCode();
+
+			IEnumerable<int> hx = Options.Select(o => o.GetHashCode());
+
+			foreach (int i in hx) {
+				h.Add(i);
 			}
 
-			int d = ConsoleDialog.OPTION_LETTER_START + (i - ConsoleDialog.MAX_OPTION_N);
+			h.Add(Status?.GetHashCode());
+			h.Add(Description?.GetHashCode());
+			h.Add(Header?.GetHashCode());
+			h.Add(Subtitle?.GetHashCode());
 
-			return (char) d;
-		}
-
-		private static int GetIndexFromDisplayOption(char c)
-		{
-			if (Char.IsNumber(c)) {
-				return (int) Char.GetNumericValue(c);
-			}
-
-			if (Char.IsLetter(c)) {
-				c = Char.ToUpper(c);
-				return ConsoleDialog.MAX_OPTION_N + (c - ConsoleDialog.OPTION_LETTER_START);
-			}
-
-			return Common.INVALID;
-		}
-
-		private static string FormatOption(ConsoleOption option, int i)
-		{
-			var  sb = new StringBuilder();
-			char c  = ConsoleDialog.GetDisplayOptionFromIndex(i);
-
-			string? name = option.Name;
-
-			if (option.Color.HasValue) {
-				name = name.AddColor(option.Color.Value);
-			}
-
-			if (option.ColorBG.HasValue) {
-				name = name.AddColorBG(option.ColorBG.Value);
-			}
-
-			sb.Append($"[{c}]: ");
-
-			if (name != null) {
-				sb.Append($"{name} ");
-			}
-
-			if (option.Data != null) {
-
-				sb.AppendLine();
-
-				sb.Append($"{Strings.Indent(Strings.OutlineString(option.Data))}");
-			}
-
-			if (!sb.ToString().EndsWith(Strings.Constants.NEW_LINE)) {
-				sb.AppendLine();
-			}
-
-			string f = ConsoleManager.FormatString(null, sb.ToString(), true);
-
-			return f;
+			return h.ToHashCode();
 		}
 	}
 }
