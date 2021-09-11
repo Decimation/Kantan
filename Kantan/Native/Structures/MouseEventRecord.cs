@@ -10,7 +10,7 @@ namespace Kantan.Native.Structures
 		public Coord           dwMousePosition;
 		public ButtonState     dwButtonState;
 		public ControlKeyState dwControlKeyState;
-		public EventFlags      dwEventFlags;
+		public MouseEventFlags      dwEventFlags;
 
 
 

@@ -75,9 +75,9 @@ namespace Kantan.Cli
 	/// </list>
 	public static class ConsoleManager
 	{
-		private static readonly Color ColorHeader  = Color.Red;
-		private static readonly Color ColorOptions = Color.Aquamarine;
-		private static readonly Color ColorError   = Color.Red;
+		internal static readonly Color ColorHeader  = Color.Red;
+		internal static readonly Color ColorOptions = Color.Aquamarine;
+		internal static readonly Color ColorError   = Color.Red;
 
 		public static int BufferLimit { get; set; } = Console.BufferWidth - 10;
 
@@ -113,7 +113,7 @@ namespace Kantan.Cli
 		///     Root formatting function.
 		/// </summary>
 		[StringFormatMethod(STRING_FORMAT_ARG)]
-		private static string FormatString(string? delim, string msg, bool repDelim = true)
+		internal static string FormatString(string? delim, string msg, bool repDelim = true)
 		{
 			//Debug.WriteLine(l.FuncJoin((s) => $"[{s}]"));
 
@@ -157,368 +157,11 @@ namespace Kantan.Cli
 			return String.Join(Constants.NEW_LINE, split);
 		}
 
-		private static string FormatOption(ConsoleOption option, int i)
-		{
-			var  sb = new StringBuilder();
-			char c  = GetDisplayOptionFromIndex(i);
-
-			string? name = option.Name;
-
-			if (option.Color.HasValue) {
-				name = name.AddColor(option.Color.Value);
-			}
-
-			if (option.ColorBG.HasValue) {
-				name = name.AddColorBG(option.ColorBG.Value);
-			}
-
-			sb.Append($"[{c}]: ");
-
-			if (name != null) {
-				sb.Append($"{name} ");
-			}
-
-			if (option.Data != null) {
-
-				sb.AppendLine();
-
-				sb.Append($"{Indent(OutlineString(option.Data))}");
-			}
-
-			if (!sb.ToString().EndsWith(Constants.NEW_LINE)) {
-				sb.AppendLine();
-			}
-
-			string f = FormatString(null, sb.ToString(), true);
-
-			return f;
-		}
-
-		private static char GetDisplayOptionFromIndex(int i)
-		{
-			if (i < MAX_OPTION_N) {
-				return Char.Parse(i.ToString());
-			}
-
-			int d = OPTION_LETTER_START + (i - MAX_OPTION_N);
-
-			return (char) d;
-		}
-
-		private static int GetIndexFromDisplayOption(char c)
-		{
-			if (Char.IsNumber(c)) {
-				return (int) Char.GetNumericValue(c);
-			}
-
-			if (Char.IsLetter(c)) {
-				c = Char.ToUpper(c);
-				return MAX_OPTION_N + (c - OPTION_LETTER_START);
-			}
-
-			return INVALID;
-		}
-
-		/// <summary>
-		///     Display dialog
-		/// </summary>
-		private static void DisplayDialog(ConsoleDialog dialog, ConsoleOutputResult output)
-		{
-			// todo: atomic write operations (i.e., instead of incremental)
-
-			Console.Clear();
-
-			var t = Console.CursorTop;
-			// Console.SetCursorPosition(0,0);
-			var sb = new StringBuilder();
-
-			if (dialog.Header != null) {
-				Write(false, dialog.Header.AddColor(ColorHeader));
-				sb.Append(dialog.Header.AddColor(ColorHeader));
-			}
-
-			if (dialog.Subtitle != null) {
-
-				string subStr = FormatString(Constants.CHEVRON, dialog.Subtitle, false).AddColor(ColorOptions);
-				// string subStr = FormatString(null, dialog.Subtitle, true).AddColor(ColorOptions);
-
-				Write(true, subStr);
-				Console.WriteLine();
-				sb.AppendLine(subStr).AppendLine();
-			}
-
-			int clamp = Math.Clamp(dialog.Options.Count, 0, MAX_DISPLAY_OPTIONS);
-
-			for (int i = 0; i < clamp; i++) {
-				ConsoleOption? option = dialog.Options[i];
-
-				//string delim = Strings.GetUnicodeBoxPipe(clamp, i);
-
-				string s = FormatOption(option, i);
-
-				var top = Console.CursorTop;
-				OptionPositions[top] = option;
-				// t+=MeasureRows(s)+(i-1);
-				//Debug.WriteLine($"{top} | {((MeasureRows(sb.ToString())))} | {MeasureRows(s)} | {t} | {i} | {MeasureRows(sb.ToString())-MeasureRows(s)-i}");
-				// Debug.WriteLine(Console.CursorTop);
-				sb.Append(s);
-				Write(false, s);
-
-
-				// Write(false, s);
-				/*sb.Append(s);
-				var rows      = Strings.MeasureRows(sb.ToString())+sb.ToString().Count(c=>c=='\n');
-				var key = Console.CursorTop+rows;
-				OptionPositions[key] = option;*/
-			}
-
-			Console.WriteLine();
-			sb.AppendLine();
-
-			if (dialog.Status != null) {
-				Write(dialog.Status);
-				sb.AppendLine(dialog.Status);
-			}
-
-			if (dialog.Description != null) {
-				Console.WriteLine();
-
-				Write(dialog.Description);
-				sb.AppendLine().AppendLine(dialog.Description);
-			}
-
-			// Show options
-
-			if (dialog.SelectMultiple) {
-				Console.WriteLine();
-
-				sb.AppendLine();
-
-				string optionsStr = $"{Constants.CHEVRON} {output.Output.QuickJoin()}"
-					.AddColor(ColorOptions);
-
-				Write(true, optionsStr);
-
-				sb.AppendLine(optionsStr).AppendLine();
-
-				Console.WriteLine();
-				Write($"Press {NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.");
-
-				sb.AppendLine($"Press {NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.");
-			}
-			// Console.Write(sb);
-		}
-
 		#endregion
 
-		/// <summary>
-		///     Handles user input and options
-		/// </summary>
-		/// <remarks>Returns when:
-		/// <list type="number">
-		/// <item><description><see cref="ConsoleOption.Function" /> returns a non-<c>null</c> value</description></item>
-		/// <item><description>A file path is dragged-and-dropped</description></item>
-		/// <item><description><see cref="NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
-		/// </list>
-		/// </remarks>
-		public static async Task<ConsoleOutputResult> ReadInputAsync(ConsoleDialog dialog)
-		{
-			//var selectedOptions = new HashSet<object>();
+		
 
-			var output = new ConsoleOutputResult
-			{
-				SelectMultiple = dialog.SelectMultiple,
-			};
-
-			/*
-			 * Handle input
-			 */
-
-			ConsoleKeyInfo cki;
-
-			InitNative();
-			OptionPositions.Clear();
-
-			do {
-
-				DisplayDialog(dialog, output);
-
-				var task = Task.Run(() =>
-				{
-					// Block until input is entered.
-					_ReadInput:
-					int prevCount = dialog.Options.Count;
-
-					while (!InputAvailable) {
-
-						bool refresh = AtomicHelper.Exchange(ref Status, ConsoleStatus.Ok) == ConsoleStatus.Refresh;
-
-						// Refresh buffer if collection was updated
-
-						int currentCount = dialog.Options.Count;
-
-						if (refresh || prevCount != currentCount) {
-							DisplayDialog(dialog, output);
-							prevCount = currentCount;
-						}
-					}
-
-					InputRecord ir = ReadInputRecord();
-
-					ConsoleKeyInfo cki2;
-
-					switch (ir.EventType) {
-
-						case ConsoleEventType.KEY_EVENT:
-							// Key was read
-
-							cki2 = GetKeyInfoFromRecord(ir);
-							var dragAndDropFile = TryReadFile(cki2);
-
-							if (!String.IsNullOrWhiteSpace(dragAndDropFile)) {
-
-								//Debug.WriteLine($">> {dragAndDropFile}");
-								output.DragAndDrop = dragAndDropFile;
-								return;
-							}
-
-							break;
-						case ConsoleEventType.MOUSE_EVENT when IsMouseScroll(ir):
-
-							bool scrollDown = ir.MouseEvent.dwButtonState.HasFlag(ButtonState.SCROLL_DOWN);
-							var  increment  = scrollDown ? ScrollIncrement : -ScrollIncrement;
-
-							bool b = Scroll(increment);
-
-							goto _ReadInput;
-						case ConsoleEventType.MOUSE_EVENT:
-							// Mouse was read
-							var (x, y) = (ir.MouseEvent.dwMousePosition.X, ir.MouseEvent.dwMousePosition.Y);
-
-							// var vs = ReadXY(Console.BufferWidth, 0, y);
-							// Debug.WriteLine($"{vs}");
-
-							if (OptionPositions.ContainsKey(y)) {
-								var option  = OptionPositions[y];
-								var indexOf = dialog.Options.IndexOf(option);
-								var c       = GetDisplayOptionFromIndex(indexOf);
-
-								var me = ir.MouseEvent;
-
-								// note: KeyChar argument is slightly inaccurate (case insensitive; always uppercase)
-								cki2 = GetKeyInfo(c, c, me.dwControlKeyState);
-
-							}
-							else {
-								goto default;
-							}
-
-							break;
-
-						default:
-							cki2 = default;
-							break;
-					}
-
-					//packet.Input = cki2;
-
-					output.Key = cki2;
-				});
-
-				await task;
-
-				// Input was read
-
-				// File path was input via drag-and-drop
-				if (output.DragAndDrop != null) {
-					goto _Return;
-				}
-
-				if (output.Key.HasValue) {
-					cki = output.Key.Value;
-				}
-				else {
-					throw new InvalidOperationException();
-				}
-
-				Debug.WriteLine($"{nameof(ConsoleManager)}: ({cki.Key} {(int) cki.Key}) " +
-				                $"| ({cki.KeyChar} {(int) cki.KeyChar})", C_DEBUG);
-
-				// Handle special keys
-
-				if (cki.Key is <= ConsoleKey.F12 and >= ConsoleKey.F1) {
-					int i = cki.Key - ConsoleKey.F1;
-
-					if (dialog.Functions is { } && dialog.Functions.ContainsKey(cki.Key)) {
-						var function = dialog.Functions[cki.Key];
-						function();
-					}
-				}
-
-				switch (cki.Key) {
-					case NC_GLOBAL_REFRESH_KEY:
-						Refresh();
-						break;
-				}
-
-				// KeyChar can't be used as modifiers are not applicable
-				char keyChar = (char) (int) cki.Key;
-
-				if (!Char.IsLetterOrDigit(keyChar)) {
-					continue;
-				}
-
-				ConsoleModifiers modifiers = cki.Modifiers;
-
-				// Handle option
-
-				int idx = GetIndexFromDisplayOption(keyChar);
-
-				if (idx < dialog.Options.Count && idx >= 0) {
-					var option = dialog.Options[idx];
-
-					if (!option.Functions.ContainsKey(modifiers)) {
-						continue;
-					}
-
-					var fn = option.Functions[modifiers];
-
-					object? funcResult = fn();
-
-					if (funcResult != null) {
-						//
-						if (dialog.SelectMultiple) {
-							output.Output.Add(funcResult);
-						}
-						else {
-							output.Output = new HashSet<object>() { funcResult };
-							goto _Return;
-						}
-					}
-				}
-
-			} while (cki.Key != NC_GLOBAL_EXIT_KEY);
-
-			_Return:
-			return output;
-		}
-
-		/// <summary>
-		///     Handles user input and options
-		/// </summary>
-		/// <remarks>Returns when:
-		/// <list type="number">
-		/// <item><description><see cref="ConsoleOption.Function" /> returns a non-<c>null</c> value</description></item>
-		/// <item><description>A file path is dragged-and-dropped</description></item>
-		/// <item><description><see cref="NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
-		/// </list>
-		/// </remarks>
-		public static ConsoleOutputResult ReadInput(ConsoleDialog dialog)
-		{
-			var task = ReadInputAsync(dialog);
-			task.Wait();
-			return task.Result;
-		}
+		
 
 		public static string ReadLine(string? prompt = null, Predicate<string>? invalid = null,
 		                              string? errPrompt = null)
@@ -592,7 +235,7 @@ namespace Kantan.Cli
 		///     primary disk letter. If so, then the rest of the buffer is read until the current sequence is a
 		/// string resembling a valid file path.
 		/// </remarks>
-		private static string? TryReadFile(ConsoleKeyInfo cki)
+		internal static string? TryReadFile(ConsoleKeyInfo cki)
 		{
 			const char quote = '\"';
 
@@ -646,19 +289,13 @@ namespace Kantan.Cli
 
 		private const char OPTION_Y = 'Y';
 
-		private const int MAX_OPTION_N = 10;
-
-		private const char OPTION_LETTER_START = 'A';
-
-		private const int MAX_DISPLAY_OPTIONS = 36;
-
 		#endregion Options
 
 		#endregion IO
 
 		#region
 
-		private static readonly Dictionary<int, ConsoleOption> OptionPositions = new();
+		internal static readonly Dictionary<int, ConsoleOption> OptionPositions = new();
 
 		public static int ScrollIncrement { get; set; } = 3;
 
@@ -675,9 +312,9 @@ namespace Kantan.Cli
 		/// <summary>
 		///     Interface status
 		/// </summary>
-		private static ConsoleStatus Status;
+		internal static ConsoleStatus _status;
 
-		private enum ConsoleStatus
+		internal enum ConsoleStatus
 		{
 			/// <summary>
 			///     Signals to reload interface
@@ -687,10 +324,10 @@ namespace Kantan.Cli
 			/// <summary>
 			///     Signals to continue displaying current interface
 			/// </summary>
-			Ok
+			Ok,
 		}
 
-		public static void Refresh() => AtomicHelper.Exchange(ref Status, ConsoleStatus.Refresh);
+		public static void Refresh() => AtomicHelper.Exchange(ref _status, ConsoleStatus.Refresh);
 
 		#endregion
 
@@ -814,9 +451,10 @@ namespace Kantan.Cli
 			return canResize;
 		}
 
-		internal static IntPtr       _stdIn;
-		internal static IntPtr       _stdOut;
-		private static  ConsoleModes _oldMode;
+		internal static bool         _click;
+		private static IntPtr       _stdIn;
+		private static IntPtr       _stdOut;
+		private static ConsoleModes _oldMode;
 
 		/// <summary>
 		/// Reads characters from the screen buffer, starting at the given position.
@@ -879,15 +517,15 @@ namespace Kantan.Cli
 			return ir.EventType == ConsoleEventType.KEY_EVENT && keyEvent.bKeyDown != BOOL.FALSE;
 		}
 
-		private static bool IsMouseScroll(InputRecord ir)
+		internal static bool IsMouseScroll(InputRecord ir)
 		{
 			var mouseEvent = ir.MouseEvent;
 
-			var mouseWheel = mouseEvent.dwEventFlags is EventFlags.MOUSE_WHEELED
-				                 or EventFlags.MOUSE_HWHEELED;
+			var mouseWheel = mouseEvent.dwEventFlags is MouseEventFlags.MOUSE_WHEELED
+				                 or MouseEventFlags.MOUSE_HWHEELED;
 
 			return ir.EventType == ConsoleEventType.MOUSE_EVENT &&
-			       mouseEvent.dwEventFlags != EventFlags.MOUSE_MOVED && mouseWheel;
+			       mouseEvent.dwEventFlags != MouseEventFlags.MOUSE_MOVED && mouseWheel;
 		}
 
 		private static bool IsMouseEvent(InputRecord ir)
@@ -895,7 +533,7 @@ namespace Kantan.Cli
 			var mouseEvent = ir.MouseEvent;
 
 			return ir.EventType == ConsoleEventType.MOUSE_EVENT &&
-			       mouseEvent.dwEventFlags != EventFlags.MOUSE_MOVED || IsMouseScroll(ir);
+			       mouseEvent.dwEventFlags != MouseEventFlags.MOUSE_MOVED || IsMouseScroll(ir);
 		}
 
 		private static bool IsModKey(InputRecord ir)
@@ -909,7 +547,7 @@ namespace Kantan.Cli
 				       or VirtualKey.NUMLOCK or VirtualKey.SCROLL;
 		}
 
-		private static ConsoleKeyInfo GetKeyInfoFromRecord(InputRecord ir)
+		internal static ConsoleKeyInfo GetKeyInfoFromRecord(InputRecord ir)
 		{
 
 			// We did NOT have a previous keystroke with repeated characters:
@@ -965,7 +603,7 @@ namespace Kantan.Cli
 
 		}
 
-		private static ConsoleKeyInfo GetKeyInfo(char c, int k, ControlKeyState state)
+		internal static ConsoleKeyInfo GetKeyInfo(char c, int k, ControlKeyState state)
 		{
 			bool shift   = (state & ControlKeyState.ShiftPressed) != 0;
 			bool alt     = (state & (ControlKeyState.LeftAltPressed | ControlKeyState.RightAltPressed)) != 0;
@@ -1018,7 +656,7 @@ namespace Kantan.Cli
 			}
 		}
 
-		private static InputRecord ReadInputRecord()
+		internal static InputRecord ReadInputRecord()
 		{
 			var record = new InputRecord[1];
 
@@ -1040,7 +678,7 @@ namespace Kantan.Cli
 			_oldMode = 0;
 		}
 
-		private static void InitNative()
+		internal static void InitNative()
 		{
 			_stdOut = Win32.GetStdHandle(StandardHandle.STD_OUTPUT_HANDLE);
 			_stdIn  = Win32.GetStdHandle(StandardHandle.STD_INPUT_HANDLE);

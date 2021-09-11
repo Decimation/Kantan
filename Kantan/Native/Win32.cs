@@ -188,12 +188,17 @@ namespace Kantan.Native
 	}
 
 
-	internal enum EventFlags
+	internal enum MouseEventFlags
 	{
 		DOUBLE_CLICK   = 0x0002,
 		MOUSE_HWHEELED = 0x0008,
 		MOUSE_MOVED    = 0x0001,
-		MOUSE_WHEELED  = 0x0004
+		MOUSE_WHEELED  = 0x0004,
+
+		/// <summary>
+		/// A mouse button was pressed or released
+		/// </summary>
+		MOUSE_BUTTON = 0,
 	}
 
 	internal enum VirtualKey : short

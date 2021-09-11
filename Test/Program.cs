@@ -57,10 +57,12 @@ namespace Test
 			/*string fooBar = "foo\nbar\n".AddColor(Color.Aquamarine);
 			Console.Write(fooBar);
 			Debug.WriteLine(Strings.MeasureRows(fooBar));*/
-			await ConsoleTest();
+			await ConsoleTest3();
+			await ConsoleTest2();
+
 		}
 
-		
+
 
 		private class MyClass : IOutline
 		{
@@ -114,7 +116,7 @@ namespace Test
 				return null;
 			};
 
-			var r = ConsoleManager.ReadInputAsync(dialog);
+			var r = dialog.ReadAsync();
 
 
 			Task.Factory.StartNew(() =>
@@ -137,6 +139,30 @@ namespace Test
 			b = 1 << 1,
 			c = 1 << 2
 		}
+		private static async Task ConsoleTest3()
+		{
+			var dialog = new ConsoleDialog()
+			{
+				Functions = new()
+				{
+					[ConsoleKey.F1] = () =>
+					{
+						Console.WriteLine("g");
+
+					},
+				},
+				Status = "hi",
+				SelectMultiple = false,
+				Options        = ConsoleOption.FromEnum<MyEnum>().ToList()
+			};
+
+
+			var r = dialog.ReadAsync();
+			await r;
+
+			Console.WriteLine(r.Result.Output.QuickJoin());
+
+		}
 
 		private static async Task ConsoleTest2()
 		{
@@ -150,12 +176,13 @@ namespace Test
 
 					},
 				},
+				Status = "hi1",
 				SelectMultiple = true,
 				Options        = ConsoleOption.FromEnum<MyEnum>().ToList()
 			};
 
 
-			var r = ConsoleManager.ReadInputAsync(dialog);
+			var r = dialog.ReadAsync();
 			await r;
 
 			Console.WriteLine(r.Result.Output.QuickJoin());
