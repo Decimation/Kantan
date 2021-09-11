@@ -57,7 +57,18 @@ namespace Test
 			/*string fooBar = "foo\nbar\n".AddColor(Color.Aquamarine);
 			Console.Write(fooBar);
 			Debug.WriteLine(Strings.MeasureRows(fooBar));*/
+
+			/*var s = "foo\nhi" + Strings.GetUnicodeBoxPipe(new List<string>() { "" }, 0) + "g".AddColor(Color.Red);
+			Console.Write(s);
+			Debug.WriteLine(Strings.MeasureRows(s));*/
+			var sb = new StringBuilder();
+			sb.Append("hi".AddColor(Color.GreenYellow));
+			var s2 = sb.ToString();
+			Console.Write(s2);
+			Debug.WriteLine(Strings.MeasureRows(s2));
+			Console.ReadKey();
 			await ConsoleTest();
+			int i;
 		}
 
 		
@@ -114,8 +125,7 @@ namespace Test
 				return null;
 			};
 
-			var r = ConsoleManager.ReadInputAsync(dialog);
-
+			var r = dialog.ReadAsync();
 
 			Task.Factory.StartNew(() =>
 			{
@@ -155,7 +165,7 @@ namespace Test
 			};
 
 
-			var r = ConsoleManager.ReadInputAsync(dialog);
+			var r = dialog.ReadAsync();
 			await r;
 
 			Console.WriteLine(r.Result.Output.QuickJoin());
