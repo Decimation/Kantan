@@ -3,12 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
-using System.Text;
 using Kantan.Model;
-using Kantan.Text;
-using Kantan.Utilities;
-
-#pragma warning disable 8604
 
 #pragma warning disable 8603
 
@@ -52,7 +47,7 @@ namespace Kantan.Cli.Controls
 		///     Information about this <see cref="ConsoleOption" />
 		/// </summary>
 		public virtual IOutline? Data { get; set; }
-
+		
 		public virtual Color? Color { get; set; }
 
 		public virtual Color? ColorBG { get; set; }
@@ -93,38 +88,5 @@ namespace Kantan.Cli.Controls
 		}
 
 		#endregion
-
-		internal string FormatOption()
-		{
-			var sb = new StringBuilder();
-
-			string? name = Name;
-
-			if (Color.HasValue) {
-				name = name.AddColor(Color.Value);
-			}
-
-			if (ColorBG.HasValue) {
-				name = name.AddColorBG(ColorBG.Value);
-			}
-
-			if (name != null) {
-				sb.Append($"{name} ");
-			}
-
-			if (Data != null) {
-
-				sb.AppendLine();
-
-				sb.Append($"{Strings.Indent(Strings.OutlineString(Data))}");
-			}
-
-			if (!sb.ToString().EndsWith(Strings.Constants.NEW_LINE)) {
-				sb.AppendLine();
-			}
-
-
-			return sb.ToString();
-		}
 	}
 }

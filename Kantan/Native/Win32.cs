@@ -14,7 +14,6 @@ namespace Kantan.Native
 	internal static class Win32
 	{
 		private const string KERNEL32_DLL = "kernel32.dll";
-
 		/*
 		 * Note: some code comes from:
 		 * Novus
@@ -133,7 +132,36 @@ namespace Kantan.Native
 		STD_OUTPUT_HANDLE = -11
 	}
 
-	
+	internal enum ButtonState
+	{
+		FROM_LEFT_1ST_BUTTON_PRESSED = 0x0001,
+		FROM_LEFT_2ND_BUTTON_PRESSED = 0x0004,
+		FROM_LEFT_3RD_BUTTON_PRESSED = 0x0008,
+		FROM_LEFT_4TH_BUTTON_PRESSED = 0x0010,
+		RIGHTMOST_BUTTON_PRESSED     = 0x0002,
+
+		/// <summary>
+		///     For mouse wheel events, if this flag is set, the wheel was scrolled down.
+		///     If cleared, the wheel was scrolled up.
+		///     This is not officially documented.
+		/// </summary>
+		SCROLL_DOWN = unchecked((int) 0xFF000000)
+	}
+
+
+	[Flags]
+	internal enum ControlKeyState
+	{
+		RightAltPressed  = 0x0001,
+		LeftAltPressed   = 0x0002,
+		RightCtrlPressed = 0x0004,
+		LeftCtrlPressed  = 0x0008,
+		ShiftPressed     = 0x0010,
+		NumLockOn        = 0x0020,
+		ScrollLockOn     = 0x0040,
+		CapsLockOn       = 0x0080,
+		EnhancedKey      = 0x0100
+	}
 
 	/// <summary>
 	///     Blittable version of Windows BOOL type. It is convenient in situations where
@@ -150,7 +178,23 @@ namespace Kantan.Native
 		TRUE  = 1
 	}
 
-	
+	internal enum ConsoleEventType : short
+	{
+		FOCUS_EVENT              = 0x0010,
+		KEY_EVENT                = 0x0001,
+		MENU_EVENT               = 0x0008,
+		MOUSE_EVENT              = 0x0002,
+		WINDOW_BUFFER_SIZE_EVENT = 0x0004
+	}
+
+
+	internal enum EventFlags
+	{
+		DOUBLE_CLICK   = 0x0002,
+		MOUSE_HWHEELED = 0x0008,
+		MOUSE_MOVED    = 0x0001,
+		MOUSE_WHEELED  = 0x0004
+	}
 
 	internal enum VirtualKey : short
 	{

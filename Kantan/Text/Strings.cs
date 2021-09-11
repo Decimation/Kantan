@@ -9,7 +9,6 @@ using System.Text.Unicode;
 using JetBrains.Annotations;
 using Kantan.Collections;
 using Kantan.Model;
-using Kantan.Utilities;
 using static Kantan.Internal.Common;
 
 // ReSharper disable ArrangeObjectCreationWhenTypeNotEvident
@@ -79,12 +78,10 @@ namespace Kantan.Text
 			var bufferWidth = Console.BufferWidth;
 			var windowWidth = Console.WindowWidth;
 
-			s = Pastel.Remove(s);
 			var nc  = s.Count(c => char.IsControl(c));
-
+			
 			//var nc = s.Count(c => c=='\n'||c=='\r');
 			int nc1 = 0;
-
 			for (int i = 0; i < s.Length-1; i++) {
 				if (s[i]=='\r'&&s[i+1]=='\n') {
 					nc1++;
@@ -92,6 +89,7 @@ namespace Kantan.Text
 				else if (s[i] == '\n') nc1++;
 				
 			}
+
 			// var nc1 = s.Count(c => c == '\n');
 
 			// var nc2 = Regex.Matches(s, Environment.NewLine).Count;
