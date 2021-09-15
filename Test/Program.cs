@@ -57,9 +57,18 @@ namespace Test
 			/*string fooBar = "foo\nbar\n".AddColor(Color.Aquamarine);
 			Console.Write(fooBar);
 			Debug.WriteLine(Strings.MeasureRows(fooBar));*/
-			await ConsoleTest3();
-			await ConsoleTest2();
-
+			// await ConsoleTest3();
+			// await ConsoleTest2();
+			 
+			Console.WriteLine(MathHelper.GCD(123, 456));
+			// await ConsoleTest();
+			RationalNumber r;
+			var            fraction = Fraction.ToFraction(3.14);
+			Console.WriteLine(fraction);
+			Console.WriteLine(fraction.Value);
+			Console.WriteLine(fraction.Int64Bits);
+			Console.WriteLine(BitConverter.Int64BitsToDouble(fraction.Int64Bits));
+			Console.WriteLine(Fraction.Zero);
 		}
 
 

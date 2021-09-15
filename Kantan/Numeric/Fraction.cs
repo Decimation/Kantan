@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 // ReSharper disable NonReadonlyMemberInGetHashCode
 
@@ -11,131 +12,54 @@
 namespace Kantan.Numeric
 {
 	/* Adapted from https://stackoverflow.com/questions/7564906/convert-double-to-fraction-as-string-in-c-sharp
-	* Classes Contained:
-	*     Fraction
-	*     FractionException
-	* 
-	*
-	* 
-	* 
-	* Class name: Fraction
-	* Developed by: Syed Mehroz Alam
-	* Email: smehrozalam@yahoo.com
-	* URL: Programming Home "http://www.geocities.com/smehrozalam/"
-	* Version: 2.0
-	* 
-	* What's new in version 2.0:
-	*     *   Changed Numerator and Denominator from Int32(integer) to Int64(long) for increased range
-	*     *   renamed ConvertToString() to (overloaded) ToString()
-	*     *   added the capability of detecting/raising overflow exceptions
-	*     *   Fixed the bug that very small numbers e.g. 0.00000001 could not be converted to fraction
-	*     *   Other minor bugs fixed
-	* 
-	* What's new in version 2.1
-	*     *   overloaded user-defined conversions to/from Fractions
-	*     
-	* 
-	* Properties:
-	*     Numerator: Set/Get value for Numerator
-	*     Denominator:  Set/Get value for Numerator
-	*     Value:  Set an integer value for the fraction
-	* 
-	* Constructors:
-	*     no arguments:   initializes fraction as 0/1
-	*     (Numerator, Denominator): initializes fraction with the given numerator and denominator values
-	*     (integer):  initializes fraction with the given integer value
-	*     (long): initializes fraction with the given long value
-	*     (double):   initializes fraction with the given double value
-	*     (string):   initializes fraction with the given string value
-	*                 the string can be an in the form of and integer, double or fraction.
-	*                 e.g it can be like "123" or "123.321" or "123/456"
-	* 
-	* Public Methods (Description is given with respective methods' definitions)
-	*     (override) string ToString(Fraction)
-	*     Fraction ToFraction(string)
-	*     Fraction ToFraction(double)
-	*     double ToDouble(Fraction)
-	*     Fraction Duplicate()
-	*     Fraction Inverse(integer)
-	*     Fraction Inverse(Fraction)
-	*     ReduceFraction(Fraction)
-	*     Equals(object)
-	*     GetHashCode()
-	* 
-	* Private Methods (Description is given with respective methods' definitions)
-	*     Initialize(Numerator, Denominator)
-	*     Fraction Negate(Fraction)
-	*     Fraction Add(Fraction1, Fraction2)
-	* 
-	* Overloaded Operators (overloaded for Fractions, Integers and Doubles)
-	*     Unary: -
-	*     Binary: +,-,*,/ 
-	*     Relational and Logical Operators: ==,!=,<,>,<=,>=
-	* 
-	* Overloaded user-defined conversions
-	*     Implicit:   From double/long/string to Fraction
-	*     Explicit:   From Fraction to double/string
-	*/
+	 *
+	 * Originally developed by Syed Mehroz Alam (smehrozalam@yahoo.com)
+	 */
 
-	public class Fraction
+	public struct Fraction : IEquatable<Fraction>, ICloneable, IComparable<Fraction>, IComparable
 	{
 		private long m_iDenominator;
 
-		/// <summary>
-		/// Constructors
-		/// </summary>
-		public Fraction() => Initialize(0, 1);
+		public Fraction(long wholeNumber) : this(wholeNumber, 1) { }
 
-		public Fraction(long wholeNumber) => Initialize(wholeNumber, 1);
+		public Fraction(double decimalValue) : this(ToFraction(decimalValue)) { }
 
-		public Fraction(double decimalValue)
-		{
-			var temp = ToFraction(decimalValue);
-			Initialize(temp.Numerator, temp.Denominator);
-		}
+		public Fraction(string strValue) : this(ToFraction(strValue)) { }
 
-		public Fraction(string strValue)
-		{
-			var temp = ToFraction(strValue);
-			Initialize(temp.Numerator, temp.Denominator);
-		}
+		public Fraction(Fraction f) : this(f.Numerator, f.Denominator) { }
 
 		public Fraction(long numerator, long denominator)
 		{
-			Initialize(numerator, denominator);
+			Numerator      = numerator;
+			m_iDenominator = denominator;
+			Reduce(this);
 		}
 
-		/// <summary>
-		/// Internal function for constructors
-		/// </summary>
-		private void Initialize(long numerator, long denominator)
-		{
-			Numerator   = numerator;
-			Denominator = denominator;
-			ReduceFraction(this);
-		}
-
-		/// <summary>
-		/// Properties
-		/// </summary>
 		public long Denominator
 		{
 			get => m_iDenominator;
-			set
-			{
-				if (value != 0)
-					m_iDenominator = value;
-				else
-					throw new FractionException("Denominator cannot be assigned a ZERO Value");
+			set => EnsureDenominator(value);
+		}
+
+		private void EnsureDenominator(long value)
+		{
+			if (value != 0)
+				m_iDenominator = value;
+			else {
+
+				//throw new FractionException("Denominator cannot be assigned a ZERO value");
 			}
 		}
 
-		/// <summary>
-		/// Class attributes/members
-		/// </summary>
 		public long Numerator { get; set; }
 
-		public long Value
+		public long Int64Bits
+		{
+			get => BitConverter.DoubleToInt64Bits(ToDouble());
+			set => this = BitConverter.Int64BitsToDouble(value);
+		}
+
+		public long WholeNumberValue
 		{
 			set
 			{
@@ -144,44 +68,62 @@ namespace Kantan.Numeric
 			}
 		}
 
-		/// <summary>
-		/// The function returns the current Fraction object as double
-		/// </summary>
+		public static readonly Fraction Zero = new(0, 0);
+
+		public double Value
+		{
+			get => ToDouble();
+			set => this = ToFraction(value);
+		}
+
 		public double ToDouble()
 		{
 			return (double) Numerator / Denominator;
 		}
 
-		/// <summary>
-		/// The function returns the current Fraction object as a string
-		/// </summary>
-		public override string ToString()
+		public float ToFloat()
 		{
-			string str;
-
-			if (Denominator == 1)
-				str = Numerator.ToString();
-			else
-				str = Numerator + "/" + Denominator;
-			return str;
+			return (float) Numerator / Denominator;
 		}
 
-		/// <summary>
-		/// The function takes an string as an argument and returns its corresponding reduced fraction
-		/// the string can be an in the form of and integer, double or fraction.
-		/// e.g it can be like "123" or "123.321" or "123/456"
-		/// </summary>
+		public decimal ToDecimal() => (decimal) (ToDouble());
+
+		public override string ToString()
+		{
+			return Denominator switch
+			{
+				1                     => Numerator.ToString(),
+				0 when Numerator == 0 => 0.ToString(),
+				_                     => Numerator + "/" + Denominator,
+			};
+		}
+
+		public int CompareTo(object obj)
+		{
+			if (obj is Fraction f) {
+				return Value.CompareTo(f);
+			}
+
+			throw new ArgumentException();
+		}
+
+		public object Clone() => Copy();
+
 		public static Fraction ToFraction(string strValue)
 		{
 			int i;
 
-			for (i = 0; i < strValue.Length; i++)
-				if (strValue[i] == '/')
+			for (i = 0; i < strValue.Length; i++) {
+				if (strValue[i] == '/') {
 					break;
+				}
+			}
 
-			if (i == strValue.Length) // if string is not in the form of a fraction
+			// if string is not in the form of a fraction
+			if (i == strValue.Length) {
 				// then it is double or integer
 				return Convert.ToDouble(strValue);
+			}
 			//return ( ToFraction( Convert.ToDouble(strValue) ) );
 
 			// else string is in the form of Numerator/Denominator
@@ -190,31 +132,26 @@ namespace Kantan.Numeric
 			return new Fraction(iNumerator, iDenominator);
 		}
 
-
-		/// <summary>
-		/// The function takes a floating point number as an argument 
-		/// and returns its corresponding reduced fraction
-		/// </summary>
-		public static Fraction ToFraction(double dValue)
+		public static Fraction ToFraction(double value)
 		{
 			try {
 				checked {
 					Fraction frac;
 
-					if (dValue % 1 == 0) // if whole number
-					{
-						frac = new Fraction((long) dValue);
+					// if whole number
+					if (value % 1 == 0) {
+						frac = new Fraction((long) value);
 					}
 					else {
-						double dTemp     = dValue;
+						double dTemp     = value;
 						long   iMultiple = 1;
-						string strTemp   = dValue.ToString();
+						string strTemp   = value.ToString(CultureInfo.InvariantCulture);
 
 						while (strTemp.IndexOf("E", StringComparison.Ordinal) > 0) // if in the form like 12E-9
 						{
 							dTemp     *= 10;
 							iMultiple *= 10;
-							strTemp   =  dTemp.ToString();
+							strTemp   =  dTemp.ToString(CultureInfo.InvariantCulture);
 						}
 
 						int i = 0;
@@ -243,10 +180,7 @@ namespace Kantan.Numeric
 			}
 		}
 
-		/// <summary>
-		/// The function replicates current Fraction object
-		/// </summary>
-		public Fraction Duplicate()
+		public Fraction Copy()
 		{
 			var frac = new Fraction
 			{
@@ -256,9 +190,8 @@ namespace Kantan.Numeric
 			return frac;
 		}
 
-		/// <summary>
-		/// The function returns the inverse of a Fraction object
-		/// </summary>
+		public Fraction Invert() => Inverse(this);
+
 		public static Fraction Inverse(Fraction frac1)
 		{
 			if (frac1.Numerator == 0)
@@ -269,14 +202,8 @@ namespace Kantan.Numeric
 			return new Fraction(iNumerator, iDenominator);
 		}
 
-
 		#region Operators
 
-		/// <summary>
-		/// Operators for the Fraction object
-		/// includes -(unary), and binary operators such as +,-,*,/
-		/// also includes relational and logical operators such as ==,!=,&lt;,&gt;,&lt;=,&gt;=
-		/// </summary>
 		public static Fraction operator -(Fraction frac1) => Negate(frac1);
 
 		public static Fraction operator +(Fraction frac1, Fraction frac2) => Add(frac1, frac2);
@@ -319,91 +246,69 @@ namespace Kantan.Numeric
 
 		public static Fraction operator /(Fraction frac1, double dbl) => Multiply(frac1, Inverse(ToFraction(dbl)));
 
-		public static bool operator ==(Fraction frac1, Fraction frac2) => frac1 is not null && frac1.Equals(frac2);
+		public static bool operator ==(Fraction frac1, Fraction frac2) => frac1.Equals(frac2);
 
-		public static bool operator !=(Fraction frac1, Fraction frac2) => frac1 is not null && !frac1.Equals(frac2);
+		public static bool operator !=(Fraction frac1, Fraction frac2) => !frac1.Equals(frac2);
 
-		public static bool operator ==(Fraction frac1, int iNo) => frac1 is not null && frac1.Equals(new Fraction(iNo));
+		public static bool operator ==(Fraction frac1, int iNo) => frac1.Equals(new Fraction(iNo));
 
-		public static bool operator !=(Fraction frac1, int iNo) =>
-			frac1 is not null && !frac1.Equals(new Fraction(iNo));
+		public static bool operator !=(Fraction frac1, int iNo) => !frac1.Equals(new Fraction(iNo));
 
-		public static bool operator ==(Fraction frac1, double dbl) =>
-			frac1 is not null && frac1.Equals(new Fraction(dbl));
+		public static bool operator ==(Fraction frac1, double dbl) => frac1.Equals(new Fraction(dbl));
 
-		public static bool operator !=(Fraction frac1, double dbl) =>
-			frac1 is not null && !frac1.Equals(new Fraction(dbl));
+		public static bool operator !=(Fraction frac1, double dbl) => !frac1.Equals(new Fraction(dbl));
 
 		public static bool operator <(Fraction frac1, Fraction frac2)
-		{
-			return frac1.Numerator * frac2.Denominator < frac2.Numerator * frac1.Denominator;
-		}
+			=> frac1.Numerator * frac2.Denominator < frac2.Numerator * frac1.Denominator;
 
 		public static bool operator >(Fraction frac1, Fraction frac2)
-		{
-			return frac1.Numerator * frac2.Denominator > frac2.Numerator * frac1.Denominator;
-		}
+			=> frac1.Numerator * frac2.Denominator > frac2.Numerator * frac1.Denominator;
 
 		public static bool operator <=(Fraction frac1, Fraction frac2)
-		{
-			return frac1.Numerator * frac2.Denominator <= frac2.Numerator * frac1.Denominator;
-		}
+			=> frac1.Numerator * frac2.Denominator <= frac2.Numerator * frac1.Denominator;
 
 		public static bool operator >=(Fraction frac1, Fraction frac2)
-		{
-			return frac1.Numerator * frac2.Denominator >= frac2.Numerator * frac1.Denominator;
-		}
+			=> frac1.Numerator * frac2.Denominator >= frac2.Numerator * frac1.Denominator;
 
 		#endregion
 
-
-		/// <summary>
-		/// Overloaded user defined conversions: from numeric data types to Fractions
-		/// </summary>
 		public static implicit operator Fraction(long num) => new(num);
 
 		public static implicit operator Fraction(double num) => new(num);
 
 		public static implicit operator Fraction(string strNum) => new(strNum);
 
-		/// <summary>
-		/// Overloaded user defined conversions: from fractions to double and string
-		/// </summary>
-		public static explicit operator double(Fraction frac)
+		public static explicit operator double(Fraction frac) => frac.ToDouble();
+
+		public static explicit operator float(Fraction frac) => frac.ToFloat();
+
+		public static explicit operator decimal(Fraction frac) => frac.ToDecimal();
+
+		public static implicit operator string(Fraction frac) => frac.ToString();
+
+		public int CompareTo(Fraction other)
 		{
-			return frac.ToDouble();
+			return Value.CompareTo(other.Value);
 		}
 
-		public static implicit operator string(Fraction frac)
-		{
-			return frac.ToString();
-		}
-
-		/// <summary>
-		/// checks whether two fractions are equal
-		/// </summary>
 		public override bool Equals(object obj)
 		{
-			var frac = (Fraction) obj;
-			return frac is not null && Numerator == frac.Numerator && Denominator == frac.Denominator;
+			if (obj is Fraction frac) {
+				return Numerator == frac.Numerator && Denominator == frac.Denominator;
+			}
+
+			return false;
 		}
 
-		/// <summary>
-		/// returns a hash code for this fraction
-		/// </summary>
 		public override int GetHashCode()
 		{
-			return Convert.ToInt32((Numerator ^ Denominator) & UInt32.MaxValue);
+			unchecked {
+				return (m_iDenominator.GetHashCode() * 397) ^ Numerator.GetHashCode();
+			}
 		}
 
-		/// <summary>
-		/// internal function for negation
-		/// </summary>
-		private static Fraction Negate(Fraction frac1) => new Fraction(-frac1.Numerator, frac1.Denominator);
+		private static Fraction Negate(Fraction frac1) => new(-frac1.Numerator, frac1.Denominator);
 
-		/// <summary>
-		/// internal functions for binary operations
-		/// </summary>
 		private static Fraction Add(Fraction frac1, Fraction frac2)
 		{
 			try {
@@ -438,14 +343,16 @@ namespace Kantan.Numeric
 			}
 		}
 
-		/// <summary>
-		/// The function returns GCD of two numbers (used for reducing a Fraction)
-		/// </summary>
 		private static long GCD(long iNo1, long iNo2)
 		{
 			// take absolute values
-			if (iNo1 < 0) iNo1 = -iNo1;
-			if (iNo2 < 0) iNo2 = -iNo2;
+			if (iNo1 < 0) {
+				iNo1 = -iNo1;
+			}
+
+			if (iNo2 < 0) {
+				iNo2 = -iNo2;
+			}
 
 			do {
 				if (iNo1 < iNo2) {
@@ -458,24 +365,24 @@ namespace Kantan.Numeric
 			return iNo2;
 		}
 
-		/// <summary>
-		/// The function reduces(simplifies) a Fraction object by dividing both its numerator 
-		/// and denominator by their GCD
-		/// </summary>
-		public static void ReduceFraction(Fraction frac)
+		public Fraction Reduce() => Reduce(this);
+
+		public static Fraction Reduce(Fraction frac1)
 		{
+			var frac = frac1.Copy();
+
 			try {
 				if (frac.Numerator == 0) {
 					frac.Denominator = 1;
-					return;
+					return frac;
 				}
 
 				long iGCD = GCD(frac.Numerator, frac.Denominator);
 				frac.Numerator   /= iGCD;
 				frac.Denominator /= iGCD;
 
-				if (frac.Denominator < 0) // if -ve sign in denominator
-				{
+				// if -ve sign in denominator
+				if (frac.Denominator < 0) {
 					//pass -ve sign to numerator
 					frac.Numerator   *= -1;
 					frac.Denominator *= -1;
@@ -484,10 +391,17 @@ namespace Kantan.Numeric
 			catch (Exception exp) {
 				throw new FractionException("Cannot reduce Fraction: " + exp.Message);
 			}
+
+			return frac;
+		}
+
+		public bool Equals(Fraction other)
+		{
+			return m_iDenominator == other.m_iDenominator && Numerator == other.Numerator;
 		}
 	}
 
-	public class FractionException : Exception
+	public sealed class FractionException : Exception
 	{
 		public FractionException() : base() { }
 

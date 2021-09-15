@@ -2,6 +2,10 @@
 using System.Linq.Expressions;
 using System.Numerics;
 
+// ReSharper disable TailRecursiveCall
+// ReSharper disable ConvertIfStatementToReturnStatement
+// ReSharper disable SuggestVarOrType_SimpleTypes
+
 // ReSharper disable InconsistentNaming
 
 // ReSharper disable FieldCanBeMadeReadOnly.Local
@@ -24,15 +28,14 @@ namespace Kantan.Numeric
 
 	public static class MathHelper
 	{
-
 		/*public static bool ToleranceEqual(double a, double b, double epsilon = double.Epsilon)
 		{
 			//https://stackoverflow.com/questions/4787125/evaluate-if-two-doubles-are-equal-based-on-a-given-precision-not-within-a-certa
-
+	
 			var absA = Math.Abs(a);
 			var absB = Math.Abs(b);
 			var diff = Math.Abs(a - b);
-
+	
 			if (a*b==0) {
 				return diff < (epsilon*epsilon);
 			}
@@ -100,9 +103,56 @@ namespace Kantan.Numeric
 			return a | b;
 		}
 
-		public static long LCM(long a, long b)
+		public static long LCM(long a, long b) => (a / GCD(a, b)) * b;
+
+		public static BigInteger LCM(BigInteger number1, BigInteger number2)
 		{
-			return (a / GCD(a, b)) * b;
+			if (number1 == 0) {
+				return number2;
+			}
+
+			if (number2 == 0) {
+				return number1;
+			}
+
+			var positiveNumber2 = number2 < 0 ? BigInteger.Abs(number2) : number2;
+			var positiveNumber1 = number1 < 0 ? BigInteger.Abs(number1) : number1;
+
+			return positiveNumber1 / GCD(positiveNumber1, positiveNumber2) * positiveNumber2;
+		}
+
+		public static BigInteger GCD(BigInteger number1, BigInteger number2)
+		{
+			var positiveNumber2 = number2 < 0 ? BigInteger.Abs(number2) : number2;
+			var positiveNumber1 = number1 < 0 ? BigInteger.Abs(number1) : number1;
+
+			if (positiveNumber1 == positiveNumber2)
+				return positiveNumber1;
+
+			if (positiveNumber1 == 0)
+				return positiveNumber2;
+
+			if (positiveNumber2 == 0)
+				return positiveNumber1;
+
+			if ((~positiveNumber1 & 1) != 0) {
+				if ((positiveNumber2 & 1) != 0) {
+					return GCD(positiveNumber1 >> 1, positiveNumber2);
+				}
+				else {
+					return GCD(positiveNumber1 >> 1, positiveNumber2 >> 1) << 1;
+				}
+			}
+
+			if ((~positiveNumber2 & 1) != 0) {
+				return GCD(positiveNumber1, positiveNumber2 >> 1);
+			}
+
+			if (positiveNumber1 > positiveNumber2) {
+				return GCD((positiveNumber1 - positiveNumber2) >> 1, positiveNumber2);
+			}
+
+			return GCD((positiveNumber2 - positiveNumber1) >> 1, positiveNumber1);
 		}
 
 		#region Units

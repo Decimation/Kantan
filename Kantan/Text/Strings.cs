@@ -78,16 +78,19 @@ namespace Kantan.Text
 			var bufferWidth = Console.BufferWidth;
 			var windowWidth = Console.WindowWidth;
 
-			var nc  = s.Count(c => char.IsControl(c));
-			
+			var nc = s.Count(c => char.IsControl(c));
+
 			//var nc = s.Count(c => c=='\n'||c=='\r');
 			int nc1 = 0;
-			for (int i = 0; i < s.Length-1; i++) {
-				if (s[i]=='\r'&&s[i+1]=='\n') {
-					nc1++;
+
+			for (int i = 0; i < s.Length - 1; i++) {
+				switch (s[i]) {
+					case '\r' when s[i + 1] == '\n':
+					case '\n':
+						nc1++;
+						break;
 				}
-				else if (s[i] == '\n') nc1++;
-				
+
 			}
 
 			// var nc1 = s.Count(c => c == '\n');
@@ -101,7 +104,7 @@ namespace Kantan.Text
 			// var length = s.Length - nc1;
 			// var length = s.Length;
 
-			var n       = Math.DivRem(length, bufferWidth, out var rem);
+			var n = Math.DivRem(length, bufferWidth, out var rem);
 
 			//(s.Length % b)
 
@@ -435,7 +438,7 @@ namespace Kantan.Text
 				return delim;
 			}
 
-			if (l.Skip(i + 1).All(string.IsNullOrWhiteSpace)) {
+			if (l.Skip(i + 1).All(String.IsNullOrWhiteSpace)) {
 				return Constants.BottomLeftCorner;
 			}
 

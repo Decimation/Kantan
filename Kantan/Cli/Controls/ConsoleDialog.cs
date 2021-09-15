@@ -361,7 +361,7 @@ namespace Kantan.Cli.Controls
 			int clamp = Math.Clamp(Options.Count, 0, ConsoleOption.MAX_DISPLAY_OPTIONS);
 
 			for (int i = 0; i < clamp; i++) {
-				ConsoleOption? option = Options[i];
+				ConsoleOption option = Options[i];
 
 				//string delim = Strings.GetUnicodeBoxPipe(clamp, i);
 
@@ -369,8 +369,9 @@ namespace Kantan.Cli.Controls
 
 				var top = Console.CursorTop;
 				ConsoleManager.OptionPositions[top] = option;
+
 				// t+=MeasureRows(s)+(i-1);
-				//Debug.WriteLine($"{top} | {((MeasureRows(sb.ToString())))} | {MeasureRows(s)} | {t} | {i} | {MeasureRows(sb.ToString())-MeasureRows(s)-i}");
+				// Debug.WriteLine($"{top} | {((Strings.MeasureRows(sb.ToString())))} | {Strings.MeasureRows(s)} | {Strings.MeasureRows(sb.ToString())-Strings.MeasureRows(s)-i} | {i} |");
 				// Debug.WriteLine(Console.CursorTop);
 				sb.Append(s);
 				ConsoleManager.Write(false, s);

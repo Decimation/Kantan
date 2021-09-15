@@ -236,8 +236,6 @@ namespace Kantan.Cli
 
 		internal static readonly Dictionary<int, ConsoleOptionFunction> OtherPositions = new();
 
-		public static int ScrollIncrement { get; set; } = 3;
-
 		/// <summary>
 		///     Exits <see cref="ConsoleDialog.ReadInput" />
 		/// </summary>
@@ -247,6 +245,8 @@ namespace Kantan.Cli
 		///     <see cref="Refresh" />
 		/// </summary>
 		public const ConsoleKey NC_GLOBAL_REFRESH_KEY = ConsoleKey.F5;
+
+		public static int ScrollIncrement { get; set; } = 3;
 
 		internal static readonly ConsoleKeyInfo ExitKeyInfo =
 			new((char) NC_GLOBAL_EXIT_KEY, NC_GLOBAL_EXIT_KEY, false, false, false);

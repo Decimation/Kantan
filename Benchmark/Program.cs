@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using Kantan.Collections;
+using Kantan.Numeric;
 
 namespace Benchmark
 {
@@ -43,11 +45,26 @@ namespace Benchmark
 		}
 	}
 
+	public class Benchmarks3
+	{
+		[Benchmark]
+		public BigInteger gcd2()
+		{
+			return MathHelper.GCD( (long) (BigInteger)123, (long) (BigInteger)456);
+		}
+
+		[Benchmark]
+		public long gcd1()
+		{
+			return MathHelper.GCD( 123, 456);
+		}
+	}
+
 	public static class Program
 	{
 		public static void Main(string[] args)
 		{
-			BenchmarkRunner.Run<Benchmarks2>();
+			BenchmarkRunner.Run<Benchmarks3>();
 
 		}
 	}
