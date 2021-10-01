@@ -125,7 +125,7 @@ namespace Test
 				return null;
 			};
 
-			var r = dialog.ReadInputAsync();
+			var r = dialog.ReadAsync();
 
 
 			Task.Factory.StartNew(() =>
@@ -166,7 +166,7 @@ namespace Test
 			};
 
 
-			var r = dialog.ReadInputAsync();
+			var r = dialog.ReadAsync();
 			await r;
 
 			Console.WriteLine(r.Result.Output.QuickJoin());
@@ -191,7 +191,7 @@ namespace Test
 			};
 
 
-			var r = dialog.ReadInputAsync();
+			var r = dialog.ReadAsync();
 			await r;
 
 			Console.WriteLine(r.Result.Output.QuickJoin());
