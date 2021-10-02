@@ -1,12 +1,42 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
+using Kantan.Cli;
+using Kantan.Cli.Controls;
 
 // ReSharper disable UnusedMember.Global
+using System.Linq;
 
 namespace Kantan.Utilities
 {
 	public static class StreamHelper
 	{
+		public static List<T> ReadUntil<T>(Func<T> f, Predicate<T> a, Predicate<T> b)
+		{
+			var rg = new List<T>();
+
+			T t;
+
+			do {
+				t = f();
+
+				if (b(t)) {
+					return null;
+				}
+
+				rg.Add(t);
+
+				/*if (a(t)) {
+					break;
+				}*/
+
+			} while (!a(t));
+
+
+			return rg;
+		}
+
 		public static string[] ReadAllLines(this StreamReader stream)
 		{
 			var list = new List<string>();

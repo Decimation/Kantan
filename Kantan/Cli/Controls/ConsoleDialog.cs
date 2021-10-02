@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,6 +13,8 @@ using Kantan.Native.Structures;
 using Kantan.Text;
 using Kantan.Threading;
 using Kantan.Utilities;
+// ReSharper disable PossibleInvalidOperationException
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
 
 // ReSharper disable EmptyConstructor
 
@@ -69,7 +72,7 @@ namespace Kantan.Cli.Controls
 		///     executes the <see cref="ConsoleOption.Function" /> with the appropriate modifiers
 		/// </summary>
 		/// <remarks>
-		///     <see cref="ConsoleManager.MAX_DISPLAY_OPTIONS" />
+		///     <see cref="MAX_DISPLAY_OPTIONS" />
 		/// </remarks>
 		public IList<ConsoleOption> Options { get; init; }
 
@@ -102,9 +105,9 @@ namespace Kantan.Cli.Controls
 		/// <item><description><see cref="NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
 		/// </list>
 		/// </remarks>
-		public ConsoleOutputResult Read()
+		public ConsoleOutputResult ReadInput()
 		{
-			var task = ReadAsync();
+			var task = ReadInputAsync();
 			task.Wait();
 			return task.Result;
 		}
@@ -119,12 +122,12 @@ namespace Kantan.Cli.Controls
 		/// <item><description><see cref="NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
 		/// </list>
 		/// </remarks>
-		public async Task<ConsoleOutputResult> ReadAsync()
+		public async Task<ConsoleOutputResult> ReadInputAsync()
 		{
 			//var selectedOptions = new HashSet<object>();
 			var output = new ConsoleOutputResult
 			{
-				SelectMultiple = this.SelectMultiple,
+				SelectMultiple = SelectMultiple,
 			};
 
 			/*
@@ -134,30 +137,30 @@ namespace Kantan.Cli.Controls
 			ConsoleKeyInfo cki;
 
 			ConsoleManager.InitNative();
-			ConsoleManager.OptionPositions.Clear();
+			OptionPositions.Clear();
 
 			do {
 
-				DisplayDialog( output);
+				DisplayDialog(output);
 
 				var task = Task.Run(() =>
 				{
 					// Block until input is entered.
 					_ReadInput:
-					int prevCount = this.Options.Count;
+					int prevCount = Options.Count;
 
 					while (!ConsoleManager.InputAvailable) {
 
 						bool refresh =
-							AtomicHelper.Exchange(ref ConsoleManager._status, ConsoleManager.ConsoleStatus.Ok) ==
-							ConsoleManager.ConsoleStatus.Refresh;
+							AtomicHelper.Exchange(ref _status, ConsoleDialog.ConsoleStatus.Ok) ==
+							ConsoleDialog.ConsoleStatus.Refresh;
 
 						// Refresh buffer if collection was updated
 
-						int currentCount = this.Options.Count;
+						int currentCount = Options.Count;
 
 						if (refresh || prevCount != currentCount) {
-							DisplayDialog( output);
+							DisplayDialog(output);
 							prevCount = currentCount;
 						}
 					}
@@ -174,11 +177,11 @@ namespace Kantan.Cli.Controls
 							// Key was read
 
 							cki2 = ConsoleManager.GetKeyInfoFromRecord(ir);
-							var dragAndDropFile = ConsoleManager.TryReadFile(cki2);
+							var dragAndDropFile = TryReadFile(cki2);
 
 							if (!String.IsNullOrWhiteSpace(dragAndDropFile)) {
 
-								//Debug.WriteLine($">> {dragAndDropFile}");
+								Debug.WriteLine($">> {dragAndDropFile}");
 								output.DragAndDrop = dragAndDropFile;
 								return;
 							}
@@ -210,9 +213,9 @@ namespace Kantan.Cli.Controls
 								goto default;
 							}
 
-							if (ConsoleManager.OptionPositions.ContainsKey(y)) {
-								var option  = ConsoleManager.OptionPositions[y];
-								var indexOf = this.Options.IndexOf(option);
+							if (OptionPositions.ContainsKey(y)) {
+								var option  = OptionPositions[y];
+								var indexOf = Options.IndexOf(option);
 								var c       = GetDisplayOptionFromIndex(indexOf);
 
 								// note: KeyChar argument is slightly inaccurate (case insensitive; always uppercase)
@@ -259,15 +262,15 @@ namespace Kantan.Cli.Controls
 				if (cki.Key is <= ConsoleKey.F12 and >= ConsoleKey.F1) {
 					int i = cki.Key - ConsoleKey.F1;
 
-					if (this.Functions is { } && this.Functions.ContainsKey(cki.Key)) {
-						var function = this.Functions[cki.Key];
+					if (Functions is { } && Functions.ContainsKey(cki.Key)) {
+						var function = Functions[cki.Key];
 						function();
 					}
 				}
 
 				switch (cki.Key) {
-					case ConsoleManager.NC_GLOBAL_REFRESH_KEY:
-						ConsoleManager.Refresh();
+					case NC_GLOBAL_REFRESH_KEY:
+						Refresh();
 						break;
 				}
 
@@ -284,8 +287,8 @@ namespace Kantan.Cli.Controls
 
 				int idx = GetIndexFromDisplayOption(keyChar);
 
-				if (idx < this.Options.Count && idx >= 0) {
-					var option = this.Options[idx];
+				if (idx < Options.Count && idx >= 0) {
+					var option = Options[idx];
 
 					if (!option.Functions.ContainsKey(modifiers)) {
 						continue;
@@ -293,21 +296,21 @@ namespace Kantan.Cli.Controls
 
 					var fn = option.Functions[modifiers];
 
-					object? funcResult = fn();
+					object funcResult = fn();
 
 					if (funcResult != null) {
 						//
-						if (this.SelectMultiple) {
+						if (SelectMultiple) {
 							output.Output.Add(funcResult);
 						}
 						else {
-							output.Output = new HashSet<object>() { funcResult };
+							output.Output = new HashSet<object> { funcResult };
 							goto _Return;
 						}
 					}
 				}
 
-			} while (cki.Key != ConsoleManager.NC_GLOBAL_EXIT_KEY);
+			} while (cki.Key != NC_GLOBAL_EXIT_KEY);
 
 			_Return:
 			return output;
@@ -340,13 +343,13 @@ namespace Kantan.Cli.Controls
 
 			Console.Clear();
 
-			var t = Console.CursorTop;
+			// var t = Console.CursorTop;
 			// Console.SetCursorPosition(0,0);
-			var sb = new StringBuilder();
+			// var sb = new StringBuilder();
 
 			if (Header != null) {
 				ConsoleManager.Write(false, Header.AddColor(ConsoleManager.ColorHeader));
-				sb.Append(Header.AddColor(ConsoleManager.ColorHeader));
+				// sb.Append(Header.AddColor(ConsoleManager.ColorHeader));
 			}
 
 			if (Subtitle != null) {
@@ -357,10 +360,10 @@ namespace Kantan.Cli.Controls
 
 				ConsoleManager.Write(true, subStr);
 				Console.WriteLine();
-				sb.AppendLine(subStr).AppendLine();
+				// sb.AppendLine(subStr).AppendLine();
 			}
 
-			int clamp = Math.Clamp(Options.Count, (int) 0, (int) MAX_DISPLAY_OPTIONS);
+			int clamp = Math.Clamp(Options.Count, 0, MAX_DISPLAY_OPTIONS);
 
 			for (int i = 0; i < clamp; i++) {
 				ConsoleOption option = Options[i];
@@ -370,12 +373,12 @@ namespace Kantan.Cli.Controls
 				string s = FormatOption(option, i);
 
 				var top = Console.CursorTop;
-				ConsoleManager.OptionPositions[top] = option;
+				OptionPositions[top] = option;
 
 				// t+=MeasureRows(s)+(i-1);
 				// Debug.WriteLine($"{top} | {((Strings.MeasureRows(sb.ToString())))} | {Strings.MeasureRows(s)} | {Strings.MeasureRows(sb.ToString())-Strings.MeasureRows(s)-i} | {i} |");
 				// Debug.WriteLine(Console.CursorTop);
-				sb.Append(s);
+				// sb.Append(s);
 				ConsoleManager.Write(false, s);
 
 
@@ -387,18 +390,18 @@ namespace Kantan.Cli.Controls
 			}
 
 			Console.WriteLine();
-			sb.AppendLine();
+			// sb.AppendLine();
 
 			if (Status != null) {
 				ConsoleManager.Write(Status);
-				sb.AppendLine(Status);
+				// sb.AppendLine(Status);
 			}
 
 			if (Description != null) {
 				Console.WriteLine();
 
 				ConsoleManager.Write(Description);
-				sb.AppendLine().AppendLine(Description);
+				// sb.AppendLine().AppendLine(Description);
 			}
 
 			// Show options
@@ -406,22 +409,21 @@ namespace Kantan.Cli.Controls
 			if (SelectMultiple) {
 				Console.WriteLine();
 
-				sb.AppendLine();
+				// sb.AppendLine();
 
 				string optionsStr = $"{Strings.Constants.CHEVRON} {output.Output.QuickJoin()}"
 					.AddColor(ConsoleManager.ColorOptions);
 
 				ConsoleManager.Write(true, optionsStr);
 
-				sb.AppendLine(optionsStr).AppendLine();
+				// sb.AppendLine(optionsStr).AppendLine();
 
 				Console.WriteLine();
 
 				ConsoleManager.Write(
-					$"Press {ConsoleManager.NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.");
+					$"Press {NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.");
 
-				sb.AppendLine(
-					$"Press {ConsoleManager.NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.");
+				// sb.AppendLine($"Press {NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.");
 			}
 			// Console.Write(sb);
 		}
@@ -432,11 +434,11 @@ namespace Kantan.Cli.Controls
 
 		private static char GetDisplayOptionFromIndex(int i)
 		{
-			if (i < ConsoleDialog.MAX_OPTION_N) {
+			if (i < MAX_OPTION_N) {
 				return Char.Parse(i.ToString());
 			}
 
-			int d = ConsoleDialog.OPTION_LETTER_START + (i - ConsoleDialog.MAX_OPTION_N);
+			int d = OPTION_LETTER_START + (i - MAX_OPTION_N);
 
 			return (char) d;
 		}
@@ -449,7 +451,7 @@ namespace Kantan.Cli.Controls
 
 			if (Char.IsLetter(c)) {
 				c = Char.ToUpper(c);
-				return ConsoleDialog.MAX_OPTION_N + (c - ConsoleDialog.OPTION_LETTER_START);
+				return MAX_OPTION_N + (c - OPTION_LETTER_START);
 			}
 
 			return Common.INVALID;
@@ -458,10 +460,11 @@ namespace Kantan.Cli.Controls
 		private static string FormatOption(ConsoleOption option, int i)
 		{
 			var  sb = new StringBuilder();
-			char c  = ConsoleDialog.GetDisplayOptionFromIndex(i);
+			char c  = GetDisplayOptionFromIndex(i);
 
-			string? name = option.Name;
+			string name = option.Name;
 
+			
 			if (option.Color.HasValue) {
 				name = name.AddColor(option.Color.Value);
 			}
@@ -487,9 +490,86 @@ namespace Kantan.Cli.Controls
 				sb.AppendLine();
 			}
 
-			string f = ConsoleManager.FormatString(null, sb.ToString(), true);
+			string f = ConsoleManager.FormatString(null, sb.ToString());
 
 			return f;
+		}
+
+		/// <summary>
+		///     Exits <see cref="ConsoleDialog.ReadInput" />
+		/// </summary>
+		public const ConsoleKey NC_GLOBAL_EXIT_KEY = ConsoleKey.Escape;
+
+		/// <summary>
+		///     <see cref="Refresh" />
+		/// </summary>
+		public const ConsoleKey NC_GLOBAL_REFRESH_KEY = ConsoleKey.F5;
+
+		private static readonly Dictionary<int, ConsoleOption> OptionPositions = new();
+
+		/// <summary>
+		///     Interface status
+		/// </summary>
+		private static ConsoleStatus _status;
+
+		private enum ConsoleStatus
+		{
+			/// <summary>
+			///     Signals to reload interface
+			/// </summary>
+			Refresh,
+
+			/// <summary>
+			///     Signals to continue displaying current interface
+			/// </summary>
+			Ok,
+		}
+
+		public static void Refresh() => AtomicHelper.Exchange(ref _status, ConsoleStatus.Refresh);
+
+		/// <summary>
+		///     Determines whether the console buffer contains a file directory that was
+		///     input via drag-and-drop.
+		/// </summary>
+		/// <param name="cki">First character in the buffer</param>
+		/// <returns>A valid file directory if the buffer contains one; otherwise, <c>null</c></returns>
+		/// <remarks>
+		///     This is done heuristically by checking if the first character <paramref name="cki" /> is either a quote or the
+		///     primary disk letter. If so, then the rest of the buffer is read until the current sequence is a
+		/// string resembling a valid file path.
+		/// </remarks>
+		internal static string TryReadFile(ConsoleKeyInfo cki)
+		{
+			const char quote = '\"';
+
+			var sb = new StringBuilder();
+
+			char keyChar = cki.KeyChar;
+
+			var driveLetters = DriveInfo.GetDrives().Select(x => x.Name.First()).ToArray();
+
+			if (keyChar == quote || driveLetters.Any(e => e == keyChar)) {
+				sb.Append(keyChar);
+
+				do {
+					ConsoleKeyInfo cki2 = ConsoleManager.ReadKey(true);
+
+					if (cki2.Key == ConsoleDialog.NC_GLOBAL_EXIT_KEY) {
+						return null;
+					}
+
+					keyChar = cki2.KeyChar;
+					sb.Append(keyChar);
+
+					if (File.Exists(sb.ToString())) {
+						break;
+					}
+				} while (keyChar != quote);
+
+			}
+
+
+			return sb.ToString().Trim(quote);
 		}
 	}
 }

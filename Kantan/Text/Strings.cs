@@ -68,10 +68,7 @@ namespace Kantan.Text
 		}
 
 		[CanBeNull]
-		public static string NormalizeNull([CanBeNull] string str)
-		{
-			return String.IsNullOrWhiteSpace(str) ? null : str;
-		}
+		public static string NormalizeNull([CanBeNull] string str) => String.IsNullOrWhiteSpace(str) ? null : str;
 
 		public static int MeasureRows(string s)
 		{

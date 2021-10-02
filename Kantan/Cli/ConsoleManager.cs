@@ -21,20 +21,11 @@ using static Kantan.Internal.Common;
 using static Kantan.Text.Strings;
 
 // ReSharper disable IdentifierTypo
-
 // ReSharper disable SwitchStatementHandlesSomeKnownEnumValuesWithDefault
 // ReSharper disable SuggestVarOrType_SimpleTypes
-
-// ReSharper disable SuggestVarOrType_Elsewhere
-
-#pragma warning disable 8601
-
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
-
 // ReSharper disable CognitiveComplexity
-
 // ReSharper disable SwitchStatementMissingSomeEnumCasesNoDefault
-
 // ReSharper disable InvocationIsSkipped
 // ReSharper disable UnusedMember.Local
 // ReSharper disable InconsistentNaming
@@ -42,6 +33,9 @@ using static Kantan.Text.Strings;
 // ReSharper disable ParameterTypeCanBeEnumerable.Local
 // ReSharper disable UnusedVariable
 // ReSharper disable ParameterTypeCanBeEnumerable.Global
+// ReSharper disable SuggestVarOrType_Elsewhere
+
+#pragma warning disable 8601
 
 #pragma warning disable 8602, CA1416, CS8604, IDE0059
 #nullable enable
@@ -100,14 +94,17 @@ namespace Kantan.Cli
 		 * TODO: this design isn't great
 		 */
 
+		public static int  ScrollIncrement { get; set; } = 3;
+		private const char OPTION_N = 'N';
+
+		private const char OPTION_Y = 'Y';
+
 		public static void Init()
 		{
 			//Console.OutputEncoding = Encoding.Unicode;
 		}
 
 		#region IO
-
-		#region Display/formatting
 
 		/// <summary>
 		///     Root formatting function.
@@ -157,11 +154,6 @@ namespace Kantan.Cli
 			return String.Join(Constants.NEW_LINE, split);
 		}
 
-		#endregion
-
-		
-
-		
 
 		public static string ReadLine(string? prompt = null, Predicate<string>? invalid = null,
 		                              string? errPrompt = null)
@@ -222,51 +214,9 @@ namespace Kantan.Cli
 			};
 		}
 
-		public static ConsoleKeyInfo ReadKey(bool intercept = false) => Console.ReadKey(intercept);
+		public static ConsoleKeyInfo ReadKey(bool intercept) => Console.ReadKey(intercept);
 
-		/// <summary>
-		///     Determines whether the console buffer contains a file directory that was
-		///     input via drag-and-drop.
-		/// </summary>
-		/// <param name="cki">First character in the buffer</param>
-		/// <returns>A valid file directory if the buffer contains one; otherwise, <c>null</c></returns>
-		/// <remarks>
-		///     This is done heuristically by checking if the first character <paramref name="cki" /> is either a quote or the
-		///     primary disk letter. If so, then the rest of the buffer is read until the current sequence is a
-		/// string resembling a valid file path.
-		/// </remarks>
-		internal static string? TryReadFile(ConsoleKeyInfo cki)
-		{
-			const char quote = '\"';
-
-			var sb = new StringBuilder();
-
-			char keyChar = cki.KeyChar;
-
-			var driveLetters = DriveInfo.GetDrives().Select(x => x.Name.First()).ToArray();
-
-			if (keyChar == quote || driveLetters.Any(e => e == keyChar)) {
-				sb.Append(keyChar);
-
-				do {
-					ConsoleKeyInfo cki2 = ReadKey(true);
-
-					if (cki2.Key == NC_GLOBAL_EXIT_KEY) {
-						return null;
-					}
-
-					keyChar = cki2.KeyChar;
-					sb.Append(keyChar);
-
-					if (File.Exists(sb.ToString())) {
-						break;
-					}
-				} while (keyChar != quote);
-
-			}
-
-			return sb.ToString().Trim(quote);
-		}
+		public static ConsoleKeyInfo ReadKey() => Console.ReadKey(false);
 
 		#region Wait
 
@@ -283,60 +233,7 @@ namespace Kantan.Cli
 
 		#endregion
 
-		#region Options
-
-		private const char OPTION_N = 'N';
-
-		private const char OPTION_Y = 'Y';
-
-		#endregion Options
-
 		#endregion IO
-
-		#region
-
-		internal static readonly Dictionary<int, ConsoleOption> OptionPositions = new();
-
-		public static int ScrollIncrement { get; set; } = 3;
-
-		
-
-		/// <summary>
-		///     Exits <see cref="ReadInput" />
-		/// </summary>
-		public const ConsoleKey NC_GLOBAL_EXIT_KEY = ConsoleKey.Escape;
-
-		/// <summary>
-		///     <see cref="Refresh" />
-		/// </summary>
-		public const ConsoleKey NC_GLOBAL_REFRESH_KEY = ConsoleKey.F5;
-		
-
-		private const char OPTION_N = 'N';
-
-		private const char OPTION_Y = 'Y';
-
-		/// <summary>
-		///     Interface status
-		/// </summary>
-		internal static ConsoleStatus _status;
-
-		internal enum ConsoleStatus
-		{
-			/// <summary>
-			///     Signals to reload interface
-			/// </summary>
-			Refresh,
-
-			/// <summary>
-			///     Signals to continue displaying current interface
-			/// </summary>
-			Ok,
-		}
-
-		public static void Refresh() => AtomicHelper.Exchange(ref _status, ConsoleStatus.Refresh);
-
-		#endregion
 
 		#region Write
 
@@ -459,9 +356,9 @@ namespace Kantan.Cli
 		}
 
 		internal static bool         _click;
-		private static IntPtr       _stdIn;
-		private static IntPtr       _stdOut;
-		private static ConsoleModes _oldMode;
+		private static  IntPtr       _stdIn;
+		private static  IntPtr       _stdOut;
+		private static  ConsoleModes _oldMode;
 
 		/// <summary>
 		/// Reads characters from the screen buffer, starting at the given position.

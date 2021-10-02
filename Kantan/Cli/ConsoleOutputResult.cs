@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
+using Kantan.Text;
 
 namespace Kantan.Cli
 {
@@ -17,6 +18,11 @@ namespace Kantan.Cli
 		public ConsoleOutputResult()
 		{
 			Output = new HashSet<object>();
+		}
+
+		public override string ToString()
+		{
+			return $"{Key} | {SelectMultiple} | {DragAndDrop} | {Output.QuickJoin()}";
 		}
 	}
 }
