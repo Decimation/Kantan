@@ -41,6 +41,8 @@ namespace Test
 {
 	public static class Program
 	{
+		private static ConsoleDialog _dialog;
+
 		private static async Task Main(string[] args)
 		{
 			/*var s = new string('-', Console.BufferWidth)+'\n'+'\n';
@@ -60,6 +62,10 @@ namespace Test
 			await ConsoleTest3();
 			// await ConsoleTest2();
 			
+			Console.WriteLine("--");
+			Console.ReadLine();
+
+			_dialog.Display(false);
 		}
 
 
@@ -140,7 +146,7 @@ namespace Test
 		}
 		private static async Task ConsoleTest3()
 		{
-			var dialog = new ConsoleDialog()
+			_dialog = new ConsoleDialog()
 			{
 				Functions = new()
 				{
@@ -150,13 +156,13 @@ namespace Test
 
 					},
 				},
-				Status = "hi",
+				Status         = "(status)",
 				SelectMultiple = false,
 				Options        = ConsoleOption.FromEnum<MyEnum>().ToList()
 			};
 
 
-			var r = dialog.ReadInputAsync();
+			var r = _dialog.ReadInputAsync();
 			await r;
 
 			Console.WriteLine(r.Result);

@@ -75,7 +75,7 @@ namespace Kantan.Text
 			var bufferWidth = Console.BufferWidth;
 			var windowWidth = Console.WindowWidth;
 
-			var nc = s.Count(c => char.IsControl(c));
+			var nc = s.Count(char.IsControl);
 
 			//var nc = s.Count(c => c=='\n'||c=='\r');
 			int nc1 = 0;

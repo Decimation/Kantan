@@ -1,22 +1,13 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Kantan.Cli.Controls;
 using Kantan.Native;
 using Kantan.Native.Structures;
 using Kantan.Text;
-using Kantan.Threading;
 using Kantan.Utilities;
-using static Kantan.Diagnostics.LogCategories;
 using static Kantan.Internal.Common;
 using static Kantan.Text.Strings;
 
@@ -37,7 +28,7 @@ using static Kantan.Text.Strings;
 
 #pragma warning disable 8601
 
-#pragma warning disable 8602, CA1416, CS8604, IDE0059
+#pragma warning disable 8602, CA1416, CS8604, IDE0059, IDE0051
 #nullable enable
 
 namespace Kantan.Cli
@@ -69,9 +60,9 @@ namespace Kantan.Cli
 	/// </list>
 	public static class ConsoleManager
 	{
-		internal static readonly Color ColorHeader  = Color.Red;
-		internal static readonly Color ColorOptions = Color.Aquamarine;
-		internal static readonly Color ColorError   = Color.Red;
+		public static Color ColorHeader  { get; set; } = Color.Red;
+		public static Color ColorOptions { get; set; } = Color.Aquamarine;
+		public static Color ColorError   { get; set; } = Color.Red;
 
 		public static int BufferLimit { get; set; } = Console.BufferWidth - 10;
 
@@ -94,9 +85,9 @@ namespace Kantan.Cli
 		 * TODO: this design isn't great
 		 */
 
-		public static int  ScrollIncrement { get; set; } = 3;
-		private const char OPTION_N = 'N';
+		public static int ScrollIncrement { get; set; } = 3;
 
+		private const char OPTION_N = 'N';
 		private const char OPTION_Y = 'Y';
 
 		public static void Init()
@@ -216,7 +207,7 @@ namespace Kantan.Cli
 
 		public static ConsoleKeyInfo ReadKey(bool intercept) => Console.ReadKey(intercept);
 
-		public static ConsoleKeyInfo ReadKey() => Console.ReadKey(false);
+		public static ConsoleKeyInfo ReadKey() => ReadKey(false);
 
 		#region Wait
 
