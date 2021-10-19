@@ -7,7 +7,7 @@ namespace Kantan.Native.Structures
 	/// Contains information for a console selection.
 	/// </summary>
 	[StructLayout(LayoutKind.Sequential)]
-	internal class ConsoleSelectionInfo
+	internal struct ConsoleSelectionInfo
 	{
 		public int   dwFlags;
 		public Coord dwSelectionAnchor;

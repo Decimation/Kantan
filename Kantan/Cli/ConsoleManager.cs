@@ -31,6 +31,7 @@ using static Kantan.Text.Strings;
 // ReSharper disable SuggestVarOrType_Elsewhere
 
 #pragma warning disable 8601
+#pragma warning disable CA1416
 
 #pragma warning disable 8602, CS8604, IDE0059, IDE0051
 #nullable enable
@@ -149,7 +150,6 @@ namespace Kantan.Cli
 			return String.Join(Constants.NEW_LINE, split);
 		}
 
-
 		public static string ReadLine(string? prompt = null, Predicate<string>? invalid = null,
 		                              string? errPrompt = null)
 		{
@@ -234,10 +234,8 @@ namespace Kantan.Cli
 
 		public static void Print(params object[] args) => Console.WriteLine(args.QuickJoin());
 
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void NewLine() => Console.WriteLine();
-
 
 		/// <summary>
 		///     Root write method.
@@ -321,56 +319,53 @@ namespace Kantan.Cli
 
 		#endregion
 
-		public static bool Scroll(int increment)
+		public static bool SetWindowPosition(int left, int newTop)
 		{
 			if (!OperatingSystem.IsWindows()) {
 				return false;
 			}
 
-			var newTop = increment + Console.WindowTop;
-
 			// var b = !(newTop > Console.BufferHeight) && !(newTop < 0);
-			
+
 			bool b = true;
 
 			// Get the size of the current console window
-			ConsoleScreenBufferInfo csbi = GetBufferInfo();
+			ConsoleScreenBufferInfo csbi = GetBufferInfo(out _);
 
 			SmallRect srWindow = csbi.srWindow;
 
 			// Check for arithmetic underflows & overflows.
-			var left = 0;
 
 			int newRight = left + srWindow.Right - srWindow.Left;
 
-			if (left < 0 || newRight > csbi.dwSize.X - 1 || newRight < left)
+			if (left < 0 || newRight > csbi.dwSize.X - 1 || newRight < left) {
 				b = false;
+			}
 
 			int newBottom = newTop + srWindow.Bottom - srWindow.Top;
 
-			if (newTop < 0 || newBottom > csbi.dwSize.Y - 1 || newBottom < newTop)
+			if (newTop < 0 || newBottom > csbi.dwSize.Y - 1 || newBottom < newTop) {
 				b = false;
-
+			}
 
 			if (b) {
-				// note: Still seems to throw an exception when attempting to scrolling past end ???
 				Console.SetWindowPosition(0, newTop);
 			}
 
 			return b;
 		}
 
-		private static ConsoleScreenBufferInfo GetBufferInfo()
+		public static bool Scroll(int increment)
 		{
-			ConsoleScreenBufferInfo csbi = default;
+			var newTop = increment + Console.WindowTop;
 
-			bool unused;
+			return SetWindowPosition(0, newTop);
+		}
 
-			if (_stdOut == IntPtr.Zero) {
-				InitNative();
-			}
-
-			var x = Win32.GetConsoleScreenBufferInfo(_stdOut, out csbi);
+		[SupportedOSPlatform(OS_WINDOWS)]
+		private static ConsoleScreenBufferInfo GetBufferInfo(out bool ok)
+		{
+			ok = Win32.GetConsoleScreenBufferInfo(_stdOut, out ConsoleScreenBufferInfo csbi);
 
 			return csbi;
 		}
@@ -627,7 +622,6 @@ namespace Kantan.Cli
 			_stdOut  = IntPtr.Zero;
 			_oldMode = 0;
 		}
-
 
 		[SupportedOSPlatform(OS_WINDOWS)]
 		internal static void InitNative()
