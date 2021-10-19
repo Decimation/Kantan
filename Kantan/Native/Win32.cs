@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
+using Kantan.Internal;
 using Kantan.Native.Structures;
+
 // ReSharper disable CommentTypo
 
 // ReSharper disable IdentifierTypo
@@ -11,6 +14,7 @@ using Kantan.Native.Structures;
 
 namespace Kantan.Native
 {
+	[SupportedOSPlatform(Common.OS_WINDOWS)]
 	internal static class Win32
 	{
 		private const string KERNEL32_DLL = "kernel32.dll";
@@ -22,6 +26,12 @@ namespace Kantan.Native
 		 * https://www.medo64.com/2013/05/console-mouse-input-in-c/
 		 */
 
+		[DllImport(KERNEL32_DLL, SetLastError = true)]
+		internal static extern bool GetConsoleScreenBufferInfo(IntPtr hConsoleOutput,
+		                                                       out ConsoleScreenBufferInfo lpConsoleScreenBufferInfo);
+
+		[DllImport(KERNEL32_DLL, SetLastError = true)]
+		internal static extern bool GetConsoleSelectionInfo(out ConsoleSelectionInfo lpConsoleSelectionInfo);
 
 		[DllImport(KERNEL32_DLL, SetLastError = true)]
 		internal static extern int GetConsoleOutputCP();

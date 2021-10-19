@@ -8,7 +8,7 @@ namespace Kantan.Native.Structures
 	/// a rectangle.
 	/// </summary>
 	[StructLayout(LayoutKind.Sequential)]
-	internal class SmallRect
+	internal struct SmallRect
 	{
 		public short left;
 		public short top;

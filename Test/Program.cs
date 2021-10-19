@@ -59,15 +59,18 @@ namespace Test
 			/*string fooBar = "foo\nbar\n".AddColor(Color.Aquamarine);
 			Console.Write(fooBar);
 			Debug.WriteLine(Strings.MeasureRows(fooBar));*/
+
 			await ConsoleTest3();
 			// await ConsoleTest2();
-			
-			Console.WriteLine("--");
-			Console.ReadLine();
+			// Console.WriteLine("--");
+			// Console.ReadLine();
+			// _dialog.Display(false);
 
-			_dialog.Display(false);
+
+
+
+			// _dialog.ReadInput();
 		}
-
 
 
 		private class MyClass : IOutline
@@ -144,6 +147,7 @@ namespace Test
 			b = 1 << 1,
 			c = 1 << 2
 		}
+
 		private static async Task ConsoleTest3()
 		{
 			_dialog = new ConsoleDialog()
@@ -181,7 +185,7 @@ namespace Test
 
 					},
 				},
-				Status = "hi1",
+				Status         = "hi1",
 				SelectMultiple = true,
 				Options        = ConsoleOption.FromEnum<MyEnum>().ToList()
 			};

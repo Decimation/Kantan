@@ -23,6 +23,7 @@ namespace Kantan.Internal
 
 		internal const string STRING_FORMAT_ARG = "msg";
 
+
 		/// <summary>
 		/// Common integer value representing an invalid value, error, etc.
 		/// </summary>
@@ -44,5 +45,7 @@ namespace Kantan.Internal
 				return appFolder;
 			}
 		}*/
+
+		public const string OS_WINDOWS = "windows";
 	}
 }

@@ -7,7 +7,7 @@ namespace Kantan.Native.Structures
 	/// Contains information about a console screen buffer.
 	/// </summary>
 	[StructLayout(LayoutKind.Sequential)]
-	internal class ConsoleScreenBufferInfo
+	internal struct ConsoleScreenBufferInfo
 	{
 		public Coord dwSize;
 		public Coord dwCursorPosition;

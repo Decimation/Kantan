@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -13,18 +15,19 @@ using Kantan.Native.Structures;
 using Kantan.Text;
 using Kantan.Threading;
 using Kantan.Utilities;
+
+// ReSharper disable SuggestVarOrType_DeconstructionDeclarations
+
 // ReSharper disable SwitchStatementHandlesSomeKnownEnumValuesWithDefault
-
+// ReSharper disable SuggestVarOrType_SimpleTypes
+// ReSharper disable SuggestVarOrType_Elsewhere
 // ReSharper disable SwitchStatementMissingSomeEnumCasesNoDefault
-
 // ReSharper disable PossibleInvalidOperationException
 // ReSharper disable ConditionIsAlwaysTrueOrFalse
-
 // ReSharper disable EmptyConstructor
-
 // ReSharper disable UnusedMember.Global
-
 // ReSharper disable NonReadonlyMemberInGetHashCode
+#pragma warning disable	CA1416
 
 namespace Kantan.Cli.Controls
 {
@@ -70,7 +73,6 @@ namespace Kantan.Cli.Controls
 		 * Description
 		 */
 
-
 		/// <summary>
 		///     The index of an <see cref="ConsoleOption" /> corresponds to its key, which, when pressed,
 		///     executes the <see cref="ConsoleOption.Function" /> with the appropriate modifiers
@@ -98,6 +100,16 @@ namespace Kantan.Cli.Controls
 		///     <c>F*</c> keys
 		/// </summary>
 		public Dictionary<ConsoleKey, Action> Functions { get; set; } = new();
+
+		private readonly Dictionary<int, ConsoleOption> m_optionPositions = new();
+
+		/// <summary>
+		///     Interface status
+		/// </summary>
+		private ConsoleStatus m_status;
+
+		private static readonly string SelectMultiplePrompt =
+			$"Press {NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.";
 
 		/// <summary>
 		///     Handles user input and options
@@ -141,108 +153,16 @@ namespace Kantan.Cli.Controls
 			ConsoleKeyInfo cki;
 
 			ConsoleManager.InitNative();
+
 			m_optionPositions.Clear();
 
 			do {
 
 				Display(output);
 
-				var task = Task.Run(() =>
-				{
-					// Block until input is entered.
-					_ReadInput:
-					int prevCount = Options.Count;
+				var inputTask = Task.Run(() => InputTask(output));
 
-					while (!ConsoleManager.InputAvailable) {
-
-						bool refresh =
-							AtomicHelper.Exchange(ref m_status, ConsoleStatus.Ok) ==
-							ConsoleStatus.Refresh;
-
-						// Refresh buffer if collection was updated
-
-						int currentCount = Options.Count;
-
-						if (refresh || prevCount != currentCount) {
-							Display(output);
-							prevCount = currentCount;
-						}
-					}
-
-					InputRecord ir = ConsoleManager.ReadInputRecord();
-
-					ConsoleKeyInfo cki2;
-
-					MouseEventRecord me = ir.MouseEvent;
-
-					switch (ir.EventType) {
-
-						case ConsoleEventType.KEY_EVENT:
-							// Key was read
-
-							cki2 = ConsoleManager.GetKeyInfoFromRecord(ir);
-							var dragAndDropFile = TryReadFile(cki2);
-
-							if (!String.IsNullOrWhiteSpace(dragAndDropFile)) {
-
-								Debug.WriteLine($">> {dragAndDropFile}");
-								output.DragAndDrop = dragAndDropFile;
-								return;
-							}
-
-							break;
-						case ConsoleEventType.MOUSE_EVENT when ConsoleManager.IsMouseScroll(ir):
-
-							bool scrollDown = me.dwButtonState.HasFlag(ButtonState.SCROLL_DOWN);
-
-							var increment =
-								scrollDown ? ConsoleManager.ScrollIncrement : -ConsoleManager.ScrollIncrement;
-
-							bool b = ConsoleManager.Scroll(increment);
-
-							goto _ReadInput;
-						case ConsoleEventType.MOUSE_EVENT:
-							// Mouse was read
-							var (x, y) = (me.dwMousePosition.X, me.dwMousePosition.Y);
-
-							// var vs = ReadXY(Console.BufferWidth, 0, y);
-							// Debug.WriteLine($"{vs}");
-
-							// hack: wtf
-							if (me.dwButtonState == ButtonState.FROM_LEFT_1ST_BUTTON_PRESSED) {
-								ConsoleManager._click = true;
-							}
-
-							if (ConsoleManager._click && me.dwButtonState == 0) {
-								goto default;
-							}
-
-							if (m_optionPositions.ContainsKey(y)) {
-								var  option  = m_optionPositions[y];
-								int  indexOf = Options.IndexOf(option);
-								char c       = GetDisplayOptionFromIndex(indexOf);
-
-								// note: KeyChar argument is slightly inaccurate (case insensitive; always uppercase)
-								cki2 = ConsoleManager.GetKeyInfo(c, c, me.dwControlKeyState);
-								// Thread.Sleep(1000);
-							}
-							else {
-								goto default;
-							}
-
-							break;
-
-						default:
-							cki2 = default;
-							break;
-					}
-
-					//packet.Input = cki2;
-
-					output.Key = cki2;
-				});
-
-				await task;
+				await inputTask;
 
 				// Input was read
 
@@ -258,8 +178,8 @@ namespace Kantan.Cli.Controls
 					throw new InvalidOperationException();
 				}
 
-				Debug.WriteLine($"{nameof(ConsoleManager)}: ({cki.Key} {(int) cki.Key}) " +
-				                $"| ({cki.KeyChar} {(int) cki.KeyChar})", LogCategories.C_DEBUG);
+				/*Debug.WriteLine($"{nameof(ConsoleManager)}: ({cki.Key} {(int) cki.Key}) " +
+				                $"| ({cki.KeyChar} {(int) cki.KeyChar})", LogCategories.C_DEBUG);*/
 
 				// Handle special keys
 
@@ -320,6 +240,99 @@ namespace Kantan.Cli.Controls
 			return output;
 		}
 
+		private void InputTask(ConsoleOutputResult output)
+		{
+			// Block until input is entered.
+
+			_ReadInput:
+			int prevCount = Options.Count;
+
+			while (!ConsoleManager.InputAvailable) {
+
+				bool refresh = AtomicHelper.Exchange(ref m_status, ConsoleStatus.Ok) == ConsoleStatus.Refresh;
+
+				// Refresh buffer if collection was updated
+
+				int currentCount = Options.Count;
+
+				if (refresh || prevCount != currentCount) {
+					Display(output);
+					prevCount = currentCount;
+				}
+			}
+
+			InputRecord ir = ConsoleManager.ReadInputRecord();
+
+			ConsoleKeyInfo cki;
+
+			MouseEventRecord me = ir.MouseEvent;
+
+			switch (ir.EventType) {
+
+				case ConsoleEventType.KEY_EVENT:
+					// Key was read
+
+					cki = ConsoleManager.GetKeyInfoFromRecord(ir);
+					string dragAndDropFile = TryReadFile(cki);
+
+					if (!String.IsNullOrWhiteSpace(dragAndDropFile)) {
+
+						Debug.WriteLine($">> {dragAndDropFile}");
+						output.DragAndDrop = dragAndDropFile;
+						return;
+					}
+
+					break;
+				case ConsoleEventType.MOUSE_EVENT when ConsoleManager.IsMouseScroll(ir):
+
+					bool scrollDown = me.dwButtonState.HasFlag(ButtonState.SCROLL_DOWN);
+
+					int increment = scrollDown ? ConsoleManager.ScrollIncrement : -ConsoleManager.ScrollIncrement;
+
+					bool b = ConsoleManager.Scroll(increment);
+
+					goto _ReadInput;
+				case ConsoleEventType.MOUSE_EVENT:
+					// Mouse was read
+
+					var (x, y) = (me.dwMousePosition.X, me.dwMousePosition.Y);
+
+					// hack: wtf
+
+					if (me.dwButtonState == ButtonState.FROM_LEFT_1ST_BUTTON_PRESSED) {
+						ConsoleManager._click = true;
+					}
+
+					if (ConsoleManager._click && me.dwButtonState == 0) {
+						goto default;
+					}
+
+					if (m_optionPositions.ContainsKey(y)) {
+						ConsoleOption option = m_optionPositions[y];
+
+						int indexOf = Options.IndexOf(option);
+
+						char c = GetDisplayOptionFromIndex(indexOf);
+
+						// note: KeyChar argument is slightly inaccurate (case insensitive; always uppercase)
+						cki = ConsoleManager.GetKeyInfo(c, c, me.dwControlKeyState);
+					}
+					else {
+						goto default;
+					}
+
+					break;
+
+				default:
+					cki = default;
+					break;
+			}
+
+			//packet.Input = cki2;
+
+			output.Key = cki;
+		}
+
 		/// <summary>
 		///     Display dialog
 		/// </summary>
@@ -330,25 +343,18 @@ namespace Kantan.Cli.Controls
 			// Show options
 
 			if (SelectMultiple) {
-				Console.WriteLine();
-
-				// sb.AppendLine();
+				ConsoleManager.NewLine();
 
 				string optionsStr = $"{Strings.Constants.CHEVRON} {output.Output.QuickJoin()}"
 					.AddColor(ConsoleManager.ColorOptions);
 
 				ConsoleManager.Write(true, optionsStr);
 
-				// sb.AppendLine(optionsStr).AppendLine();
+				ConsoleManager.NewLine();
 
-				Console.WriteLine();
+				ConsoleManager.Write(SelectMultiplePrompt);
 
-				ConsoleManager.Write(
-					$"Press {NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.");
-
-				// sb.AppendLine($"Press {NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.");
 			}
-			// Console.Write(sb);
 		}
 
 		public void Display(bool clear = true)
@@ -359,13 +365,8 @@ namespace Kantan.Cli.Controls
 				Console.Clear();
 			}
 
-			// var t = Console.CursorTop;
-			// Console.SetCursorPosition(0,0);
-			// var sb = new StringBuilder();
-
 			if (Header != null) {
 				ConsoleManager.Write(false, Header.AddColor(ConsoleManager.ColorHeader));
-				// sb.Append(Header.AddColor(ConsoleManager.ColorHeader));
 			}
 
 			if (Subtitle != null) {
@@ -373,11 +374,8 @@ namespace Kantan.Cli.Controls
 				string subStr = ConsoleManager.FormatString(Strings.Constants.CHEVRON, Subtitle, false)
 				                              .AddColor(ConsoleManager.ColorOptions);
 
-				// string subStr = FormatString(null, Subtitle, true).AddColor(ColorOptions);
-
 				ConsoleManager.Write(true, subStr);
-				Console.WriteLine();
-				// sb.AppendLine(subStr).AppendLine();
+				ConsoleManager.NewLine();
 			}
 
 			int clamp = Math.Clamp(Options.Count, 0, MAX_DISPLAY_OPTIONS);
@@ -385,40 +383,25 @@ namespace Kantan.Cli.Controls
 			for (int i = 0; i < clamp; i++) {
 				ConsoleOption option = Options[i];
 
-				//string delim = Strings.GetUnicodeBoxPipe(clamp, i);
-
 				string s = FormatOption(option, i);
 
 				var top = Console.CursorTop;
 				m_optionPositions[top] = option;
 
-				// t+=MeasureRows(s)+(i-1);
-				// Debug.WriteLine($"{top} | {((Strings.MeasureRows(sb.ToString())))} | {Strings.MeasureRows(s)} | {Strings.MeasureRows(sb.ToString())-Strings.MeasureRows(s)-i} | {i} |");
-				// Debug.WriteLine(Console.CursorTop);
-				// sb.Append(s);
 				ConsoleManager.Write(false, s);
 
-
-				// Write(false, s);
-				/*sb.Append(s);
-				var rows      = Strings.MeasureRows(sb.ToString())+sb.ToString().Count(c=>c=='\n');
-				var key = Console.CursorTop+rows;
-				OptionPositions[key] = option;*/
 			}
 
-			Console.WriteLine();
-			// sb.AppendLine();
+			ConsoleManager.NewLine();
 
 			if (Status != null) {
 				ConsoleManager.Write(Status);
-				// sb.AppendLine(Status);
 			}
 
 			if (Description != null) {
-				Console.WriteLine();
+				ConsoleManager.NewLine();
 
 				ConsoleManager.Write(Description);
-				// sb.AppendLine().AppendLine(Description);
 			}
 		}
 
@@ -453,7 +436,6 @@ namespace Kantan.Cli.Controls
 			char c  = GetDisplayOptionFromIndex(i);
 
 			string name = option.Name;
-
 
 			if (option.Color.HasValue) {
 				name = name.AddColor(option.Color.Value);
@@ -490,7 +472,7 @@ namespace Kantan.Cli.Controls
 		private const int  MAX_DISPLAY_OPTIONS = 36;
 
 		/// <summary>
-		///     Exits <see cref="ConsoleDialog.ReadInput" />
+		///     Exits <see cref="ReadInput" />
 		/// </summary>
 		public const ConsoleKey NC_GLOBAL_EXIT_KEY = ConsoleKey.Escape;
 
@@ -498,13 +480,6 @@ namespace Kantan.Cli.Controls
 		///     <see cref="Refresh" />
 		/// </summary>
 		public const ConsoleKey NC_GLOBAL_REFRESH_KEY = ConsoleKey.F5;
-
-		private readonly Dictionary<int, ConsoleOption> m_optionPositions = new();
-
-		/// <summary>
-		///     Interface status
-		/// </summary>
-		private ConsoleStatus m_status;
 
 		private enum ConsoleStatus
 		{
@@ -534,7 +509,7 @@ namespace Kantan.Cli.Controls
 		/// </remarks>
 		internal static string TryReadFile(ConsoleKeyInfo cki)
 		{
-			const char quote = '\"';
+			const char QUOTE = '\"';
 
 			var sb = new StringBuilder();
 
@@ -542,7 +517,7 @@ namespace Kantan.Cli.Controls
 
 			var driveLetters = DriveInfo.GetDrives().Select(x => x.Name.First()).ToArray();
 
-			if (keyChar == quote || driveLetters.Any(e => e == keyChar)) {
+			if (keyChar == QUOTE || driveLetters.Any(e => e == keyChar)) {
 				sb.Append(keyChar);
 
 				do {
@@ -558,30 +533,29 @@ namespace Kantan.Cli.Controls
 					if (File.Exists(sb.ToString())) {
 						break;
 					}
-				} while (keyChar != quote);
+				} while (keyChar != QUOTE);
 
 			}
 
-
-			return sb.ToString().Trim(quote);
+			return sb.ToString().Trim(QUOTE);
 		}
 
 		public override int GetHashCode()
 		{
-			var h = new HashCode();
+			var hashCode = new HashCode();
 
-			IEnumerable<int> hx = Options.Select(o => o.GetHashCode());
+			IEnumerable<int> hashes = Options.Select(o => o.GetHashCode());
 
-			foreach (int i in hx) {
-				h.Add(i);
+			foreach (int value in hashes) {
+				hashCode.Add(value);
 			}
 
-			h.Add(Status?.GetHashCode());
-			h.Add(Description?.GetHashCode());
-			h.Add(Header?.GetHashCode());
-			h.Add(Subtitle?.GetHashCode());
+			hashCode.Add(Status?.GetHashCode());
+			hashCode.Add(Description?.GetHashCode());
+			hashCode.Add(Header?.GetHashCode());
+			hashCode.Add(Subtitle?.GetHashCode());
 
-			return h.ToHashCode();
+			return hashCode.ToHashCode();
 		}
 	}
 }

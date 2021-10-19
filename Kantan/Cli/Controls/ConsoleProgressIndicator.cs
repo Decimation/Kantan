@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
+using Kantan.Internal;
 
 // ReSharper disable UnusedMember.Global
-#pragma warning disable CA1416, CA2211
+#pragma warning disable CA2211
 namespace Kantan.Cli.Controls
 {
+	[SupportedOSPlatform(Common.OS_WINDOWS)]
 	public static class ConsoleProgressIndicator
 	{
 		/*

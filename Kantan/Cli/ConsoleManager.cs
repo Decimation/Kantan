@@ -1,6 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Threading;
 using JetBrains.Annotations;
 using Kantan.Cli.Controls;
@@ -28,7 +32,7 @@ using static Kantan.Text.Strings;
 
 #pragma warning disable 8601
 
-#pragma warning disable 8602, CA1416, CS8604, IDE0059, IDE0051
+#pragma warning disable 8602, CS8604, IDE0059, IDE0051
 #nullable enable
 
 namespace Kantan.Cli
@@ -228,10 +232,12 @@ namespace Kantan.Cli
 
 		#region Write
 
-		public static void Print(params object[] args)
-		{
-			Console.WriteLine(args.QuickJoin());
-		}
+		public static void Print(params object[] args) => Console.WriteLine(args.QuickJoin());
+
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void NewLine() => Console.WriteLine();
+
 
 		/// <summary>
 		///     Root write method.
@@ -317,10 +323,34 @@ namespace Kantan.Cli
 
 		public static bool Scroll(int increment)
 		{
+			if (!OperatingSystem.IsWindows()) {
+				return false;
+			}
+
 			var newTop = increment + Console.WindowTop;
 
-			var b = !(newTop > Console.BufferHeight) &&
-			        !(newTop < 0);
+			// var b = !(newTop > Console.BufferHeight) && !(newTop < 0);
+			
+			bool b = true;
+
+			// Get the size of the current console window
+			ConsoleScreenBufferInfo csbi = GetBufferInfo();
+
+			SmallRect srWindow = csbi.srWindow;
+
+			// Check for arithmetic underflows & overflows.
+			var left = 0;
+
+			int newRight = left + srWindow.Right - srWindow.Left;
+
+			if (left < 0 || newRight > csbi.dwSize.X - 1 || newRight < left)
+				b = false;
+
+			int newBottom = newTop + srWindow.Bottom - srWindow.Top;
+
+			if (newTop < 0 || newBottom > csbi.dwSize.Y - 1 || newBottom < newTop)
+				b = false;
+
 
 			if (b) {
 				// note: Still seems to throw an exception when attempting to scrolling past end ???
@@ -330,10 +360,26 @@ namespace Kantan.Cli
 			return b;
 		}
 
+		private static ConsoleScreenBufferInfo GetBufferInfo()
+		{
+			ConsoleScreenBufferInfo csbi = default;
+
+			bool unused;
+
+			if (_stdOut == IntPtr.Zero) {
+				InitNative();
+			}
+
+			var x = Win32.GetConsoleScreenBufferInfo(_stdOut, out csbi);
+
+			return csbi;
+		}
+
 		/// <summary>
 		///     Attempts to resize the console window
 		/// </summary>
 		/// <returns><c>true</c> if the operation succeeded</returns>
+		[SupportedOSPlatform(OS_WINDOWS)]
 		public static bool Resize(int cww, int cwh)
 		{
 			bool canResize = Console.LargestWindowWidth >= cww &&
@@ -358,6 +404,7 @@ namespace Kantan.Cli
 		/// <param name="x">Column position of the first character to read.</param>
 		/// <param name="y">Row position of the first character to read.</param>
 		/// <returns>A string containing the characters read from the screen buffer.</returns>
+		[SupportedOSPlatform(OS_WINDOWS)]
 		public static string ReadXY(int nChars, int x, int y)
 		{
 			char[] buff      = new char[nChars];
@@ -379,6 +426,7 @@ namespace Kantan.Cli
 		/// <param name="x">Column position of the starting location.</param>
 		/// <param name="y">Row position of the starting location.</param>
 		/// <returns></returns>
+		[SupportedOSPlatform(OS_WINDOWS)]
 		public static int WriteXY(string text, int x, int y) => WriteXY(text.ToCharArray(), text.Length, x, y);
 
 		/// <summary>
@@ -389,6 +437,7 @@ namespace Kantan.Cli
 		/// <param name="x">Column position in which to write the first character.</param>
 		/// <param name="y">Row position in which to write the first character.</param>
 		/// <returns>Returns the number of characters written.</returns>
+		[SupportedOSPlatform(OS_WINDOWS)]
 		public static int WriteXY(char[] text, int nChars, int x, int y)
 		{
 			if (nChars > text.Length) {
@@ -524,6 +573,10 @@ namespace Kantan.Cli
 		{
 			get
 			{
+				if (!OperatingSystem.IsWindows()) {
+					return Console.KeyAvailable;
+				}
+
 				while (true) {
 
 					if (!Win32.PeekConsoleInput(_stdIn, out InputRecord ir, 1, out uint numEventsRead)) {
@@ -551,6 +604,7 @@ namespace Kantan.Cli
 			}
 		}
 
+		[SupportedOSPlatform(OS_WINDOWS)]
 		internal static InputRecord ReadInputRecord()
 		{
 			var record = new InputRecord[1];
@@ -565,7 +619,8 @@ namespace Kantan.Cli
 
 		}
 
-		private static void CloseNative()
+		[SupportedOSPlatform(OS_WINDOWS)]
+		internal static void CloseNative()
 		{
 			Win32.SetConsoleMode(_stdIn, _oldMode);
 			_stdIn   = IntPtr.Zero;
@@ -573,6 +628,8 @@ namespace Kantan.Cli
 			_oldMode = 0;
 		}
 
+
+		[SupportedOSPlatform(OS_WINDOWS)]
 		internal static void InitNative()
 		{
 			_stdOut = Win32.GetStdHandle(StandardHandle.STD_OUTPUT_HANDLE);
@@ -593,6 +650,7 @@ namespace Kantan.Cli
 			}
 		}
 
+		[SupportedOSPlatform(OS_WINDOWS)]
 		private static void ScrollNative(int nRows)
 		{
 			var csbiInfo   = new ConsoleScreenBufferInfo();
