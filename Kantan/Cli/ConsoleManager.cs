@@ -352,20 +352,12 @@ namespace Kantan.Cli
 
 			int newBottom = newTop + srWindow.Bottom - srWindow.Top;
 			
-			var c         = newTop - srWindow.Top;
-			
-
-			if (c<0) {
-				newTop = 0;
-			}
-
 			int dwSizeY = csbi.dwSize.Y - 1;
 			
 			if (newTop < 0 || newBottom > dwSizeY || newBottom < newTop) {
 				b = false;
 			}
-
-			Debug.WriteLine($"{newRight} {newTop} {newBottom}| {b} {c} ");
+			
 			if (b) {
 				Console.SetWindowPosition(0, newTop);
 			}
