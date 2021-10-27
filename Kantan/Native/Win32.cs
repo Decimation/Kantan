@@ -18,6 +18,7 @@ namespace Kantan.Native
 	internal static class Win32
 	{
 		private const string KERNEL32_DLL = "kernel32.dll";
+
 		/*
 		 * Note: some code comes from:
 		 * Novus
@@ -85,9 +86,8 @@ namespace Kantan.Native
 		                                                       ConsoleScreenBufferInfo lpConsoleScreenBufferInfo);
 
 		[DllImport(KERNEL32_DLL, SetLastError = true)]
-		internal static extern bool GetConsoleSelectionInfo(
-			[In] [Out] [MarshalAs(UnmanagedType.LPStruct)]
-			ConsoleSelectionInfo lpConsoleSelectionInfo);
+		internal static extern bool GetConsoleSelectionInfo([In] [Out] [MarshalAs(UnmanagedType.LPStruct)] 
+		                                                    ConsoleSelectionInfo lpConsoleSelectionInfo);
 
 		[DllImport(KERNEL32_DLL, SetLastError = true)]
 		internal static extern bool ScrollConsoleScreenBuffer(IntPtr hConsoleOutput,
@@ -96,19 +96,22 @@ namespace Kantan.Native
 		                                                      [In] [MarshalAs(UnmanagedType.LPStruct)]
 		                                                      SmallRect lpClipRectangle, Coord dwDestinationOrigin,
 		                                                      ref ConsoleCharInfo lpFill);
+
 		[DllImport(KERNEL32_DLL, SetLastError = true)]
 		internal static extern bool WriteConsoleOutputAttribute(IntPtr hConsoleOutput,
 		                                                        [In]
 		                                                        [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 2)]
 		                                                        ConsoleCharAttribute[] lpCharacter, int nLength,
 		                                                        Coord dwWriteCoord, ref int lpNumberOfCharsWritten);
+
 		[DllImport(KERNEL32_DLL, SetLastError = true)]
-		public static extern bool WriteConsoleOutput(
-			IntPtr hConsoleOutput,
-			[In][MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 2)] ConsoleCharInfo[,] lpBuffer,
-			Coord dwBufferSize,
-			Coord dwBufferCoord,
-			[In, Out][MarshalAs(UnmanagedType.LPStruct)] SmallRect lpWriteRegion);
+		internal static extern bool WriteConsoleOutput(IntPtr hConsoleOutput,
+		                                               [In] [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 2)]
+		                                               ConsoleCharInfo[,] lpBuffer,
+		                                               Coord dwBufferSize,
+		                                               Coord dwBufferCoord,
+		                                               [In, Out] [MarshalAs(UnmanagedType.LPStruct)]
+		                                               SmallRect lpWriteRegion);
 
 		[DllImport(KERNEL32_DLL, SetLastError = true)]
 		internal static extern bool WriteConsoleOutputCharacter(IntPtr hConsoleOutput,

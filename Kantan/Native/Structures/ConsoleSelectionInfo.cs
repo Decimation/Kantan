@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+
 // ReSharper disable UnusedMember.Global
 
 namespace Kantan.Native.Structures
@@ -9,7 +10,8 @@ namespace Kantan.Native.Structures
 	[StructLayout(LayoutKind.Sequential)]
 	internal struct ConsoleSelectionInfo
 	{
-		public int   dwFlags;
+		public int dwFlags;
+
 		public Coord dwSelectionAnchor;
 
 		[MarshalAs(UnmanagedType.Struct)]
