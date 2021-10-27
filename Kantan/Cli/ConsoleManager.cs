@@ -95,7 +95,7 @@ namespace Kantan.Cli
 		 * TODO: this design isn't great
 		 */
 
-		public static int ScrollIncrement { get; set; } = 3;
+		public static int ScrollIncrement { get; set; } = 1;
 
 		private const char OPTION_N = 'N';
 		private const char OPTION_Y = 'Y';
@@ -343,16 +343,29 @@ namespace Kantan.Cli
 
 			int newRight = left + srWindow.Right - srWindow.Left;
 
-			if (left < 0 || newRight > csbi.dwSize.X - 1 || newRight < left) {
+			int dwSizeX   = csbi.dwSize.X - 1;
+			
+
+			if (left < 0 || newRight > dwSizeX || newRight < left) {
 				b = false;
 			}
 
 			int newBottom = newTop + srWindow.Bottom - srWindow.Top;
+			
+			var c         = newTop - srWindow.Top;
+			
 
-			if (newTop < 0 || newBottom > csbi.dwSize.Y - 1 || newBottom < newTop) {
+			if (c<0) {
+				newTop = 0;
+			}
+
+			int dwSizeY = csbi.dwSize.Y - 1;
+			
+			if (newTop < 0 || newBottom > dwSizeY || newBottom < newTop) {
 				b = false;
 			}
 
+			Debug.WriteLine($"{newRight} {newTop} {newBottom}| {b} {c} ");
 			if (b) {
 				Console.SetWindowPosition(0, newTop);
 			}
