@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
@@ -68,6 +69,10 @@ namespace Kantan.Cli
 		public static Color ColorHeader  { get; set; } = Color.Red;
 		public static Color ColorOptions { get; set; } = Color.Aquamarine;
 		public static Color ColorError   { get; set; } = Color.Red;
+
+
+		public static ConsoleCharAttribute HighlightAttribute { get; set; } =
+			new(ConsoleColor.Black, ConsoleColor.White);
 
 		public static int BufferLimit { get; set; } = Console.BufferWidth - 10;
 
@@ -392,6 +397,12 @@ namespace Kantan.Cli
 		private static  IntPtr       _stdOut;
 		private static  ConsoleModes _oldMode;
 
+		[SupportedOSPlatform(OS_WINDOWS)]
+		public static string ReadBufferLine(int y) => ReadBufferXY(Console.BufferWidth, 0, y);
+
+		[SupportedOSPlatform(OS_WINDOWS)]
+		public static string ReadBufferXY(int x, int y) => ReadBufferXY(Console.BufferWidth, x, y);
+
 		/// <summary>
 		/// Reads characters from the screen buffer, starting at the given position.
 		/// </summary>
@@ -400,7 +411,7 @@ namespace Kantan.Cli
 		/// <param name="y">Row position of the first character to read.</param>
 		/// <returns>A string containing the characters read from the screen buffer.</returns>
 		[SupportedOSPlatform(OS_WINDOWS)]
-		public static string ReadXY(int nChars, int x, int y)
+		public static string ReadBufferXY(int nChars, int x, int y)
 		{
 			char[] buff      = new char[nChars];
 			int    charsRead = 0;
@@ -413,6 +424,9 @@ namespace Kantan.Cli
 			return new string(buff, 0, charsRead);
 		}
 
+		[SupportedOSPlatform(OS_WINDOWS)]
+		public static int WriteBufferLine(string text, int y) => WriteBufferXY(text.ToCharArray(), text.Length, 0, y);
+
 		/// <summary>
 		/// Writes characters to the buffer at the given position.
 		/// The cursor position is not updated.
@@ -422,7 +436,59 @@ namespace Kantan.Cli
 		/// <param name="y">Row position of the starting location.</param>
 		/// <returns></returns>
 		[SupportedOSPlatform(OS_WINDOWS)]
-		public static int WriteXY(string text, int x, int y) => WriteXY(text.ToCharArray(), text.Length, x, y);
+		public static int WriteBufferXY(string text, int x, int y)
+			=> WriteBufferXY(text.ToCharArray(), text.Length, x, y);
+
+		public static int WriteAttributesXY(ConsoleCharAttribute[] attrs, int x, int y)
+			=> WriteAttributesXY(attrs, attrs.Length, x, y);
+
+		/// <summary>
+		/// Writes character attributes to the screen buffer at the given cursor position.
+		/// </summary>
+		/// <param name="attrs">An array of attributes to be written to the screen buffer.</param>
+		/// <param name="nattrs">The number of attributes to be written.</param>
+		/// <param name="x">Column position in which to write the first attribute.</param>
+		/// <param name="y">Row position in which to write the first attribute.</param>
+		/// <returns>Returns the number of attributes written.</returns>
+		public static int WriteAttributesXY(ConsoleCharAttribute[] attrs, int nattrs, int x, int y)
+		{
+			if (nattrs > attrs.Length) {
+				throw new ArgumentException();
+			}
+
+			int   attrsWritten = 0;
+			Coord writePos     = new Coord((short) x, (short) y);
+
+			if (!Win32.WriteConsoleOutputAttribute(_stdOut, attrs, attrs.Length, writePos, ref attrsWritten)) {
+				throw new Win32Exception();
+			}
+
+			return attrsWritten;
+		}
+
+		/// <summary>
+		/// Writes character and attribute information to a rectangular portion of the screen buffer.
+		/// </summary>
+		/// <param name="buff">The array that contains characters and attributes to be written.</param>
+		/// <param name="buffX">Column position of the first character to be written from the array.</param>
+		/// <param name="buffY">Row position of the first character to be written from the array.</param>
+		/// <param name="left">Column position of the top-left corner of the screen buffer area where characters are to be written.</param>
+		/// <param name="top">Row position of the top-left corner of the screen buffer area where characters are to be written.</param>
+		/// <param name="right">Column position of the bottom-right corner of the screen buffer area where characters are to be written.</param>
+		/// <param name="bottom">Row position of the bottom-right corner of the screen buffer area where characters are to be written.</param>
+		public static void WriteBlock(ConsoleCharInfo[,] buff, int buffX, int buffY, int left, int top, int right,
+		                              int bottom)
+		{
+			var bufferSize  = new Coord((short) buff.GetLength(1), (short) buff.GetLength(0));
+			var bufferPos   = new Coord((short) buffX, (short) buffY);
+			var writeRegion = new SmallRect((short) left, (short) top, (short) right, (short) bottom);
+
+			if (!Win32.WriteConsoleOutput(_stdOut, buff, bufferSize, bufferPos, writeRegion)) {
+				throw new Win32Exception();
+			}
+		}
+
+		public static int WriteBufferXY(char[] text, int x, int y) => WriteBufferXY(text, text.Length, x, y);
 
 		/// <summary>
 		/// Writes characters from a character array to the screen buffer at the given cursor position.
@@ -433,7 +499,7 @@ namespace Kantan.Cli
 		/// <param name="y">Row position in which to write the first character.</param>
 		/// <returns>Returns the number of characters written.</returns>
 		[SupportedOSPlatform(OS_WINDOWS)]
-		public static int WriteXY(char[] text, int nChars, int x, int y)
+		public static int WriteBufferXY(char[] text, int nChars, int x, int y)
 		{
 			if (nChars > text.Length) {
 				throw new ArgumentException("Cannot be larger than the array length.", nameof(nChars));

@@ -8,7 +8,7 @@ namespace Kantan.Native.Structures
 	/// Specifies a Unicode or ASCII character and its attributes.
 	/// </summary>
 	[StructLayout(LayoutKind.Explicit)]
-	internal struct ConsoleCharInfo
+	public struct ConsoleCharInfo
 	{
 		[FieldOffset(0)]
 		private char cUnicodeChar;

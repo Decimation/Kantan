@@ -66,7 +66,10 @@ namespace Test
 			// Console.ReadLine();
 			// _dialog.Display(false);
 
-
+			Console.ReadLine();
+			await ConsoleTest2();
+			Console.ReadLine();
+			Console.WriteLine("abc anal butt gggg");
 
 
 			// _dialog.ReadInput();

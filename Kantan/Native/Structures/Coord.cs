@@ -17,5 +17,9 @@ namespace Kantan.Native.Structures
 			X = x;
 			Y = y;
 		}
+
+		public Coord(short x, short y):this((ushort)x,(ushort)y)
+		{
+		}
 	}
 }

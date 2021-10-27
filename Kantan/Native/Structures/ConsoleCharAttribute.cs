@@ -8,7 +8,7 @@ namespace Kantan.Native.Structures
 	/// Helper class that simplifies working with foreground and background colors.
 	/// </summary>
 	[StructLayout(LayoutKind.Sequential)]
-	internal struct ConsoleCharAttribute
+	public struct ConsoleCharAttribute
 	{
 		private short attr;
 

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Kantan.Diagnostics;
@@ -107,6 +109,7 @@ namespace Kantan.Cli.Controls
 		///     Interface status
 		/// </summary>
 		private ConsoleStatus m_status;
+		
 
 		private static readonly string SelectMultiplePrompt =
 			$"Press {NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.";
@@ -255,7 +258,8 @@ namespace Kantan.Cli.Controls
 
 				int currentCount = Options.Count;
 
-				if (refresh || prevCount != currentCount) {
+				if ((refresh || prevCount != currentCount)) {
+					Debug.WriteLine("update");
 					Display(output);
 					prevCount = currentCount;
 				}
@@ -297,13 +301,17 @@ namespace Kantan.Cli.Controls
 
 					var (x, y) = (me.dwMousePosition.X, me.dwMousePosition.Y);
 
+
 					// hack: wtf
+
+					//Debug.WriteLine($"{me}");
 
 					if (me.dwButtonState == ButtonState.FROM_LEFT_1ST_BUTTON_PRESSED) {
 						ConsoleManager._click = true;
 					}
 
 					if (ConsoleManager._click && me.dwButtonState == 0) {
+						//ConsoleManager._click = false;
 						goto default;
 					}
 
@@ -316,6 +324,8 @@ namespace Kantan.Cli.Controls
 
 						// note: KeyChar argument is slightly inaccurate (case insensitive; always uppercase)
 						cki = ConsoleManager.GetKeyInfo(c, c, me.dwControlKeyState);
+
+						HighlightClick(y, x);
 					}
 					else {
 						goto default;
@@ -333,11 +343,30 @@ namespace Kantan.Cli.Controls
 			output.Key = cki;
 		}
 
+		private static void HighlightClick(ushort y, ushort x)
+		{
+			const char SPACE = (char) 32;
+
+			var bufferLine = ConsoleManager.ReadBufferLine(y).Trim(SPACE);
+
+			Debug.WriteLine($"{nameof(ConsoleDialog)}: click ({x}, {y})");
+
+			var attrs = new ConsoleCharAttribute[bufferLine.Length];
+
+			Array.Fill(attrs, ConsoleManager.HighlightAttribute);
+
+			ConsoleManager.WriteAttributesXY(attrs, bufferLine.Length, 0, y);
+			//ConsoleManager.WriteBufferLine(s1, y);
+			Thread.Sleep(50);
+		}
+
 		/// <summary>
 		///     Display dialog
 		/// </summary>
 		private void Display(ConsoleOutputResult output)
 		{
+			Debug.WriteLine($"{nameof(ConsoleDialog)}: Update display");
+
 			Display();
 
 			// Show options

@@ -96,6 +96,19 @@ namespace Kantan.Native
 		                                                      [In] [MarshalAs(UnmanagedType.LPStruct)]
 		                                                      SmallRect lpClipRectangle, Coord dwDestinationOrigin,
 		                                                      ref ConsoleCharInfo lpFill);
+		[DllImport(KERNEL32_DLL, SetLastError = true)]
+		internal static extern bool WriteConsoleOutputAttribute(IntPtr hConsoleOutput,
+		                                                        [In]
+		                                                        [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 2)]
+		                                                        ConsoleCharAttribute[] lpCharacter, int nLength,
+		                                                        Coord dwWriteCoord, ref int lpNumberOfCharsWritten);
+		[DllImport(KERNEL32_DLL, SetLastError = true)]
+		public static extern bool WriteConsoleOutput(
+			IntPtr hConsoleOutput,
+			[In][MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 2)] ConsoleCharInfo[,] lpBuffer,
+			Coord dwBufferSize,
+			Coord dwBufferCoord,
+			[In, Out][MarshalAs(UnmanagedType.LPStruct)] SmallRect lpWriteRegion);
 
 		[DllImport(KERNEL32_DLL, SetLastError = true)]
 		internal static extern bool WriteConsoleOutputCharacter(IntPtr hConsoleOutput,
