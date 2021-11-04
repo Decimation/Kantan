@@ -5,7 +5,7 @@
 namespace Kantan.Native.Structures
 {
 	[DebuggerDisplay("{X}, {Y}")]
-	internal struct Coord
+	public struct Coord
 	{
 		public ushort X;
 		public ushort Y;

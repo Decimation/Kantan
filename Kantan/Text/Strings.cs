@@ -47,16 +47,10 @@ namespace Kantan.Text
 
 		public static string CleanString(this string s)
 		{
-			//return s.Replace("\"", String.Empty);
-
 			return s.Trim('\"');
 		}
 
-		public static string Truncate(this string value)
-		{
-			//return value.Truncate(Console.WindowWidth - 5);
-			return value.Truncate(100);
-		}
+		public static string Truncate(this string value) => value.Truncate(100);
 
 		public static string Truncate(this string value, int maxLength)
 		{
@@ -185,14 +179,19 @@ namespace Kantan.Text
 			for (int j = 0; j <= m; d[0, j] = j++) { }
 
 			// Step 3
-			for (int i = 1; i <= n; i++) //Step 4
-			for (int j = 1; j <= m; j++) {
-				// Step 5
-				int cost = t[j - 1] == s[i - 1] ? 0 : 1;
 
-				// Step 6
-				d[i, j] = Math.Min(Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1), d[i - 1, j - 1] + cost);
+			for (int i = 1; i <= n; i++) {
+				// Step 4
+
+				for (int j = 1; j <= m; j++) {
+					// Step 5
+					int cost = t[j - 1] == s[i - 1] ? 0 : 1;
+
+					// Step 6
+					d[i, j] = Math.Min(Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1), d[i - 1, j - 1] + cost);
+				}
 			}
+
 
 			// Step 7
 			return d[n, m];
@@ -425,37 +424,5 @@ namespace Kantan.Text
 
 		public static bool IsCharInRange(char c, UnicodeRange r)
 			=> c < r.FirstCodePoint + r.Length && c >= r.FirstCodePoint;
-
-		internal static string GetUnicodeBoxPipe(IList<string> l, int i)
-		{
-			string delim;
-
-			if (i == 0 && l.Count == 2) {
-				delim = Constants.Horizontal;
-				return delim;
-			}
-
-			if (l.Skip(i + 1).All(String.IsNullOrWhiteSpace)) {
-				return Constants.BottomLeftCorner;
-			}
-
-			delim = l switch
-			{
-				{ Count: 1 } => Constants.Horizontal,
-				{ Count: 2 } => i switch
-				{
-					0 => Constants.UpperLeftCorner,
-					1 => Constants.BottomLeftCorner,
-				},
-				_ => i switch
-				{
-					0   => Constants.UpperLeftCorner,
-					> 0 => Constants.Vertical,
-					_   => Constants.BottomLeftCorner,
-				}
-			};
-
-			return delim;
-		}
 	}
 }

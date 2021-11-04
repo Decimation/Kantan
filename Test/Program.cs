@@ -31,6 +31,10 @@ using Kantan.Utilities;
 using Microsoft.Win32.SafeHandles;
 using RestSharp;
 
+#if NET6_0
+#warning Update!
+#endif
+
 // ReSharper disable UnusedMember.Local
 #pragma warning disable 4014
 
@@ -59,6 +63,7 @@ namespace Test
 			/*string fooBar = "foo\nbar\n".AddColor(Color.Aquamarine);
 			Console.Write(fooBar);
 			Debug.WriteLine(Strings.MeasureRows(fooBar));*/
+			
 
 			await ConsoleTest3();
 			// await ConsoleTest2();

@@ -7,7 +7,7 @@ namespace Kantan.Native.Structures
 	/// Use of this event type is not documented.
 	/// </summary>
 	[StructLayout(LayoutKind.Explicit)]
-	internal struct FocusEvent
+	public struct FocusEvent
 	{
 		[FieldOffset(0)]
 		public uint bSetFocus;

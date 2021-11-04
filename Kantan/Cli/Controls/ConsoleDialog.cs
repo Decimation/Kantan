@@ -109,7 +109,7 @@ namespace Kantan.Cli.Controls
 		///     Interface status
 		/// </summary>
 		private ConsoleStatus m_status;
-		
+
 
 		private static readonly string SelectMultiplePrompt =
 			$"Press {NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.";
@@ -178,7 +178,10 @@ namespace Kantan.Cli.Controls
 					cki = output.Key.Value;
 				}
 				else {
-					throw new InvalidOperationException();
+					cki = default;
+					continue;
+
+					// throw new InvalidOperationException();
 				}
 
 				/*Debug.WriteLine($"{nameof(ConsoleManager)}: ({cki.Key} {(int) cki.Key}) " +
@@ -259,7 +262,7 @@ namespace Kantan.Cli.Controls
 				int currentCount = Options.Count;
 
 				if ((refresh || prevCount != currentCount)) {
-					Debug.WriteLine("update");
+					Debug.WriteLine("update", nameof(ConsoleDialog));
 					Display(output);
 					prevCount = currentCount;
 				}
@@ -315,6 +318,14 @@ namespace Kantan.Cli.Controls
 						goto default;
 					}
 
+					/*if (me.dwButtonState == 0 && ConsoleManager.m_prevRecord.dwButtonState == ButtonState.FROM_LEFT_1ST_BUTTON_PRESSED) {
+						Debug.WriteLine("ignoring 2nd press");
+						ConsoleManager.m_prevRecord = me;
+						goto default;
+						
+					}*/
+
+
 					if (m_optionPositions.ContainsKey(y)) {
 						ConsoleOption option = m_optionPositions[y];
 
@@ -339,8 +350,15 @@ namespace Kantan.Cli.Controls
 			}
 
 			//packet.Input = cki2;
+			/*Debug.WriteLine($"{ir} | {(ir.EventType == ConsoleEventType.MOUSE_EVENT ? ir.MouseEvent : "")}",
+			                nameof(ConsoleDialog));*/
 
-			output.Key = cki;
+			if (cki == default) {
+				output.Key = null;
+			}
+			else {
+				output.Key = cki;
+			}
 		}
 
 		private static void HighlightClick(ushort y, ushort x)
@@ -349,16 +367,15 @@ namespace Kantan.Cli.Controls
 
 			var bufferLine = ConsoleManager.ReadBufferLine(y).Trim(SPACE);
 
-			Debug.WriteLine($"{nameof(ConsoleDialog)}: click ({x}, {y})");
+			Debug.WriteLine($"click ({x}, {y})", nameof(ConsoleDialog));
 
-			var attrs = new ConsoleCharAttribute[bufferLine.Length];
+			ConsoleManager.Highlight(bufferLine.Length, ConsoleManager.HighlightAttribute, 0, y);
 
-			Array.Fill(attrs, ConsoleManager.HighlightAttribute);
-
-			ConsoleManager.WriteAttributesXY(attrs, bufferLine.Length, 0, y);
 			//ConsoleManager.WriteBufferLine(s1, y);
+
 			Thread.Sleep(50);
 		}
+
 
 		/// <summary>
 		///     Display dialog
@@ -523,8 +540,6 @@ namespace Kantan.Cli.Controls
 			Ok,
 		}
 
-		public void Refresh() => AtomicHelper.Exchange(ref m_status, ConsoleStatus.Refresh);
-
 		/// <summary>
 		///     Determines whether the console buffer contains a file directory that was
 		///     input via drag-and-drop.
@@ -568,6 +583,8 @@ namespace Kantan.Cli.Controls
 
 			return sb.ToString().Trim(QUOTE);
 		}
+
+		public void Refresh() => AtomicHelper.Exchange(ref m_status, ConsoleStatus.Refresh);
 
 		public override int GetHashCode()
 		{

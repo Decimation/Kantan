@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
@@ -343,21 +345,21 @@ namespace Kantan.Cli
 
 			int newRight = left + srWindow.Right - srWindow.Left;
 
-			int dwSizeX   = csbi.dwSize.X - 1;
-			
+			int dwSizeX = csbi.dwSize.X - 1;
+
 
 			if (left < 0 || newRight > dwSizeX || newRight < left) {
 				b = false;
 			}
 
 			int newBottom = newTop + srWindow.Bottom - srWindow.Top;
-			
+
 			int dwSizeY = csbi.dwSize.Y - 1;
-			
+
 			if (newTop < 0 || newBottom > dwSizeY || newBottom < newTop) {
 				b = false;
 			}
-			
+
 			if (b) {
 				Console.SetWindowPosition(0, newTop);
 			}
@@ -370,6 +372,33 @@ namespace Kantan.Cli
 			var newTop = increment + Console.WindowTop;
 
 			return SetWindowPosition(0, newTop);
+		}
+
+		[SupportedOSPlatform(OS_WINDOWS)]
+		private static void ScrollNative(int nRows)
+		{
+			var csbiInfo   = new ConsoleScreenBufferInfo();
+			var srctWindow = new SmallRect(0, 0, 0, 0);
+
+			// Get the current screen buffer window position.
+
+			if (!Win32.GetConsoleScreenBufferInfo(_stdOut, csbiInfo)) {
+				throw new Win32Exception();
+			}
+
+			// Check whether the window is too close to the screen buffer top
+
+			if (csbiInfo.srWindow.Top >= nRows) {
+				srctWindow.Top    = (short) -nRows; // move top up
+				srctWindow.Bottom = (short) -nRows; // move bottom up
+				srctWindow.Left   = 0;              // no change
+				srctWindow.Right  = 0;              // no change
+
+				if (!Win32.SetConsoleWindowInfo(_stdOut, false, srctWindow)) {
+					throw new Win32Exception();
+				}
+
+			}
 		}
 
 		[SupportedOSPlatform(OS_WINDOWS)]
@@ -397,10 +426,11 @@ namespace Kantan.Cli
 			return canResize;
 		}
 
-		internal static bool         _click;
-		private static  IntPtr       _stdIn;
-		private static  IntPtr       _stdOut;
-		private static  ConsoleModes _oldMode;
+
+		internal static bool             _click;
+		private static  IntPtr           _stdIn;
+		private static  IntPtr           _stdOut;
+		private static  ConsoleModes     _oldMode;
 
 		[SupportedOSPlatform(OS_WINDOWS)]
 		public static string ReadBufferLine(int y) => ReadBufferXY(Console.BufferWidth, 0, y);
@@ -715,31 +745,45 @@ namespace Kantan.Cli
 			}
 		}
 
-		[SupportedOSPlatform(OS_WINDOWS)]
-		private static void ScrollNative(int nRows)
+		public static void Highlight(int s, ConsoleCharAttribute attr, ushort x, ushort y)
 		{
-			var csbiInfo   = new ConsoleScreenBufferInfo();
-			var srctWindow = new SmallRect(0, 0, 0, 0);
+			var attrs = new ConsoleCharAttribute[s];
 
-			// Get the current screen buffer window position.
+			Array.Fill(attrs, attr);
 
-			if (!Win32.GetConsoleScreenBufferInfo(_stdOut, csbiInfo)) {
-				throw new Win32Exception();
+			ConsoleManager.WriteAttributesXY(attrs, attrs.Length, x, y);
+		}
+
+		internal static string GetUnicodeBoxPipe(IList<string> l, int i)
+		{
+			string delim;
+
+			if (i == 0 && l.Count == 2) {
+				delim = Constants.Horizontal;
+				return delim;
 			}
 
-			// Check whether the window is too close to the screen buffer top
+			if (l.Skip(i + 1).All(String.IsNullOrWhiteSpace)) {
+				return Constants.BottomLeftCorner;
+			}
 
-			if (csbiInfo.srWindow.Top >= nRows) {
-				srctWindow.Top    = (short) -nRows; // move top up
-				srctWindow.Bottom = (short) -nRows; // move bottom up
-				srctWindow.Left   = 0;              // no change
-				srctWindow.Right  = 0;              // no change
-
-				if (!Win32.SetConsoleWindowInfo(_stdOut, false, srctWindow)) {
-					throw new Win32Exception();
+			delim = l switch
+			{
+				{ Count: 1 } => Constants.Horizontal,
+				{ Count: 2 } => i switch
+				{
+					0 => Constants.UpperLeftCorner,
+					1 => Constants.BottomLeftCorner,
+				},
+				_ => i switch
+				{
+					0   => Constants.UpperLeftCorner,
+					> 0 => Constants.Vertical,
+					_   => Constants.BottomLeftCorner,
 				}
+			};
 
-			}
+			return delim;
 		}
 	}
 }

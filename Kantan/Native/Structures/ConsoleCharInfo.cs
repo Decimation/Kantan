@@ -11,13 +11,13 @@ namespace Kantan.Native.Structures
 	public struct ConsoleCharInfo
 	{
 		[FieldOffset(0)]
-		private char cUnicodeChar;
+		public char cUnicodeChar;
 
 		[FieldOffset(0)]
-		private byte bAsciiChar;
+		public byte bAsciiChar;
 
 		[FieldOffset(2)]
-		private ConsoleCharAttribute attr;
+		public ConsoleCharAttribute attr;
 
 		/// <summary>
 		/// Creates a new instance of the ConsoleCharInfo structure.
@@ -42,41 +42,17 @@ namespace Kantan.Native.Structures
 			bAsciiChar   = aChar;
 			this.attr    = attr;
 		}
-
-		/// <summary>
-		/// Gets or sets the Unicode character represented by this ConsoleCharInfo structure.
-		/// </summary>
-		public char UnicodeChar
-		{
-			get { return cUnicodeChar; }
-			set { cUnicodeChar = value; }
-		}
-
-		/// <summary>
-		/// Gets or sets the ASCII character represented by this ConsoleCharInfo structure.
-		/// </summary>
-		public byte AsciiChar
-		{
-			get { return bAsciiChar; }
-			set { bAsciiChar = value; }
-		}
-
-		/// <summary>
-		/// Gets or sets the attributes for this character.
-		/// </summary>
-		public ConsoleCharAttribute Attribute
-		{
-			get { return attr; }
-			set { attr = value; }
-		}
+		
+		
+		
 
 		/// <summary>
 		/// Gets or sets the foreground color attribute.
 		/// </summary>
 		public ConsoleColor Foreground
 		{
-			get { return attr.Foreground; }
-			set { attr.Foreground = value; }
+			get => attr.Foreground;
+			set => attr.Foreground = value;
 		}
 
 		/// <summary>
@@ -84,8 +60,8 @@ namespace Kantan.Native.Structures
 		/// </summary>
 		public ConsoleColor Background
 		{
-			get { return attr.Background; }
-			set { attr.Background = value; }
+			get => attr.Background;
+			set => attr.Background = value;
 		}
 	}
 }

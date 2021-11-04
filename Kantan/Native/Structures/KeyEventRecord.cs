@@ -7,7 +7,7 @@ namespace Kantan.Native.Structures
 {
 	[DebuggerDisplay("KeyCode: {wVirtualKeyCode}")]
 	[StructLayout(LayoutKind.Explicit)]
-	internal struct KeyEventRecord
+	public struct KeyEventRecord
 	{
 		[FieldOffset(0)]
 		public BOOL bKeyDown;

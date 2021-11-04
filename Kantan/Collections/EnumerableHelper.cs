@@ -123,7 +123,7 @@ namespace Kantan.Collections
 			 */
 
 			int i = 0;
-			
+
 			var seqSpan = CollectionsMarshal.AsSpan(sequence as List<T>);
 			var rgSpan  = CollectionsMarshal.AsSpan(rg);
 
@@ -134,7 +134,7 @@ namespace Kantan.Collections
 				// var b  = rg.GetRange(i, sequence.Count).SequenceEqual(sequence);
 
 				var b = rgSpan.Slice(i, sequence.Count).SequenceEqual(seqSpan);
-				
+
 				if (b) {
 					rg.RemoveRange(i, sequence.Count);
 					rg.InsertRange(i, replace);
@@ -165,8 +165,6 @@ namespace Kantan.Collections
 			=> b.Where(c => !a.Contains(c));
 
 #if !NET6_0_OR_GREATER
-
-		// TODO: Remove when .NET 6 releases
 
 		/// <summary>
 		/// Break a list of items into chunks of a specific size
@@ -241,8 +239,10 @@ namespace Kantan.Collections
 				}
 			}
 		}
-
+#else
+#warning Update!
 #endif
+
 		public static void Replace<T>(this List<T> list, Predicate<T> oldItemSelector, T newItem)
 		{
 			//check for different situations here and throw exception

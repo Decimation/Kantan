@@ -231,11 +231,6 @@ namespace Kantan.Numeric
 
 		#region Generic math
 
-#if !NET6_0_OR_GREATER
-
-
-		// TODO: Remove when .NET 6 releases
-
 		public static T Add<T>(T a, T b) => MathImplementation<T>.Add(a, b);
 
 		public static T Subtract<T>(T a, T b) => MathImplementation<T>.Sub(a, b);
@@ -251,12 +246,14 @@ namespace Kantan.Numeric
 			internal static readonly Func<T, T, T> Mul;
 			internal static readonly Func<T, T, T> Div;
 
+
 			static MathImplementation()
 			{
 				Add = Create(Expression.Add);
 				Sub = Create(Expression.Subtract);
 				Mul = Create(Expression.Multiply);
 				Div = Create(Expression.Divide);
+
 			}
 
 			private static Func<T, T, T> Create(Func<ParameterExpression, ParameterExpression, BinaryExpression> fx)
@@ -268,7 +265,6 @@ namespace Kantan.Numeric
 
 			}
 		}
-#endif
 
 		#endregion
 

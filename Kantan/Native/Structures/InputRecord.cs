@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+// ReSharper disable UnusedMember.Global
 
 // ReSharper disable InconsistentNaming
 
@@ -8,7 +9,7 @@ namespace Kantan.Native.Structures
 {
 	[DebuggerDisplay("EventType: {EventType}")]
 	[StructLayout(LayoutKind.Explicit)]
-	internal struct InputRecord
+	public struct InputRecord
 	{
 		[FieldOffset(0)]
 		public ConsoleEventType EventType;
@@ -41,5 +42,14 @@ namespace Kantan.Native.Structures
 		{
 			return $"{nameof(EventType)}: {EventType}";
 		}
+	}
+
+	public enum ConsoleEventType : short
+	{
+		FOCUS_EVENT              = 0x0010,
+		KEY_EVENT                = 0x0001,
+		MENU_EVENT               = 0x0008,
+		MOUSE_EVENT              = 0x0002,
+		WINDOW_BUFFER_SIZE_EVENT = 0x0004
 	}
 }

@@ -10,7 +10,7 @@ namespace Kantan.Native.Structures
 	[StructLayout(LayoutKind.Sequential)]
 	public struct ConsoleCharAttribute
 	{
-		private short attr;
+		public short attr;
 
 		/// <summary>
 		/// Creates a new instance of the ConsoleCharAttribute structure
@@ -36,8 +36,8 @@ namespace Kantan.Native.Structures
 		/// </summary>
 		public ConsoleColor Foreground
 		{
-			get { return (ConsoleColor) (attr & 0x0f); }
-			set { attr = (short) ((attr & 0xfff0) | (ushort) value); }
+			get => (ConsoleColor) (attr & 0x0f);
+			set => attr = (short) ((attr & 0xfff0) | (ushort) value);
 		}
 
 		/// <summary>
@@ -45,17 +45,10 @@ namespace Kantan.Native.Structures
 		/// </summary>
 		public ConsoleColor Background
 		{
-			get { return (ConsoleColor) ((attr >> 4) & 0x0f); }
-			set { attr = (short) ((attr & 0xff0f) | ((ushort) value << 4)); }
+			get => (ConsoleColor) ((attr >> 4) & 0x0f);
+			set => attr = (short) ((attr & 0xff0f) | ((ushort) value << 4));
 		}
 
-		/// <summary>
-		/// Gets or sets the attribute (combined foreground/background color).
-		/// </summary>
-		public short Attribute
-		{
-			get { return attr; }
-			set { attr = value; }
-		}
+		
 	}
 }
