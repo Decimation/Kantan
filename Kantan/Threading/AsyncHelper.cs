@@ -5,133 +5,132 @@ using System.Threading.Tasks;
 
 // ReSharper disable UnusedMember.Global
 
-namespace Kantan.Threading
+namespace Kantan.Threading;
+
+public static class AsyncHelper
 {
-	public static class AsyncHelper
+	/// <summary>
+	/// Executes an async <see cref="Task{TResult}"/> method which has a void return value synchronously
+	/// </summary>
+	/// <param name="task"><see cref="Task{TResult}"/> method to execute</param>
+	public static void RunSync(Func<Task> task)
 	{
-		/// <summary>
-		/// Executes an async <see cref="Task{TResult}"/> method which has a void return value synchronously
-		/// </summary>
-		/// <param name="task"><see cref="Task{TResult}"/> method to execute</param>
-		public static void RunSync(Func<Task> task)
+		var oldContext = SynchronizationContext.Current;
+		var synch      = new ExclusiveSynchronizationContext();
+
+		SynchronizationContext.SetSynchronizationContext(synch);
+
+		synch.Post(async _ =>
 		{
-			var oldContext = SynchronizationContext.Current;
-			var synch      = new ExclusiveSynchronizationContext();
+			try {
+				await task();
+			}
+			catch (Exception e) {
+				synch.InnerException = e;
+				throw;
+			}
+			finally {
+				synch.EndMessageLoop();
+			}
+		}, null);
 
-			SynchronizationContext.SetSynchronizationContext(synch);
+		synch.BeginMessageLoop();
 
-			synch.Post(async _ =>
-			{
-				try {
-					await task();
-				}
-				catch (Exception e) {
-					synch.InnerException = e;
-					throw;
-				}
-				finally {
-					synch.EndMessageLoop();
-				}
-			}, null);
+		SynchronizationContext.SetSynchronizationContext(oldContext);
+	}
 
-			synch.BeginMessageLoop();
+	/// <summary>
+	/// Executes an async <see cref="Task{TResult}"/> method which has a T return type synchronously
+	/// </summary>
+	/// <typeparam name="T">Return Type</typeparam>
+	/// <param name="task"><see cref="Task{TResult}"/> method to execute</param>
+	/// <returns></returns>
+	public static T RunSync<T>(Func<Task<T>> task)
+	{
+		var oldContext = SynchronizationContext.Current;
+		var synch      = new ExclusiveSynchronizationContext();
 
-			SynchronizationContext.SetSynchronizationContext(oldContext);
+		SynchronizationContext.SetSynchronizationContext(synch);
+
+		T ret = default(T);
+
+		synch.Post(async _ =>
+		{
+			try {
+				ret = await task();
+			}
+			catch (Exception e) {
+				synch.InnerException = e;
+				throw;
+			}
+			finally {
+				synch.EndMessageLoop();
+			}
+		}, null);
+
+		synch.BeginMessageLoop();
+		SynchronizationContext.SetSynchronizationContext(oldContext);
+		return ret;
+	}
+
+	private class ExclusiveSynchronizationContext : SynchronizationContext
+	{
+		private bool m_done;
+
+		public Exception InnerException { get; set; }
+
+		private readonly AutoResetEvent m_workItemsWaiting = new(false);
+
+		private readonly Queue<Tuple<SendOrPostCallback, object>> m_items = new();
+
+		public override void Send(SendOrPostCallback d, object state)
+		{
+			throw new NotSupportedException("We cannot send to our same thread");
 		}
 
-		/// <summary>
-		/// Executes an async <see cref="Task{TResult}"/> method which has a T return type synchronously
-		/// </summary>
-		/// <typeparam name="T">Return Type</typeparam>
-		/// <param name="task"><see cref="Task{TResult}"/> method to execute</param>
-		/// <returns></returns>
-		public static T RunSync<T>(Func<Task<T>> task)
+		public override void Post(SendOrPostCallback d, object state)
 		{
-			var oldContext = SynchronizationContext.Current;
-			var synch      = new ExclusiveSynchronizationContext();
-
-			SynchronizationContext.SetSynchronizationContext(synch);
-
-			T ret = default(T);
-
-			synch.Post(async _ =>
-			{
-				try {
-					ret = await task();
-				}
-				catch (Exception e) {
-					synch.InnerException = e;
-					throw;
-				}
-				finally {
-					synch.EndMessageLoop();
-				}
-			}, null);
-
-			synch.BeginMessageLoop();
-			SynchronizationContext.SetSynchronizationContext(oldContext);
-			return ret;
-		}
-
-		private class ExclusiveSynchronizationContext : SynchronizationContext
-		{
-			private bool m_done;
-
-			public Exception InnerException { get; set; }
-
-			private readonly AutoResetEvent m_workItemsWaiting = new(false);
-
-			private readonly Queue<Tuple<SendOrPostCallback, object>> m_items = new();
-
-			public override void Send(SendOrPostCallback d, object state)
-			{
-				throw new NotSupportedException("We cannot send to our same thread");
+			lock (m_items) {
+				m_items.Enqueue(Tuple.Create(d, state));
 			}
 
-			public override void Post(SendOrPostCallback d, object state)
-			{
+			m_workItemsWaiting.Set();
+		}
+
+		public void EndMessageLoop()
+		{
+			Post(_ => m_done = true, null);
+		}
+
+		public void BeginMessageLoop()
+		{
+			while (!m_done) {
+				Tuple<SendOrPostCallback, object> task = null;
+
 				lock (m_items) {
-					m_items.Enqueue(Tuple.Create(d, state));
-				}
-
-				m_workItemsWaiting.Set();
-			}
-
-			public void EndMessageLoop()
-			{
-				Post(_ => m_done = true, null);
-			}
-
-			public void BeginMessageLoop()
-			{
-				while (!m_done) {
-					Tuple<SendOrPostCallback, object> task = null;
-
-					lock (m_items) {
-						if (m_items.Count > 0) {
-							task = m_items.Dequeue();
-						}
-					}
-
-					if (task != null) {
-						task.Item1(task.Item2);
-
-						if (InnerException != null) // the method threw an exception
-						{
-							throw new AggregateException($"{nameof(AsyncHelper)} method threw an exception.",
-							                             InnerException);
-						}
-					}
-					else {
-						m_workItemsWaiting.WaitOne();
+					if (m_items.Count > 0) {
+						task = m_items.Dequeue();
 					}
 				}
-			}
 
-			public override SynchronizationContext CreateCopy()
-			{
-				return this;
+				if (task != null) {
+					task.Item1(task.Item2);
+
+					if (InnerException != null) // the method threw an exception
+					{
+						throw new AggregateException($"{nameof(AsyncHelper)} method threw an exception.",
+						                             InnerException);
+					}
+				}
+				else {
+					m_workItemsWaiting.WaitOne();
+				}
 			}
+		}
+
+		public override SynchronizationContext CreateCopy()
+		{
+			return this;
 		}
 	}
 }

@@ -31,577 +31,576 @@ using Kantan.Utilities;
 // ReSharper disable NonReadonlyMemberInGetHashCode
 #pragma warning disable	CA1416
 
-namespace Kantan.Cli.Controls
+namespace Kantan.Cli.Controls;
+
+/// <summary>
+///     Displayed in following sequence:
+///     <list type="number">
+///         <item>
+///             <description>
+///                 <see cref="Header" />
+///             </description>
+///         </item>
+///         <item>
+///             <description>
+///                 <see cref="Subtitle" />
+///             </description>
+///         </item>
+///         <item>
+///             <description>
+///                 <see cref="Options" />
+///             </description>
+///         </item>
+///         <item>
+///             <description>
+///                 <see cref="Status" />
+///             </description>
+///         </item>
+///         <item>
+///             <description>
+///                 <see cref="Description" />
+///             </description>
+///         </item>
+///     </list>
+/// </summary>
+public class ConsoleDialog
 {
+	public ConsoleDialog() { }
+
+	/*
+	 * Header
+	 * Subtitle
+	 * Options
+	 * Status
+	 * Description
+	 */
+
 	/// <summary>
-	///     Displayed in following sequence:
-	///     <list type="number">
-	///         <item>
-	///             <description>
-	///                 <see cref="Header" />
-	///             </description>
-	///         </item>
-	///         <item>
-	///             <description>
-	///                 <see cref="Subtitle" />
-	///             </description>
-	///         </item>
-	///         <item>
-	///             <description>
-	///                 <see cref="Options" />
-	///             </description>
-	///         </item>
-	///         <item>
-	///             <description>
-	///                 <see cref="Status" />
-	///             </description>
-	///         </item>
-	///         <item>
-	///             <description>
-	///                 <see cref="Description" />
-	///             </description>
-	///         </item>
-	///     </list>
+	///     The index of an <see cref="ConsoleOption" /> corresponds to its key, which, when pressed,
+	///     executes the <see cref="ConsoleOption.Function" /> with the appropriate modifiers
 	/// </summary>
-	public class ConsoleDialog
+	/// <remarks>
+	///     <see cref="MAX_DISPLAY_OPTIONS" />
+	/// </remarks>
+	public IList<ConsoleOption> Options { get; init; }
+
+	public bool SelectMultiple { get; init; }
+
+	[CanBeNull]
+	public string Header { get; set; }
+
+	[CanBeNull]
+	public string Status { get; set; }
+
+	[CanBeNull]
+	public string Description { get; set; }
+
+	[CanBeNull]
+	public string Subtitle { get; set; }
+
+	/// <summary>
+	///     <c>F*</c> keys
+	/// </summary>
+	public Dictionary<ConsoleKey, Action> Functions { get; set; } = new();
+
+	private readonly Dictionary<int, ConsoleOption> m_optionPositions = new();
+
+	/// <summary>
+	///     Interface status
+	/// </summary>
+	private ConsoleStatus m_status;
+
+
+	private static readonly string SelectMultiplePrompt =
+		$"Press {NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.";
+
+	/// <summary>
+	///     Handles user input and options
+	/// </summary>
+	/// <remarks>Returns when:
+	/// <list type="number">
+	/// <item><description><see cref="ConsoleOption.Function" /> returns a non-<c>null</c> value</description></item>
+	/// <item><description>A file path is dragged-and-dropped</description></item>
+	/// <item><description><see cref="NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
+	/// </list>
+	/// </remarks>
+	public ConsoleOutputResult ReadInput()
 	{
-		public ConsoleDialog() { }
+		var task = ReadInputAsync();
+		task.Wait();
+		return task.Result;
+	}
+
+	/// <summary>
+	///     Handles user input and options
+	/// </summary>
+	/// <remarks>Returns when:
+	/// <list type="number">
+	/// <item><description><see cref="ConsoleOption.Function" /> returns a non-<c>null</c> value</description></item>
+	/// <item><description>A file path is dragged-and-dropped</description></item>
+	/// <item><description><see cref="NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
+	/// </list>
+	/// </remarks>
+	public async Task<ConsoleOutputResult> ReadInputAsync()
+	{
+		//var selectedOptions = new HashSet<object>();
+		var output = new ConsoleOutputResult
+		{
+			SelectMultiple = SelectMultiple,
+		};
 
 		/*
-		 * Header
-		 * Subtitle
-		 * Options
-		 * Status
-		 * Description
+		 * Handle input
 		 */
 
-		/// <summary>
-		///     The index of an <see cref="ConsoleOption" /> corresponds to its key, which, when pressed,
-		///     executes the <see cref="ConsoleOption.Function" /> with the appropriate modifiers
-		/// </summary>
-		/// <remarks>
-		///     <see cref="MAX_DISPLAY_OPTIONS" />
-		/// </remarks>
-		public IList<ConsoleOption> Options { get; init; }
+		ConsoleKeyInfo cki;
 
-		public bool SelectMultiple { get; init; }
+		ConsoleManager.InitNative();
 
-		[CanBeNull]
-		public string Header { get; set; }
+		m_optionPositions.Clear();
 
-		[CanBeNull]
-		public string Status { get; set; }
+		do {
 
-		[CanBeNull]
-		public string Description { get; set; }
+			Display(output);
 
-		[CanBeNull]
-		public string Subtitle { get; set; }
+			var inputTask = Task.Run(() => InputTask(output));
 
-		/// <summary>
-		///     <c>F*</c> keys
-		/// </summary>
-		public Dictionary<ConsoleKey, Action> Functions { get; set; } = new();
+			await inputTask;
 
-		private readonly Dictionary<int, ConsoleOption> m_optionPositions = new();
+			// Input was read
 
-		/// <summary>
-		///     Interface status
-		/// </summary>
-		private ConsoleStatus m_status;
-
-
-		private static readonly string SelectMultiplePrompt =
-			$"Press {NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.";
-
-		/// <summary>
-		///     Handles user input and options
-		/// </summary>
-		/// <remarks>Returns when:
-		/// <list type="number">
-		/// <item><description><see cref="ConsoleOption.Function" /> returns a non-<c>null</c> value</description></item>
-		/// <item><description>A file path is dragged-and-dropped</description></item>
-		/// <item><description><see cref="NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
-		/// </list>
-		/// </remarks>
-		public ConsoleOutputResult ReadInput()
-		{
-			var task = ReadInputAsync();
-			task.Wait();
-			return task.Result;
-		}
-
-		/// <summary>
-		///     Handles user input and options
-		/// </summary>
-		/// <remarks>Returns when:
-		/// <list type="number">
-		/// <item><description><see cref="ConsoleOption.Function" /> returns a non-<c>null</c> value</description></item>
-		/// <item><description>A file path is dragged-and-dropped</description></item>
-		/// <item><description><see cref="NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
-		/// </list>
-		/// </remarks>
-		public async Task<ConsoleOutputResult> ReadInputAsync()
-		{
-			//var selectedOptions = new HashSet<object>();
-			var output = new ConsoleOutputResult
-			{
-				SelectMultiple = SelectMultiple,
-			};
-
-			/*
-			 * Handle input
-			 */
-
-			ConsoleKeyInfo cki;
-
-			ConsoleManager.InitNative();
-
-			m_optionPositions.Clear();
-
-			do {
-
-				Display(output);
-
-				var inputTask = Task.Run(() => InputTask(output));
-
-				await inputTask;
-
-				// Input was read
-
-				// File path was input via drag-and-drop
-				if (output.DragAndDrop != null) {
-					goto _Return;
-				}
-
-				if (output.Key.HasValue) {
-					cki = output.Key.Value;
-				}
-				else {
-					cki = default;
-					continue;
-
-					// throw new InvalidOperationException();
-				}
-
-				/*Debug.WriteLine($"{nameof(ConsoleManager)}: ({cki.Key} {(int) cki.Key}) " +
-				                $"| ({cki.KeyChar} {(int) cki.KeyChar})", LogCategories.C_DEBUG);*/
-
-				// Handle special keys
-
-				if (cki.Key is <= ConsoleKey.F12 and >= ConsoleKey.F1) {
-					int i = cki.Key - ConsoleKey.F1;
-
-					if (Functions is { } && Functions.ContainsKey(cki.Key)) {
-						Action function = Functions[cki.Key];
-						function();
-					}
-				}
-
-				switch (cki.Key) {
-					case NC_GLOBAL_REFRESH_KEY:
-						Refresh();
-						break;
-				}
-
-				// KeyChar can't be used as modifiers are not applicable
-				char keyChar = (char) (int) cki.Key;
-
-				if (!Char.IsLetterOrDigit(keyChar)) {
-					continue;
-				}
-
-				ConsoleModifiers modifiers = cki.Modifiers;
-
-				// Handle option
-
-				int idx = GetIndexFromDisplayOption(keyChar);
-
-				if (idx < Options.Count && idx >= 0) {
-					var option = Options[idx];
-
-					if (!option.Functions.ContainsKey(modifiers)) {
-						continue;
-					}
-
-					var fn = option.Functions[modifiers];
-
-					object funcResult = fn();
-
-					if (funcResult != null) {
-						//
-						if (SelectMultiple) {
-							output.Output.Add(funcResult);
-						}
-						else {
-							output.Output = new HashSet<object> { funcResult };
-							goto _Return;
-						}
-					}
-				}
-
-			} while (cki.Key != NC_GLOBAL_EXIT_KEY);
-
-			_Return:
-			return output;
-		}
-
-		private void InputTask(ConsoleOutputResult output)
-		{
-			// Block until input is entered.
-
-			_ReadInput:
-			int prevCount = Options.Count;
-
-			while (!ConsoleManager.InputAvailable) {
-
-				bool refresh = AtomicHelper.Exchange(ref m_status, ConsoleStatus.Ok) == ConsoleStatus.Refresh;
-
-				// Refresh buffer if collection was updated
-
-				int currentCount = Options.Count;
-
-				if ((refresh || prevCount != currentCount)) {
-					Debug.WriteLine("update", nameof(ConsoleDialog));
-					Display(output);
-					prevCount = currentCount;
-				}
+			// File path was input via drag-and-drop
+			if (output.DragAndDrop != null) {
+				goto _Return;
 			}
 
-			InputRecord ir = ConsoleManager.ReadInputRecord();
-
-			ConsoleKeyInfo cki;
-
-			MouseEventRecord me = ir.MouseEvent;
-
-			switch (ir.EventType) {
-
-				case ConsoleEventType.KEY_EVENT:
-					// Key was read
-
-					cki = ConsoleManager.GetKeyInfoFromRecord(ir);
-					string dragAndDropFile = TryReadFile(cki);
-
-					if (!String.IsNullOrWhiteSpace(dragAndDropFile)) {
-
-						Debug.WriteLine($">> {dragAndDropFile}");
-						output.DragAndDrop = dragAndDropFile;
-						return;
-					}
-
-					break;
-				case ConsoleEventType.MOUSE_EVENT when ConsoleManager.IsMouseScroll(ir):
-
-					bool scrollDown = me.dwButtonState.HasFlag(ButtonState.SCROLL_DOWN);
-
-					int increment = scrollDown ? ConsoleManager.ScrollIncrement : -ConsoleManager.ScrollIncrement;
-
-					bool b = ConsoleManager.Scroll(increment);
-
-					goto _ReadInput;
-				case ConsoleEventType.MOUSE_EVENT:
-					// Mouse was read
-
-					var (x, y) = (me.dwMousePosition.X, me.dwMousePosition.Y);
-
-
-					// hack: wtf
-
-					//Debug.WriteLine($"{me}");
-
-					if (me.dwButtonState == ButtonState.FROM_LEFT_1ST_BUTTON_PRESSED) {
-						ConsoleManager._click = true;
-					}
-
-					if (ConsoleManager._click && me.dwButtonState == 0) {
-						//ConsoleManager._click = false;
-						goto default;
-					}
-
-					/*if (me.dwButtonState == 0 && ConsoleManager.m_prevRecord.dwButtonState == ButtonState.FROM_LEFT_1ST_BUTTON_PRESSED) {
-						Debug.WriteLine("ignoring 2nd press");
-						ConsoleManager.m_prevRecord = me;
-						goto default;
-						
-					}*/
-
-
-					if (m_optionPositions.ContainsKey(y)) {
-						ConsoleOption option = m_optionPositions[y];
-
-						int indexOf = Options.IndexOf(option);
-
-						char c = GetDisplayOptionFromIndex(indexOf);
-
-						// note: KeyChar argument is slightly inaccurate (case insensitive; always uppercase)
-						cki = ConsoleManager.GetKeyInfo(c, c, me.dwControlKeyState);
-
-						HighlightClick(y, x);
-					}
-					else {
-						goto default;
-					}
-
-					break;
-
-				default:
-					cki = default;
-					break;
-			}
-
-			//packet.Input = cki2;
-			/*Debug.WriteLine($"{ir} | {(ir.EventType == ConsoleEventType.MOUSE_EVENT ? ir.MouseEvent : "")}",
-			                nameof(ConsoleDialog));*/
-
-			if (cki == default) {
-				output.Key = null;
+			if (output.Key.HasValue) {
+				cki = output.Key.Value;
 			}
 			else {
-				output.Key = cki;
+				cki = default;
+				continue;
+
+				// throw new InvalidOperationException();
+			}
+
+			/*Debug.WriteLine($"{nameof(ConsoleManager)}: ({cki.Key} {(int) cki.Key}) " +
+			                $"| ({cki.KeyChar} {(int) cki.KeyChar})", LogCategories.C_DEBUG);*/
+
+			// Handle special keys
+
+			if (cki.Key is <= ConsoleKey.F12 and >= ConsoleKey.F1) {
+				int i = cki.Key - ConsoleKey.F1;
+
+				if (Functions is { } && Functions.ContainsKey(cki.Key)) {
+					Action function = Functions[cki.Key];
+					function();
+				}
+			}
+
+			switch (cki.Key) {
+				case NC_GLOBAL_REFRESH_KEY:
+					Refresh();
+					break;
+			}
+
+			// KeyChar can't be used as modifiers are not applicable
+			char keyChar = (char) (int) cki.Key;
+
+			if (!Char.IsLetterOrDigit(keyChar)) {
+				continue;
+			}
+
+			ConsoleModifiers modifiers = cki.Modifiers;
+
+			// Handle option
+
+			int idx = GetIndexFromDisplayOption(keyChar);
+
+			if (idx < Options.Count && idx >= 0) {
+				var option = Options[idx];
+
+				if (!option.Functions.ContainsKey(modifiers)) {
+					continue;
+				}
+
+				var fn = option.Functions[modifiers];
+
+				object funcResult = fn();
+
+				if (funcResult != null) {
+					//
+					if (SelectMultiple) {
+						output.Output.Add(funcResult);
+					}
+					else {
+						output.Output = new HashSet<object> { funcResult };
+						goto _Return;
+					}
+				}
+			}
+
+		} while (cki.Key != NC_GLOBAL_EXIT_KEY);
+
+		_Return:
+		return output;
+	}
+
+	private void InputTask(ConsoleOutputResult output)
+	{
+		// Block until input is entered.
+
+		_ReadInput:
+		int prevCount = Options.Count;
+
+		while (!ConsoleManager.InputAvailable) {
+
+			bool refresh = AtomicHelper.Exchange(ref m_status, ConsoleStatus.Ok) == ConsoleStatus.Refresh;
+
+			// Refresh buffer if collection was updated
+
+			int currentCount = Options.Count;
+
+			if ((refresh || prevCount != currentCount)) {
+				Debug.WriteLine("update", nameof(ConsoleDialog));
+				Display(output);
+				prevCount = currentCount;
 			}
 		}
 
-		private static void HighlightClick(ushort y, ushort x)
-		{
-			const char SPACE = (char) 32;
+		InputRecord ir = ConsoleManager.ReadInputRecord();
 
-			var bufferLine = ConsoleManager.ReadBufferLine(y).Trim(SPACE);
+		ConsoleKeyInfo cki;
 
-			Debug.WriteLine($"click ({x}, {y})", nameof(ConsoleDialog));
+		MouseEventRecord me = ir.MouseEvent;
 
-			ConsoleManager.Highlight(bufferLine.Length, ConsoleManager.HighlightAttribute, 0, y);
+		switch (ir.EventType) {
 
-			//ConsoleManager.WriteBufferLine(s1, y);
+			case ConsoleEventType.KEY_EVENT:
+				// Key was read
 
-			Thread.Sleep(50);
+				cki = ConsoleManager.GetKeyInfoFromRecord(ir);
+				string dragAndDropFile = TryReadFile(cki);
+
+				if (!String.IsNullOrWhiteSpace(dragAndDropFile)) {
+
+					Debug.WriteLine($">> {dragAndDropFile}");
+					output.DragAndDrop = dragAndDropFile;
+					return;
+				}
+
+				break;
+			case ConsoleEventType.MOUSE_EVENT when ConsoleManager.IsMouseScroll(ir):
+
+				bool scrollDown = me.dwButtonState.HasFlag(ButtonState.SCROLL_DOWN);
+
+				int increment = scrollDown ? ConsoleManager.ScrollIncrement : -ConsoleManager.ScrollIncrement;
+
+				bool b = ConsoleManager.Scroll(increment);
+
+				goto _ReadInput;
+			case ConsoleEventType.MOUSE_EVENT:
+				// Mouse was read
+
+				var (x, y) = (me.dwMousePosition.X, me.dwMousePosition.Y);
+
+
+				// hack: wtf
+
+				//Debug.WriteLine($"{me}");
+
+				if (me.dwButtonState == ButtonState.FROM_LEFT_1ST_BUTTON_PRESSED) {
+					ConsoleManager._click = true;
+				}
+
+				if (ConsoleManager._click && me.dwButtonState == 0) {
+					//ConsoleManager._click = false;
+					goto default;
+				}
+
+				/*if (me.dwButtonState == 0 && ConsoleManager.m_prevRecord.dwButtonState == ButtonState.FROM_LEFT_1ST_BUTTON_PRESSED) {
+					Debug.WriteLine("ignoring 2nd press");
+					ConsoleManager.m_prevRecord = me;
+					goto default;
+					
+				}*/
+
+
+				if (m_optionPositions.ContainsKey(y)) {
+					ConsoleOption option = m_optionPositions[y];
+
+					int indexOf = Options.IndexOf(option);
+
+					char c = GetDisplayOptionFromIndex(indexOf);
+
+					// note: KeyChar argument is slightly inaccurate (case insensitive; always uppercase)
+					cki = ConsoleManager.GetKeyInfo(c, c, me.dwControlKeyState);
+
+					HighlightClick(y, x);
+				}
+				else {
+					goto default;
+				}
+
+				break;
+
+			default:
+				cki = default;
+				break;
 		}
 
+		//packet.Input = cki2;
+		/*Debug.WriteLine($"{ir} | {(ir.EventType == ConsoleEventType.MOUSE_EVENT ? ir.MouseEvent : "")}",
+		                nameof(ConsoleDialog));*/
 
-		/// <summary>
-		///     Display dialog
-		/// </summary>
-		private void Display(ConsoleOutputResult output)
-		{
-			Debug.WriteLine($"{nameof(ConsoleDialog)}: Update display");
-
-			Display();
-
-			// Show options
-
-			if (SelectMultiple) {
-				ConsoleManager.NewLine();
-
-				string optionsStr = $"{Strings.Constants.CHEVRON} {output.Output.QuickJoin()}"
-					.AddColor(ConsoleManager.ColorOptions);
-
-				ConsoleManager.Write(true, optionsStr);
-
-				ConsoleManager.NewLine();
-
-				ConsoleManager.Write(SelectMultiplePrompt);
-
-			}
+		if (cki == default) {
+			output.Key = null;
 		}
+		else {
+			output.Key = cki;
+		}
+	}
 
-		public void Display(bool clear = true)
-		{
-			// todo: atomic write operations (i.e., instead of incremental)
+	private static void HighlightClick(ushort y, ushort x)
+	{
+		const char SPACE = (char) 32;
 
-			if (clear) {
-				Console.Clear();
-			}
+		var bufferLine = ConsoleManager.ReadBufferLine(y).Trim(SPACE);
 
-			if (Header != null) {
-				ConsoleManager.Write(false, Header.AddColor(ConsoleManager.ColorHeader));
-			}
+		Debug.WriteLine($"click ({x}, {y})", nameof(ConsoleDialog));
 
-			if (Subtitle != null) {
+		ConsoleManager.Highlight(ConsoleManager.HighlightAttribute, bufferLine.Length, 0, y);
 
-				string subStr = ConsoleManager.FormatString(Strings.Constants.CHEVRON, Subtitle, false)
-				                              .AddColor(ConsoleManager.ColorOptions);
+		//ConsoleManager.WriteBufferLine(s1, y);
 
-				ConsoleManager.Write(true, subStr);
-				ConsoleManager.NewLine();
-			}
+		Thread.Sleep(50);
+	}
 
-			int clamp = Math.Clamp(Options.Count, 0, MAX_DISPLAY_OPTIONS);
 
-			for (int i = 0; i < clamp; i++) {
-				ConsoleOption option = Options[i];
+	/// <summary>
+	///     Display dialog
+	/// </summary>
+	private void Display(ConsoleOutputResult output)
+	{
+		Debug.WriteLine($"{nameof(ConsoleDialog)}: Update display");
 
-				string s = FormatOption(option, i);
+		Display();
 
-				var top = Console.CursorTop;
-				m_optionPositions[top] = option;
+		// Show options
 
-				ConsoleManager.Write(false, s);
+		if (SelectMultiple) {
+			ConsoleManager.NewLine();
 
-			}
+			string optionsStr = $"{Strings.Constants.CHEVRON} {output.Output.QuickJoin()}"
+				.AddColor(ConsoleManager.ColorOptions);
+
+			ConsoleManager.Write(true, optionsStr);
 
 			ConsoleManager.NewLine();
 
-			if (Status != null) {
-				ConsoleManager.Write(Status);
-			}
+			ConsoleManager.Write(SelectMultiplePrompt);
 
-			if (Description != null) {
-				ConsoleManager.NewLine();
+		}
+	}
 
-				ConsoleManager.Write(Description);
-			}
+	public void Display(bool clear = true)
+	{
+		// todo: atomic write operations (i.e., instead of incremental)
+
+		if (clear) {
+			Console.Clear();
 		}
 
-		private static char GetDisplayOptionFromIndex(int i)
-		{
-			if (i < MAX_OPTION_N) {
-				return Char.Parse(i.ToString());
-			}
-
-			int d = OPTION_LETTER_START + (i - MAX_OPTION_N);
-
-			return (char) d;
+		if (Header != null) {
+			ConsoleManager.Write(false, Header.AddColor(ConsoleManager.ColorHeader));
 		}
 
-		private static int GetIndexFromDisplayOption(char c)
-		{
-			if (Char.IsNumber(c)) {
-				return (int) Char.GetNumericValue(c);
-			}
+		if (Subtitle != null) {
 
-			if (Char.IsLetter(c)) {
-				c = Char.ToUpper(c);
-				return MAX_OPTION_N + (c - OPTION_LETTER_START);
-			}
+			string subStr = ConsoleManager.FormatString(Strings.Constants.CHEVRON, Subtitle, false)
+			                              .AddColor(ConsoleManager.ColorOptions);
 
-			return Common.INVALID;
+			ConsoleManager.Write(true, subStr);
+			ConsoleManager.NewLine();
 		}
 
-		private static string FormatOption(ConsoleOption option, int i)
-		{
-			var  sb = new StringBuilder();
-			char c  = GetDisplayOptionFromIndex(i);
+		int clamp = Math.Clamp(Options.Count, 0, MAX_DISPLAY_OPTIONS);
 
-			string name = option.Name;
+		for (int i = 0; i < clamp; i++) {
+			ConsoleOption option = Options[i];
 
-			if (option.Color.HasValue) {
-				name = name.AddColor(option.Color.Value);
-			}
+			string s = FormatOption(option, i);
 
-			if (option.ColorBG.HasValue) {
-				name = name.AddColorBG(option.ColorBG.Value);
-			}
+			var top = Console.CursorTop;
+			m_optionPositions[top] = option;
 
-			sb.Append($"[{c}]: ");
+			ConsoleManager.Write(false, s);
 
-			if (name != null) {
-				sb.Append($"{name} ");
-			}
-
-			if (option.Data != null) {
-
-				sb.AppendLine();
-
-				sb.Append($"{Strings.Indent(Strings.OutlineString(option.Data))}");
-			}
-
-			if (!sb.ToString().EndsWith(Strings.Constants.NEW_LINE)) {
-				sb.AppendLine();
-			}
-
-			string f = ConsoleManager.FormatString(null, sb.ToString());
-
-			return f;
 		}
 
-		private const int  MAX_OPTION_N        = 10;
-		private const char OPTION_LETTER_START = 'A';
-		private const int  MAX_DISPLAY_OPTIONS = 36;
+		ConsoleManager.NewLine();
+
+		if (Status != null) {
+			ConsoleManager.Write(Status);
+		}
+
+		if (Description != null) {
+			ConsoleManager.NewLine();
+
+			ConsoleManager.Write(Description);
+		}
+	}
+
+	private static char GetDisplayOptionFromIndex(int i)
+	{
+		if (i < MAX_OPTION_N) {
+			return Char.Parse(i.ToString());
+		}
+
+		int d = OPTION_LETTER_START + (i - MAX_OPTION_N);
+
+		return (char) d;
+	}
+
+	private static int GetIndexFromDisplayOption(char c)
+	{
+		if (Char.IsNumber(c)) {
+			return (int) Char.GetNumericValue(c);
+		}
+
+		if (Char.IsLetter(c)) {
+			c = Char.ToUpper(c);
+			return MAX_OPTION_N + (c - OPTION_LETTER_START);
+		}
+
+		return Common.INVALID;
+	}
+
+	private static string FormatOption(ConsoleOption option, int i)
+	{
+		var  sb = new StringBuilder();
+		char c  = GetDisplayOptionFromIndex(i);
+
+		string name = option.Name;
+
+		if (option.Color.HasValue) {
+			name = name.AddColor(option.Color.Value);
+		}
+
+		if (option.ColorBG.HasValue) {
+			name = name.AddColorBG(option.ColorBG.Value);
+		}
+
+		sb.Append($"[{c}]: ");
+
+		if (name != null) {
+			sb.Append($"{name} ");
+		}
+
+		if (option.Data != null) {
+
+			sb.AppendLine();
+
+			sb.Append($"{Strings.Indent(Strings.OutlineString(option.Data))}");
+		}
+
+		if (!sb.ToString().EndsWith(Strings.Constants.NEW_LINE)) {
+			sb.AppendLine();
+		}
+
+		string f = ConsoleManager.FormatString(null, sb.ToString());
+
+		return f;
+	}
+
+	private const int  MAX_OPTION_N        = 10;
+	private const char OPTION_LETTER_START = 'A';
+	private const int  MAX_DISPLAY_OPTIONS = 36;
+
+	/// <summary>
+	///     Exits <see cref="ReadInput" />
+	/// </summary>
+	public const ConsoleKey NC_GLOBAL_EXIT_KEY = ConsoleKey.Escape;
+
+	/// <summary>
+	///     <see cref="Refresh" />
+	/// </summary>
+	public const ConsoleKey NC_GLOBAL_REFRESH_KEY = ConsoleKey.F5;
+
+	private enum ConsoleStatus
+	{
+		/// <summary>
+		///     Signals to reload interface
+		/// </summary>
+		Refresh,
 
 		/// <summary>
-		///     Exits <see cref="ReadInput" />
+		///     Signals to continue displaying current interface
 		/// </summary>
-		public const ConsoleKey NC_GLOBAL_EXIT_KEY = ConsoleKey.Escape;
+		Ok,
+	}
 
-		/// <summary>
-		///     <see cref="Refresh" />
-		/// </summary>
-		public const ConsoleKey NC_GLOBAL_REFRESH_KEY = ConsoleKey.F5;
+	/// <summary>
+	///     Determines whether the console buffer contains a file directory that was
+	///     input via drag-and-drop.
+	/// </summary>
+	/// <param name="cki">First character in the buffer</param>
+	/// <returns>A valid file directory if the buffer contains one; otherwise, <c>null</c></returns>
+	/// <remarks>
+	///     This is done heuristically by checking if the first character <paramref name="cki" /> is either a quote or the
+	///     primary disk letter. If so, then the rest of the buffer is read until the current sequence is a
+	/// string resembling a valid file path.
+	/// </remarks>
+	internal static string TryReadFile(ConsoleKeyInfo cki)
+	{
+		const char QUOTE = '\"';
 
-		private enum ConsoleStatus
-		{
-			/// <summary>
-			///     Signals to reload interface
-			/// </summary>
-			Refresh,
+		var sb = new StringBuilder();
 
-			/// <summary>
-			///     Signals to continue displaying current interface
-			/// </summary>
-			Ok,
-		}
+		char keyChar = cki.KeyChar;
 
-		/// <summary>
-		///     Determines whether the console buffer contains a file directory that was
-		///     input via drag-and-drop.
-		/// </summary>
-		/// <param name="cki">First character in the buffer</param>
-		/// <returns>A valid file directory if the buffer contains one; otherwise, <c>null</c></returns>
-		/// <remarks>
-		///     This is done heuristically by checking if the first character <paramref name="cki" /> is either a quote or the
-		///     primary disk letter. If so, then the rest of the buffer is read until the current sequence is a
-		/// string resembling a valid file path.
-		/// </remarks>
-		internal static string TryReadFile(ConsoleKeyInfo cki)
-		{
-			const char QUOTE = '\"';
+		var driveLetters = DriveInfo.GetDrives().Select(x => x.Name.First()).ToArray();
 
-			var sb = new StringBuilder();
+		if (keyChar == QUOTE || driveLetters.Any(e => e == keyChar)) {
+			sb.Append(keyChar);
 
-			char keyChar = cki.KeyChar;
+			do {
+				ConsoleKeyInfo cki2 = ConsoleManager.ReadKey(true);
 
-			var driveLetters = DriveInfo.GetDrives().Select(x => x.Name.First()).ToArray();
+				if (cki2.Key == NC_GLOBAL_EXIT_KEY) {
+					return null;
+				}
 
-			if (keyChar == QUOTE || driveLetters.Any(e => e == keyChar)) {
+				keyChar = cki2.KeyChar;
 				sb.Append(keyChar);
 
-				do {
-					ConsoleKeyInfo cki2 = ConsoleManager.ReadKey(true);
+				if (File.Exists(sb.ToString())) {
+					break;
+				}
+			} while (keyChar != QUOTE);
 
-					if (cki2.Key == NC_GLOBAL_EXIT_KEY) {
-						return null;
-					}
-
-					keyChar = cki2.KeyChar;
-					sb.Append(keyChar);
-
-					if (File.Exists(sb.ToString())) {
-						break;
-					}
-				} while (keyChar != QUOTE);
-
-			}
-
-			return sb.ToString().Trim(QUOTE);
 		}
 
-		public void Refresh() => AtomicHelper.Exchange(ref m_status, ConsoleStatus.Refresh);
+		return sb.ToString().Trim(QUOTE);
+	}
 
-		public override int GetHashCode()
-		{
-			var hashCode = new HashCode();
+	public void Refresh() => AtomicHelper.Exchange(ref m_status, ConsoleStatus.Refresh);
 
-			IEnumerable<int> hashes = Options.Select(o => o.GetHashCode());
+	public override int GetHashCode()
+	{
+		var hashCode = new HashCode();
 
-			foreach (int value in hashes) {
-				hashCode.Add(value);
-			}
+		IEnumerable<int> hashes = Options.Select(o => o.GetHashCode());
 
-			hashCode.Add(Status?.GetHashCode());
-			hashCode.Add(Description?.GetHashCode());
-			hashCode.Add(Header?.GetHashCode());
-			hashCode.Add(Subtitle?.GetHashCode());
-
-			return hashCode.ToHashCode();
+		foreach (int value in hashes) {
+			hashCode.Add(value);
 		}
+
+		hashCode.Add(Status?.GetHashCode());
+		hashCode.Add(Description?.GetHashCode());
+		hashCode.Add(Header?.GetHashCode());
+		hashCode.Add(Subtitle?.GetHashCode());
+
+		return hashCode.ToHashCode();
 	}
 }

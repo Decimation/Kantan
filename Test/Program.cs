@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
@@ -30,10 +31,8 @@ using Kantan.Text;
 using Kantan.Utilities;
 using Microsoft.Win32.SafeHandles;
 using RestSharp;
+// ReSharper disable MethodHasAsyncOverload
 
-#if NET6_0
-#warning Update!
-#endif
 
 // ReSharper disable UnusedMember.Local
 #pragma warning disable 4014
@@ -41,168 +40,148 @@ using RestSharp;
 // ReSharper disable UnusedParameter.Local
 #pragma warning disable IDE0060, CS1998
 
-namespace Test
+namespace Test;
+
+public static class Program
 {
-	public static class Program
+	private static ConsoleDialog _dialog;
+
+	private static async Task Main(string[] args)
 	{
-		private static ConsoleDialog _dialog;
+		var    i          = "https://i.imgur.com/QtCausw.png";
+		var path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+		var    f          = Path.Combine(path, Path.GetFileName(i));
+		WebUtilities.GetFile(i,path);
 
-		private static async Task Main(string[] args)
-		{
-			/*var s = new string('-', Console.BufferWidth)+'\n'+'\n';
-			int    f = Strings.MeasureRows(s);
-			Console.WriteLine(s);
-			Console.WriteLine(f);*/
-
-			/*var s = new string('-', Console.BufferWidth + 1) + '\n';
-			Console.WriteLine(s);
-			Debug.WriteLine(Strings.MeasureRows(s));
-			Debug.WriteLine(Console.CursorTop);*/
+		var x = Network.GetWebResponse("http://tidder.xyz", ms:5000);
+		Console.WriteLine(x);
+		Console.WriteLine(Network.GetWebResponse(i));
+	}
 
 
-			/*string fooBar = "foo\nbar\n".AddColor(Color.Aquamarine);
-			Console.Write(fooBar);
-			Debug.WriteLine(Strings.MeasureRows(fooBar));*/
-			
-
-			await ConsoleTest3();
-			// await ConsoleTest2();
-			// Console.WriteLine("--");
-			// Console.ReadLine();
-			// _dialog.Display(false);
-
-			Console.ReadLine();
-			await ConsoleTest2();
-			Console.ReadLine();
-
-
-			// _dialog.ReadInput();
-		}
-
-
-		private class MyClass : IOutline
-		{
-			/// <inheritdoc />
-			public Dictionary<string, object> Outline
-				=> new()
-				{
-					["a"] = "g",
-					["x"] = "d",
-
-				};
-		}
-
-		private static async Task ConsoleTest()
-		{
-			var dialog = new ConsoleDialog()
+	private class MyClass : IOutline
+	{
+		/// <inheritdoc />
+		public Dictionary<string, object> Outline
+			=> new()
 			{
-				Subtitle = "a\nb\nc",
-				Functions = new()
-				{
-					[ConsoleKey.F1] = () =>
-					{
-						Console.WriteLine("g");
+				["a"] = "g",
+				["x"] = "d",
 
-					},
+			};
+	}
+
+	private static async Task ConsoleTest()
+	{
+		var dialog = new ConsoleDialog()
+		{
+			Subtitle = "a\nb\nc",
+			Functions = new()
+			{
+				[ConsoleKey.F1] = () =>
+				{
+					Console.WriteLine("g");
+
 				},
-				//SelectMultiple = true,
-				Options = ConsoleOption.FromArray(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 }).ToList()
-			};
-			dialog.Options[0].Data = new MyClass();
+			},
+			//SelectMultiple = true,
+			Options = ConsoleOption.FromArray(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 }).ToList()
+		};
+		dialog.Options[0].Data = new MyClass();
 
-			for (int i = 0; i < dialog.Options.Count; i++) {
-				dialog.Options[i].Data = new MyClass();
-			}
-
-			dialog.Options[0].Functions[ConsoleModifiers.Shift] = () =>
-			{
-				Console.WriteLine("butt");
-				return null;
-			};
-
-			dialog.Options[0].Functions[ConsoleModifiers.Control] = () =>
-			{
-				Console.WriteLine("ctrl");
-				return null;
-			};
-
-			dialog.Options[0].Functions[ConsoleModifiers.Control | ConsoleModifiers.Alt] = () =>
-			{
-				Console.WriteLine("alt+ctrl");
-				return null;
-			};
-
-			var r = dialog.ReadInputAsync();
-
-
-			Task.Factory.StartNew(() =>
-			{
-				Thread.Sleep(1000);
-				dialog.Options.Add(new ConsoleOption() { Name = "butt" });
-			});
-
-			await r;
-
-			Console.WriteLine(r.Result);
-
+		for (int i = 0; i < dialog.Options.Count; i++)
+		{
+			dialog.Options[i].Data = new MyClass();
 		}
 
-		[Flags]
-		enum MyEnum
+		dialog.Options[0].Functions[ConsoleModifiers.Shift] = () =>
 		{
-			a = 1 << 0,
-			b = 1 << 1,
-			c = 1 << 2
-		}
+			Console.WriteLine("butt");
+			return null;
+		};
 
-		private static async Task ConsoleTest3()
+		dialog.Options[0].Functions[ConsoleModifiers.Control] = () =>
 		{
-			_dialog = new ConsoleDialog()
+			Console.WriteLine("ctrl");
+			return null;
+		};
+
+		dialog.Options[0].Functions[ConsoleModifiers.Control | ConsoleModifiers.Alt] = () =>
+		{
+			Console.WriteLine("alt+ctrl");
+			return null;
+		};
+
+		var r = dialog.ReadInputAsync();
+
+
+		Task.Factory.StartNew(() =>
+		{
+			Thread.Sleep(1000);
+			dialog.Options.Add(new ConsoleOption() { Name = "test" });
+		});
+
+		await r;
+
+		Console.WriteLine(r.Result);
+
+	}
+
+	[Flags]
+	enum MyEnum
+	{
+		a = 1 << 0,
+		b = 1 << 1,
+		c = 1 << 2
+	}
+
+	private static async Task ConsoleTest3()
+	{
+		_dialog = new ConsoleDialog()
+		{
+			Functions = new()
 			{
-				Functions = new()
+				[ConsoleKey.F1] = () =>
 				{
-					[ConsoleKey.F1] = () =>
-					{
-						Console.WriteLine("g");
+					Console.WriteLine("g");
 
-					},
 				},
-				Status         = "(status)",
-				SelectMultiple = false,
-				Options        = ConsoleOption.FromEnum<MyEnum>().ToList()
-			};
+			},
+			Status = "(status)",
+			SelectMultiple = false,
+			Options = ConsoleOption.FromEnum<MyEnum>().ToList()
+		};
 
 
-			var r = _dialog.ReadInputAsync();
-			await r;
+		var r = _dialog.ReadInputAsync();
+		await r;
 
-			Console.WriteLine(r.Result);
+		Console.WriteLine(r.Result);
 
-		}
+	}
 
-		private static async Task ConsoleTest2()
+	private static async Task ConsoleTest2()
+	{
+		var dialog = new ConsoleDialog()
 		{
-			var dialog = new ConsoleDialog()
+			Functions = new()
 			{
-				Functions = new()
+				[ConsoleKey.F1] = () =>
 				{
-					[ConsoleKey.F1] = () =>
-					{
-						Console.WriteLine("g");
+					Console.WriteLine("g");
 
-					},
 				},
-				Status         = "hi1",
-				SelectMultiple = true,
-				Options        = ConsoleOption.FromEnum<MyEnum>().ToList()
-			};
+			},
+			Status = "hi1",
+			SelectMultiple = true,
+			Options = ConsoleOption.FromEnum<MyEnum>().ToList()
+		};
 
 
-			var r = dialog.ReadInputAsync();
-			await r;
+		var r = dialog.ReadInputAsync();
+		await r;
 
-			Console.WriteLine(r.Result.Output.QuickJoin());
+		Console.WriteLine(r.Result.Output.QuickJoin());
 
-		}
 	}
 }

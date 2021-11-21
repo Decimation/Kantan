@@ -2,19 +2,18 @@
 
 // ReSharper disable UnusedMember.Global
 
-namespace Kantan.Native.Structures
+namespace Kantan.Native.Structures;
+
+/// <summary>
+/// Contains information for a console selection.
+/// </summary>
+[StructLayout(LayoutKind.Sequential)]
+public struct ConsoleSelectionInfo
 {
-	/// <summary>
-	/// Contains information for a console selection.
-	/// </summary>
-	[StructLayout(LayoutKind.Sequential)]
-	public struct ConsoleSelectionInfo
-	{
-		public int dwFlags;
+	public int dwFlags;
 
-		public Coord dwSelectionAnchor;
+	public Coord dwSelectionAnchor;
 
-		[MarshalAs(UnmanagedType.Struct)]
-		public SmallRect srSelection;
-	}
+	[MarshalAs(UnmanagedType.Struct)]
+	public SmallRect srSelection;
 }

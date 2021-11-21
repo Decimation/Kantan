@@ -2,10 +2,9 @@
 
 // ReSharper disable UnusedMember.Global
 
-namespace Kantan.Model
+namespace Kantan.Model;
+
+public interface IOutline
 {
-	public interface IOutline
-	{
-		public Dictionary<string, object> Outline { get; }
-	}
+	public Dictionary<string, object> Outline { get; }
 }

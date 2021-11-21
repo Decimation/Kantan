@@ -8,50 +8,49 @@ using RestSharp;
 // ReSharper disable RedundantAnonymousTypePropertyName
 #pragma warning disable IDE0037
 
-namespace Kantan.Net
+namespace Kantan.Net;
+
+/// <summary>
+/// Simple GraphQL client
+/// </summary>
+public class GraphQLClient
 {
-	/// <summary>
-	/// Simple GraphQL client
-	/// </summary>
-	public class GraphQLClient
+	/*
+	 * Adapted from https://github.com/latheesan-k/simple-graphql-client
+	 */
+
+
+	private readonly RestClient _client;
+
+	public GraphQLClient(string apiUrl)
 	{
-		/*
-		 * Adapted from https://github.com/latheesan-k/simple-graphql-client
-		 */
+		_client = new RestClient(apiUrl);
 
+		ServicePointManager.SecurityProtocol =
+			SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+	}
 
-		private readonly RestClient _client;
-
-		public GraphQLClient(string apiUrl)
+	public dynamic Execute(string query, object variables = null,
+	                       Dictionary<string, string> additionalHeaders = null,
+	                       int timeout = 0)
+	{
+		var request = new RestRequest("/", Method.POST)
 		{
-			_client = new RestClient(apiUrl);
+			Timeout = timeout
+		};
 
-			ServicePointManager.SecurityProtocol =
-				SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
-		}
-
-		public dynamic Execute(string query, object variables = null,
-		                       Dictionary<string, string> additionalHeaders = null,
-		                       int timeout = 0)
-		{
-			var request = new RestRequest("/", Method.POST)
-			{
-				Timeout = timeout
-			};
-
-			if (additionalHeaders is {Count: > 0}) {
-				foreach ((string key, string value) in additionalHeaders) {
-					request.AddHeader(key, value);
-				}
+		if (additionalHeaders is {Count: > 0}) {
+			foreach ((string key, string value) in additionalHeaders) {
+				request.AddHeader(key, value);
 			}
-
-			request.AddJsonBody(new
-			{
-				query     = query,
-				variables = variables
-			});
-
-			return JObject.Parse(_client.Execute(request).Content);
 		}
+
+		request.AddJsonBody(new
+		{
+			query     = query,
+			variables = variables
+		});
+
+		return JObject.Parse(_client.Execute(request).Content);
 	}
 }

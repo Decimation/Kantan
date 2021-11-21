@@ -9,60 +9,59 @@ using Kantan.Text;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
 
-namespace Kantan.Model
+namespace Kantan.Model;
+
+public abstract class FlagsEnumeration : Enumeration
 {
-	public abstract class FlagsEnumeration : Enumeration
+	protected FlagsEnumeration(int id, string name) : base(id, name) { }
+
+	public FlagsEnumeration Or(FlagsEnumeration f)
 	{
-		protected FlagsEnumeration(int id, string name) : base(id, name) { }
+		Id |= f.Id;
+		return this;
+	}
 
-		public FlagsEnumeration Or(FlagsEnumeration f)
-		{
-			Id |= f.Id;
-			return this;
-		}
+	public FlagsEnumeration And(FlagsEnumeration f)
+	{
+		Id &= f.Id;
+		return this;
+	}
 
-		public FlagsEnumeration And(FlagsEnumeration f)
-		{
-			Id &= f.Id;
-			return this;
-		}
+	public FlagsEnumeration Not()
+	{
+		Id = ~Id;
+		return this;
+	}
 
-		public FlagsEnumeration Not()
-		{
-			Id = ~Id;
-			return this;
-		}
+	public FlagsEnumeration Xor(FlagsEnumeration f)
+	{
+		Id ^= f.Id;
+		return this;
+	}
 
-		public FlagsEnumeration Xor(FlagsEnumeration f)
-		{
-			Id ^= f.Id;
-			return this;
-		}
+	public bool HasFlag(FlagsEnumeration f)
+	{
+		return (Id & f.Id) != 0;
+	}
 
-		public bool HasFlag(FlagsEnumeration f)
-		{
-			return (Id & f.Id) != 0;
-		}
+	public static int GetNextFlagId()
+	{
+		var all = GetAll<FlagsEnumeration>();
 
-		public static int GetNextFlagId()
-		{
-			var all = GetAll<FlagsEnumeration>();
+		all = all.OrderByDescending(x => x.Id);
 
-			all = all.OrderByDescending(x => x.Id);
+		return all.First().Id << 1;
+	}
 
-			return all.First().Id << 1;
-		}
+	public abstract FlagsEnumeration Copy();
 
-		public abstract FlagsEnumeration Copy();
+	public static FlagsEnumeration operator &(FlagsEnumeration f, FlagsEnumeration f2) => f.Copy().And(f2);
 
-		public static FlagsEnumeration operator &(FlagsEnumeration f, FlagsEnumeration f2) => f.Copy().And(f2);
+	public static FlagsEnumeration operator |(FlagsEnumeration f, FlagsEnumeration f2) => f.Copy().Or(f2);
 
-		public static FlagsEnumeration operator |(FlagsEnumeration f, FlagsEnumeration f2) => f.Copy().Or(f2);
+	public static FlagsEnumeration operator ^(FlagsEnumeration f, FlagsEnumeration f2) => f.Copy().Xor(f2);
 
-		public static FlagsEnumeration operator ^(FlagsEnumeration f, FlagsEnumeration f2) => f.Copy().Xor(f2);
-
-		public static FlagsEnumeration operator ~(FlagsEnumeration f) => f.Copy().Not();
+	public static FlagsEnumeration operator ~(FlagsEnumeration f) => f.Copy().Not();
 
 		
-	}
 }

@@ -37,149 +37,148 @@ using MN = System.Diagnostics.CodeAnalysis.MaybeNullAttribute;
 
 #endregion
 
-namespace Kantan.Diagnostics
+namespace Kantan.Diagnostics;
+
+/// <summary>
+/// Diagnostic utilities, conditions, contracts
+/// </summary>
+/// <seealso cref="Debug"/>
+/// <seealso cref="Trace"/>
+/// <seealso cref="Debugger"/>
+public static class Guard
 {
+	/*
+	 * https://www.jetbrains.com/help/resharper/Contract_Annotations.html
+	 * https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/attributes/nullable-analysis
+	 */
+
+	#region Contract annotations
+
+	private const string VALUE_NULL_HALT    = "value:null => halt";
+	private const string VALUE_NOTNULL_HALT = "value:notnull => halt";
+	private const string COND_FALSE_HALT    = "condition:false => halt";
+	private const string UNCONDITIONAL_HALT = "=> halt";
+
+	private const ACT ACT_TRUE     = ACT.IS_TRUE;
+	private const ACT ACT_NOT_NULL = ACT.IS_NOT_NULL;
+
+	#endregion
+
+	[DNR]
+	[DH, AM]
+	[CA(UNCONDITIONAL_HALT), SFM(STRING_FORMAT_ARG)]
+	public static void Fail(string? msg = null, params object[] args) => Fail<Exception>(msg, args);
+
 	/// <summary>
-	/// Diagnostic utilities, conditions, contracts
+	/// Root fail function
 	/// </summary>
-	/// <seealso cref="Debug"/>
-	/// <seealso cref="Trace"/>
-	/// <seealso cref="Debugger"/>
-	public static class Guard
+	[DNR]
+	[DH, AM]
+	[CA(UNCONDITIONAL_HALT), SFM(STRING_FORMAT_ARG)]
+	public static void Fail<TException>(string? msg = null, params object[] args)
+		where TException : Exception, new()
 	{
-		/*
-		 * https://www.jetbrains.com/help/resharper/Contract_Annotations.html
-		 * https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/attributes/nullable-analysis
-		 */
+		TException exception;
 
-		#region Contract annotations
+		if (msg != null) {
+			string s = String.Format(msg, args);
 
-		private const string VALUE_NULL_HALT    = "value:null => halt";
-		private const string VALUE_NOTNULL_HALT = "value:notnull => halt";
-		private const string COND_FALSE_HALT    = "condition:false => halt";
-		private const string UNCONDITIONAL_HALT = "=> halt";
-
-		private const ACT ACT_TRUE     = ACT.IS_TRUE;
-		private const ACT ACT_NOT_NULL = ACT.IS_NOT_NULL;
-
-		#endregion
-
-		[DNR]
-		[DH, AM]
-		[CA(UNCONDITIONAL_HALT), SFM(STRING_FORMAT_ARG)]
-		public static void Fail(string? msg = null, params object[] args) => Fail<Exception>(msg, args);
-
-		/// <summary>
-		/// Root fail function
-		/// </summary>
-		[DNR]
-		[DH, AM]
-		[CA(UNCONDITIONAL_HALT), SFM(STRING_FORMAT_ARG)]
-		public static void Fail<TException>(string? msg = null, params object[] args)
-			where TException : Exception, new()
-		{
-			TException exception;
-
-			if (msg != null) {
-				string s = String.Format(msg, args);
-
-				exception = (TException) Activator.CreateInstance(typeof(TException), s)!;
-			}
-			else {
-				exception = new TException();
-			}
-
-			throw exception;
+			exception = (TException) Activator.CreateInstance(typeof(TException), s)!;
+		}
+		else {
+			exception = new TException();
 		}
 
-		[DH, AM]
-		[CA(COND_FALSE_HALT)]
-		public static void Assert([AC(ACT_TRUE)] [DNRI(false)] bool condition,
-		                          string? msg = null, params object[] args)
-			=> Assert<Exception>(condition, msg, args);
+		throw exception;
+	}
 
-		/// <summary>
-		/// Root assertion function
-		/// </summary>
-		[DH, AM]
-		[CA(COND_FALSE_HALT), SFM(STRING_FORMAT_ARG)]
-		public static void Assert<TException>([AC(ACT_TRUE)] [DNRI(false)] bool condition,
-		                                      string? msg = null, params object[] args)
-			where TException : Exception, new()
-		{
-			if (!condition) {
-				Fail<TException>(msg, args);
-			}
-		}
+	[DH, AM]
+	[CA(COND_FALSE_HALT)]
+	public static void Assert([AC(ACT_TRUE)] [DNRI(false)] bool condition,
+	                          string? msg = null, params object[] args)
+		=> Assert<Exception>(condition, msg, args);
 
-		[DH, AM]
-		[CA(COND_FALSE_HALT)]
-		public static void AssertArgument([AC(ACT_TRUE)] [DNRI(false)] bool condition,
-		                                  string? name = null)
-			=> Assert<ArgumentException>(condition, name);
-
-		[DH, AM]
-		[CA(VALUE_NULL_HALT)]
-		public static void AssertArgumentNotNull([NN] [AC(ACT_NOT_NULL)] object? value,
-		                                         string? name = null)
-			=> Assert<ArgumentNullException>(value != null, name);
-
-		[DH, AM]
-		[CA(VALUE_NULL_HALT)]
-		public static void AssertNotNull([NN] [AC(ACT_NOT_NULL)] object? value, string? name = null)
-			=> Assert<NullReferenceException>(value != null, name);
-
-		[DH, AM]
-		[CA(VALUE_NULL_HALT)]
-		public static void AssertNotNullOrWhiteSpace([NN] [AC(ACT_NOT_NULL)] string? value, string? name = null)
-			=> Assert<NullReferenceException>(!String.IsNullOrWhiteSpace(value), name);
-
-		[DH, AM]
-		public static void AssertEqual(object a, object b) => Assert(a.Equals(b));
-
-		[DH, AM]
-		public static void AssertEqual<T>(T a, T b) where T : IEquatable<T> => Assert(a.Equals(b));
-
-		[DH, AM]
-		public static void AssertContains<T>(IEnumerable<T> enumerable, T value) => Assert(enumerable.Contains(value));
-
-		[DH, AM]
-		public static void AssertNonNegative([NNV] long value, string? name = null) => Assert(value is > 0 or 0, name);
-
-		[DH, AM]
-		public static void AssertPositive([NNV] long value, string? name = null) => Assert(value > 0, name);
-
-
-		[DH, AM]
-		public static void AssertThrows<TException>(Action f) where TException : Exception
-		{
-			bool throws = false;
-
-			try {
-				f();
-			}
-			catch (TException) {
-				throws = true;
-			}
-
-			if (!throws) {
-				Fail();
-			}
-		}
-
-		[DH, AM]
-		public static void AssertAll([DNRI(false)] [AC(ACT_TRUE)] params bool[] conditions)
-		{
-			foreach (bool condition in conditions) {
-				Assert(condition);
-			}
+	/// <summary>
+	/// Root assertion function
+	/// </summary>
+	[DH, AM]
+	[CA(COND_FALSE_HALT), SFM(STRING_FORMAT_ARG)]
+	public static void Assert<TException>([AC(ACT_TRUE)] [DNRI(false)] bool condition,
+	                                      string? msg = null, params object[] args)
+		where TException : Exception, new()
+	{
+		if (!condition) {
+			Fail<TException>(msg, args);
 		}
 	}
 
-	public sealed class GuardException : Exception
-	{
-		public GuardException() { }
+	[DH, AM]
+	[CA(COND_FALSE_HALT)]
+	public static void AssertArgument([AC(ACT_TRUE)] [DNRI(false)] bool condition,
+	                                  string? name = null)
+		=> Assert<ArgumentException>(condition, name);
 
-		public GuardException(string? message) : base(message) { }
+	[DH, AM]
+	[CA(VALUE_NULL_HALT)]
+	public static void AssertArgumentNotNull([NN] [AC(ACT_NOT_NULL)] object? value,
+	                                         string? name = null)
+		=> Assert<ArgumentNullException>(value != null, name);
+
+	[DH, AM]
+	[CA(VALUE_NULL_HALT)]
+	public static void AssertNotNull([NN] [AC(ACT_NOT_NULL)] object? value, string? name = null)
+		=> Assert<NullReferenceException>(value != null, name);
+
+	[DH, AM]
+	[CA(VALUE_NULL_HALT)]
+	public static void AssertNotNullOrWhiteSpace([NN] [AC(ACT_NOT_NULL)] string? value, string? name = null)
+		=> Assert<NullReferenceException>(!String.IsNullOrWhiteSpace(value), name);
+
+	[DH, AM]
+	public static void AssertEqual(object a, object b) => Assert(a.Equals(b));
+
+	[DH, AM]
+	public static void AssertEqual<T>(T a, T b) where T : IEquatable<T> => Assert(a.Equals(b));
+
+	[DH, AM]
+	public static void AssertContains<T>(IEnumerable<T> enumerable, T value) => Assert(enumerable.Contains(value));
+
+	[DH, AM]
+	public static void AssertNonNegative([NNV] long value, string? name = null) => Assert(value is > 0 or 0, name);
+
+	[DH, AM]
+	public static void AssertPositive([NNV] long value, string? name = null) => Assert(value > 0, name);
+
+
+	[DH, AM]
+	public static void AssertThrows<TException>(Action f) where TException : Exception
+	{
+		bool throws = false;
+
+		try {
+			f();
+		}
+		catch (TException) {
+			throws = true;
+		}
+
+		if (!throws) {
+			Fail();
+		}
 	}
+
+	[DH, AM]
+	public static void AssertAll([DNRI(false)] [AC(ACT_TRUE)] params bool[] conditions)
+	{
+		foreach (bool condition in conditions) {
+			Assert(condition);
+		}
+	}
+}
+
+public sealed class GuardException : Exception
+{
+	public GuardException() { }
+
+	public GuardException(string? message) : base(message) { }
 }
