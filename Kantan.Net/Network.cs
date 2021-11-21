@@ -1,20 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Web;
 using JetBrains.Annotations;
-using Kantan.Internal;
 using Kantan.Model;
-using Newtonsoft.Json;
 using RestSharp;
-using RestSharp.Extensions;
-using Formatting = System.Xml.Formatting;
 
 #pragma warning disable 8600
 #pragma warning disable 8604
@@ -92,7 +85,7 @@ public static class Network
 	{
 		var ping = new Ping();
 
-		var task = ping.SendPingAsync(hostOrIP, (int) ms);
+		var task = ping.SendPingAsync(hostOrIP, ms);
 		task.Wait();
 
 		PingReply r = task.Result;
@@ -157,9 +150,6 @@ public static class Network
 			catch (Exception) {
 				return null;
 			}
-			finally {
-				//....
-			}
 		} while (maxRedirCount-- > 0);
 
 		return newUrl;
@@ -167,34 +157,7 @@ public static class Network
 
 	#region Response
 
-	[MustUseReturnValue]
-	public static HttpResponseMessage GetHttpResponse(string url, HttpMethod method, int ms = TimeoutMS,
-	                                                  bool redirect = true, int redirects = MAX_AUTO_REDIRECTS)
-	{
-		using var handler = new HttpClientHandler
-		{
-			AllowAutoRedirect        = redirect,
-			MaxAutomaticRedirections = redirects
-		};
-
-		using var client = new HttpClient(handler);
-
-		using var request = new HttpRequestMessage
-		{
-			Method     = method,
-			RequestUri = new Uri(url),
-		};
-
-		client.Timeout = TimeSpan.FromMilliseconds(ms);
-
-		var message = client.Send(request);
-
-		return message;
-	}
-
 #if USE_WC
-
-
 	[MustUseReturnValue]
 	public static HttpWebResponse GetWebResponse(string url, int ms = TimeoutMS, string method = "GET",
 	                                             bool redirect = true, int redirects = MAX_AUTO_REDIRECTS)
@@ -213,35 +176,30 @@ public static class Network
 #else
 
 	[MustUseReturnValue]
-	public static HttpResponseMessage? GetWebResponse(string url, int ms = TimeoutMS, HttpMethod? method = null,
-	                                                  bool redirect = true, int redirects = MAX_AUTO_REDIRECTS)
+	public static HttpResponseMessage GetHttpResponse(string url, int ms = TimeoutMS, HttpMethod? method = null,
+	                                                  bool allowAutoRedirect = true,
+	                                                  int maxAutoRedirects = MAX_AUTO_REDIRECTS)
 	{
-		var cts = new CancellationTokenSource(ms);
 
-		var request = new HttpRequestMessage()
+		using var request = new HttpRequestMessage
 		{
 			RequestUri = new Uri(url),
 			Method     = method ?? HttpMethod.Get
 		};
 
-		var clientHandler = new HttpClientHandler()
+		using var clientHandler = new HttpClientHandler
 		{
-			AllowAutoRedirect = redirect,
-			MaxAutomaticRedirections = redirects
+			AllowAutoRedirect        = allowAutoRedirect,
+			MaxAutomaticRedirections = maxAutoRedirects
 		};
 
-		var client = new HttpClient();
+		using var client = new HttpClient(clientHandler);
 
-		try {
-			var sendTask = client.SendAsync(request, cts.Token);
-			sendTask.Wait();
-			return sendTask.Result;
-		}
-		catch (Exception e) {
-			Debug.WriteLine($"{nameof(Network)}: {nameof(GetWebResponse)} : {e.Message}");
-			return null;
-		}
+		client.Timeout = TimeSpan.FromMilliseconds(ms);
 
+		var response = client.Send(request);
+
+		return response;
 	}
 #endif
 

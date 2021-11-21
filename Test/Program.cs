@@ -48,14 +48,16 @@ public static class Program
 
 	private static async Task Main(string[] args)
 	{
+		Trace.WriteLine("butt");
+
 		var    i          = "https://i.imgur.com/QtCausw.png";
 		var path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 		var    f          = Path.Combine(path, Path.GetFileName(i));
 		WebUtilities.GetFile(i,path);
 
-		var x = Network.GetWebResponse("http://tidder.xyz", ms:5000);
+		var x = Network.GetHttpResponse("http://tidder.xyz", ms:5000);
 		Console.WriteLine(x);
-		Console.WriteLine(Network.GetWebResponse(i));
+		Console.WriteLine(Network.GetHttpResponse(i));
 	}
 
 

@@ -9,23 +9,16 @@ using System.Threading.Tasks;
 // ReSharper disable JoinDeclarationAndInitializer
 // ReSharper disable ConditionIsAlwaysTrueOrFalse
 #pragma warning disable CA2255
-namespace Kantan
+namespace Kantan;
+
+internal static class Init
 {
-	public static class KantanInit
+	internal const string NAME = "Kantan";
+
+	[ModuleInitializer]
+	internal static void Setup()
 	{
-
-		[ModuleInitializer]
-		public static void Init()
-		{
-			Trace.WriteLine($"Kantan: init");
-
-			bool useWC;
-#if USE_WC
-			useWC = true;
-#else
-			useWC = false;
-#endif
-			Debug.WriteLine($"USE_WC: {useWC}");
-		}
+		Trace.WriteLine($"[{NAME}]: init");
+		
 	}
 }
