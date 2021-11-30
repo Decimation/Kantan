@@ -6,8 +6,8 @@ using System.Net;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using Kantan.Diagnostics;
+using Kantan.Net.Properties;
 using Newtonsoft.Json;
-using RestSharp;
 
 // ReSharper disable InconsistentNaming
 
@@ -42,19 +42,17 @@ public static class MediaTypes
 
 	private const int SUBTYPE_I = 1;
 
-		
 
 	/// <summary>
 	/// Whether the MIME <paramref name="mime"/> is of type <paramref name="type"/>
 	/// </summary>
-	public static bool IsTypeEqual(string mime, MediaType type) =>
-		IsTypeEqual(mime, Enum.GetName(type));
+	public static bool IsTypeEqual(string mime, MediaType type) => IsTypeEqual(mime, Enum.GetName(type));
 
 	/// <summary>
 	/// Whether the MIME <paramref name="mime"/> is of type <paramref name="type"/>
 	/// </summary>
-	public static bool IsTypeEqual(string mime, string type) =>
-		GetTypeComponent(mime).StartsWith(type, StringComparison.InvariantCultureIgnoreCase);
+	public static bool IsTypeEqual(string mime, string type)
+		=> GetTypeComponent(mime).StartsWith(type, StringComparison.InvariantCultureIgnoreCase);
 
 
 	/*
@@ -69,6 +67,8 @@ public static class MediaTypes
 		return mime.Split(DELIM)[SUBTYPE_I];
 	}
 
+	#region Resolve
+
 	[DllImport("urlmon.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = false)]
 	private static extern int FindMimeFromData(IntPtr pBC, [MA(UT.LPWStr)] string pwzUrl,
 	                                           [MA(UT.LPArray, ArraySubType = UT.I1, SizeParamIndex = 3)]
@@ -80,14 +80,11 @@ public static class MediaTypes
 
 	public static string ResolveFromData(Stream s)
 	{
-		using var ms = s as MemoryStream;
-
+		using var ms         = s as MemoryStream;
 		const int BLOCK_SIZE = 256;
+		byte[]    rg         = new byte[BLOCK_SIZE];
 
-		byte[] rg = new byte[BLOCK_SIZE];
-
-		int c = ms.Read(rg, 0, BLOCK_SIZE);
-
+		int    c = ms.Read(rg, 0, BLOCK_SIZE);
 		string m = ResolveFromData(rg);
 
 		return m;
@@ -123,13 +120,16 @@ public static class MediaTypes
 		return mimeRet;
 	}
 
-	private const string DB_JSON_URL = "https://cdn.jsdelivr.net/gh/jshttp/mime-db@master/db.json";
+	#endregion
+
+
+	#region Database
 
 	private static Dictionary<string, MediaTypeInfo> GetDatabase()
 	{
 		using var client = new HttpClient();
 
-		string json = client.DownloadString((DB_JSON_URL));
+		string json = client.DownloadString((Resources.MimeDatabaseUrl));
 
 		var mimeTypes = JsonConvert.DeserializeObject<Dictionary<string, MediaTypeInfo>>(json)!;
 
@@ -147,8 +147,7 @@ public static class MediaTypes
 
 	private static Lazy<Dictionary<string, MediaTypeInfo>> Database { get; } = new(GetDatabase);
 
-
-	static MediaTypes() { }
+	#endregion
 }
 
 public enum MediaType

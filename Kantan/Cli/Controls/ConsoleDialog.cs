@@ -15,7 +15,6 @@ using Kantan.Internal;
 using Kantan.Native;
 using Kantan.Native.Structures;
 using Kantan.Text;
-using Kantan.Threading;
 using Kantan.Utilities;
 
 // ReSharper disable SuggestVarOrType_DeconstructionDeclarations
@@ -254,18 +253,23 @@ public class ConsoleDialog
 		int prevCount = Options.Count;
 
 		while (!ConsoleManager.InputAvailable) {
+			unsafe {
+				var ptr = (int*) Unsafe.AsPointer(ref m_status);
 
-			bool refresh = AtomicHelper.Exchange(ref m_status, ConsoleStatus.Ok) == ConsoleStatus.Refresh;
+				bool refresh = Interlocked.Exchange(ref Unsafe.AsRef<int>(ptr), (int) ConsoleStatus.Ok) ==
+				               (int) ConsoleStatus.Refresh;
 
-			// Refresh buffer if collection was updated
+				// Refresh buffer if collection was updated
 
-			int currentCount = Options.Count;
+				int currentCount = Options.Count;
 
-			if ((refresh || prevCount != currentCount)) {
-				Debug.WriteLine("update", nameof(ConsoleDialog));
-				Display(output);
-				prevCount = currentCount;
+				if ((refresh || prevCount != currentCount)) {
+					Debug.WriteLine("update", nameof(ConsoleDialog));
+					Display(output);
+					prevCount = currentCount;
+				}
 			}
+
 		}
 
 		InputRecord ir = ConsoleManager.ReadInputRecord();
@@ -584,7 +588,14 @@ public class ConsoleDialog
 		return sb.ToString().Trim(QUOTE);
 	}
 
-	public void Refresh() => AtomicHelper.Exchange(ref m_status, ConsoleStatus.Refresh);
+	public void Refresh()
+	{
+		unsafe {
+			var ptr = (int*) Unsafe.AsPointer(ref m_status);
+			Interlocked.Exchange(ref Unsafe.AsRef<int>(ptr),(int) ConsoleStatus.Refresh);
+		}
+
+	}
 
 	public override int GetHashCode()
 	{

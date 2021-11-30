@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,21 +23,6 @@ public static class UriUtilities
 	 * https://stackoverflow.com/questions/1222610/check-if-2-urls-are-equal
 	 */
 
-
-
-	/*[CanBeNull]
-	public static string GetFinalComponent(string url)
-	{
-		var split = url.Split('/');
-
-		if (!split.Any()) {
-			return null;
-		}
-
-		var last = split[^1];
-
-		return last;
-	}*/
 
 	/// <summary>
 	/// Determines whether <paramref name="url1"/> is equal to <paramref name="url2"/>
@@ -83,7 +69,7 @@ public static class UriUtilities
 
 	public static string RemoveUrlQueries(string url)
 	{
-		Uri uri = new Uri(url);
+		var uri = new Uri(url);
 		return uri.GetLeftPart(UriPartial.Path);
 	}
 
@@ -164,6 +150,39 @@ public static class UriUtilities
 		return url;
 	}
 
+	public static string NormalizeFilename(Uri src)
+	{
+		string filename = Path.GetFileName(src.AbsolutePath);
+
+		if (!Path.HasExtension(filename)) {
+
+			// If no format is specified/found, just append a jpg extension
+			string ext = ".jpg";
+
+			// For Pixiv (?)
+			var kv = HttpUtility.ParseQueryString(src.Query);
+
+			var t = kv["format"];
+
+			if (t != null) {
+				ext = $".{t}";
+			}
+
+			filename += ext;
+
+		}
+
+		// Stupid URI parameter Twitter appends to filenames
+
+		var i = filename.IndexOf(":large", StringComparison.Ordinal);
+
+		if (i != -1) {
+			filename = filename[..i];
+		}
+
+		return filename;
+	}
+
 	public static Uri GetHostUri(Uri u)
 	{
 		return new UriBuilder(u.Host).Uri;
@@ -183,17 +202,6 @@ public static class UriUtilities
 	{
 		bool result = Uri.TryCreate(uriName, UriKind.Absolute, out uriResult)
 		              && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
-
-		// if (!result) {
-		// 	var b = new UriBuilder(StripScheme(new Uri(uriName)))
-		// 	{
-		// 		Scheme = Uri.UriSchemeHttps, 
-		// 		Port = -1
-		// 	};
-		// 	uriResult = b.Uri;
-		//
-		// 	//uriResult = new Uri(uriResult.ToString().Replace("file:", "http:"));
-		// }
 
 		return result;
 	}

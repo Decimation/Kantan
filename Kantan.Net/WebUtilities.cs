@@ -2,13 +2,18 @@
 #pragma warning disable SYSLIB0014 // Type or member is obsolete
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
+using static Kantan.Diagnostics.LogCategories;
 
 #pragma warning disable CS0618
 
@@ -46,6 +51,8 @@ public static class WebUtilities
 		}
 	}
 
+	
+
 	#region Shortcuts
 
 	public static IHtmlDocument GetHtmlDocument(string url)
@@ -74,7 +81,6 @@ public static class WebUtilities
 	{
 		using var wc = new WebClient();
 		return wc.OpenRead(url);
-
 	}
 
 	public static byte[] GetData(string url)
@@ -117,7 +123,6 @@ public static class WebUtilities
 
 	public static string DownloadFile(this HttpClient client, string url)
 	{
-		// var fname = UriUtilities.GetFinalComponent(url);
 		var fname = Path.GetFileName(url);
 		var tmp   = Path.Combine(Path.GetTempPath(), fname);
 

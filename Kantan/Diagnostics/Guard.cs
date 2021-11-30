@@ -1,41 +1,47 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using JetBrains.Annotations;
-using static Kantan.Internal.Common;
-
+﻿// ReSharper disable RedundantUsingDirective.Global
 // ReSharper disable UnusedMember.Local
 // ReSharper disable UnusedMember.Global
 // ReSharper disable UseNullableReferenceTypesAnnotationSyntax
 // ReSharper disable IdentifierTypo
+
 #pragma warning disable IDE0051, IDE0005
-#nullable enable
 
 #region Aliases
 
-using ACT = JetBrains.Annotations.AssertionConditionType;
-using AC = JetBrains.Annotations.AssertionConditionAttribute;
-using AM = JetBrains.Annotations.AssertionMethodAttribute;
-using CA = JetBrains.Annotations.ContractAnnotationAttribute;
-using SFM = JetBrains.Annotations.StringFormatMethodAttribute;
-using DH = System.Diagnostics.DebuggerHiddenAttribute;
-using DNR = System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute;
-using DNRI = System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute;
-using NNV = JetBrains.Annotations.NonNegativeValueAttribute;
-using NNINN = System.Diagnostics.CodeAnalysis.NotNullIfNotNullAttribute;
-using NNW = System.Diagnostics.CodeAnalysis.NotNullWhenAttribute;
-using MNN = System.Diagnostics.CodeAnalysis.MemberNotNullAttribute;
-using MNNW = System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute;
-using MNW = System.Diagnostics.CodeAnalysis.MaybeNullWhenAttribute;
-using NN = JetBrains.Annotations.NotNullAttribute;
-using CBN = JetBrains.Annotations.CanBeNullAttribute;
-using ICBN = JetBrains.Annotations.ItemCanBeNullAttribute;
-using AN = System.Diagnostics.CodeAnalysis.AllowNullAttribute;
-using MN = System.Diagnostics.CodeAnalysis.MaybeNullAttribute;
+global using CAE = System.Runtime.CompilerServices.CallerArgumentExpressionAttribute;
+global using ACT = JetBrains.Annotations.AssertionConditionType;
+global using AC = JetBrains.Annotations.AssertionConditionAttribute;
+global using AM = JetBrains.Annotations.AssertionMethodAttribute;
+global using CA = JetBrains.Annotations.ContractAnnotationAttribute;
+global using SFM = JetBrains.Annotations.StringFormatMethodAttribute;
+global using DH = System.Diagnostics.DebuggerHiddenAttribute;
+global using DNR = System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute;
+global using DNRI = System.Diagnostics.CodeAnalysis.DoesNotReturnIfAttribute;
+global using NNV = JetBrains.Annotations.NonNegativeValueAttribute;
+global using NNINN = System.Diagnostics.CodeAnalysis.NotNullIfNotNullAttribute;
+global using NNW = System.Diagnostics.CodeAnalysis.NotNullWhenAttribute;
+global using MNN = System.Diagnostics.CodeAnalysis.MemberNotNullAttribute;
+global using MNNW = System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute;
+global using MNW = System.Diagnostics.CodeAnalysis.MaybeNullWhenAttribute;
+global using NN = JetBrains.Annotations.NotNullAttribute;
+global using CBN = JetBrains.Annotations.CanBeNullAttribute;
+global using ICBN = JetBrains.Annotations.ItemCanBeNullAttribute;
+global using AN = System.Diagnostics.CodeAnalysis.AllowNullAttribute;
+global using MN = System.Diagnostics.CodeAnalysis.MaybeNullAttribute;
 
 #endregion
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.Versioning;
+using JetBrains.Annotations;
+using static Kantan.Internal.Common;
+
+#nullable enable
 
 namespace Kantan.Diagnostics;
 
@@ -63,17 +69,16 @@ public static class Guard
 	private const ACT ACT_NOT_NULL = ACT.IS_NOT_NULL;
 
 	#endregion
+	
 
-	[DNR]
-	[DH, AM]
+	[DNR, DH, AM]
 	[CA(UNCONDITIONAL_HALT), SFM(STRING_FORMAT_ARG)]
 	public static void Fail(string? msg = null, params object[] args) => Fail<Exception>(msg, args);
 
 	/// <summary>
 	/// Root fail function
 	/// </summary>
-	[DNR]
-	[DH, AM]
+	[DNR, DH, AM]
 	[CA(UNCONDITIONAL_HALT), SFM(STRING_FORMAT_ARG)]
 	public static void Fail<TException>(string? msg = null, params object[] args)
 		where TException : Exception, new()

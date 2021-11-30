@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading;
 using JetBrains.Annotations;
@@ -670,28 +671,34 @@ public static class ConsoleManager
 			}
 
 			while (true) {
-
-				if (!Win32.PeekConsoleInput(_stdIn, out InputRecord ir, 1, out uint numEventsRead)) {
-					throw new Win32Exception();
-				}
-
-				//Debug.WriteLine(ir);
-
-				if (numEventsRead == 0) {
-					return false;
-				}
-
-				// Skip non key-down && mod key events.
-
-				if (!IsMouseEvent(ir) && (!IsKeyDownEvent(ir) || IsModKey(ir))) {
-					var rg = new InputRecord[1];
-
-					if (!Win32.ReadConsoleInput(_stdIn, rg, 1, out numEventsRead))
+				unsafe {
+					if (!Win32.PeekConsoleInput(_stdIn, out InputRecord ir, 1, out uint numEventsRead)) {
 						throw new Win32Exception();
+					}
+
+					//Debug.WriteLine(ir);
+
+					if (numEventsRead == 0) {
+						return false;
+					}
+
+					// Skip non key-down && mod key events.
+					
+					var rg = new InputRecord[1];
+				
+
+					if (!IsMouseEvent(ir) && (!IsKeyDownEvent(ir) || IsModKey(ir))) {
+						if (!Win32.ReadConsoleInput(_stdIn, rg, 1, out numEventsRead))
+							throw new Win32Exception();
+					}
+					else {
+						// Marshal.DestroyStructure(Marshal.UnsafeAddrOfPinnedArrayElement(rg,0),typeof(InputRecord));
+						return true;
+					}
+					// Marshal.DestroyStructure(Marshal.UnsafeAddrOfPinnedArrayElement(rg, 0), typeof(InputRecord));
+
 				}
-				else {
-					return true;
-				}
+
 			}
 		}
 	}
@@ -770,6 +777,7 @@ public static class ConsoleManager
 			{
 				0 => Constants.UpperLeftCorner,
 				1 => Constants.BottomLeftCorner,
+				_ => throw new ArgumentOutOfRangeException(nameof(i), i, null)
 			},
 			_ => i switch
 			{

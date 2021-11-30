@@ -1,42 +1,61 @@
 ﻿// ReSharper disable InconsistentNaming
+
+using Newtonsoft.Json;
+
 namespace Kantan.Net;
 
-public sealed class IPGeolocation
+public struct IPGeolocation
 {
-	public string IP { get; internal set; }
+	// Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse); 
+	[JsonProperty("status")]
+	public string Status { get; set; }
 
-	public string CountryCode { get; internal set; }
+	[JsonProperty("country")]
+	public string Country { get; set; }
 
-	public string CountryName { get; internal set; }
+	[JsonProperty("countryCode")]
+	public string CountryCode { get; set; }
 
-	public string RegionCode { get; internal set; }
+	[JsonProperty("region")]
+	public string Region { get; set; }
 
-	public string RegionName { get; internal set; }
+	[JsonProperty("regionName")]
+	public string RegionName { get; set; }
 
-	public string City { get; internal set; }
+	[JsonProperty("city")]
+	public string City { get; set; }
 
-	public string ZipCode { get; internal set; }
+	[JsonProperty("zip")]
+	public string Zip { get; set; }
 
-	public string TimeZone { get; internal set; }
+	[JsonProperty("lat")]
+	public double Lat { get; set; }
 
-	public double Latitude { get; internal set; }
+	[JsonProperty("lon")]
+	public double Lon { get; set; }
 
-	public double Longitude { get; internal set; }
+	[JsonProperty("timezone")]
+	public string Timezone { get; set; }
 
-	public int MetroCode { get; internal set; }
+	[JsonProperty("isp")]
+	public string Isp { get; set; }
+
+	[JsonProperty("org")]
+	public string Org { get; set; }
+
+	[JsonProperty("as")]
+	public string As { get; set; }
+
+	[JsonProperty("query")]
+	public string Query { get; set; }
 
 	public override string ToString()
 	{
-		return $"{nameof(IP)}: {IP}\n"                   +
-		       $"{nameof(CountryCode)}: {CountryCode}\n" +
-		       $"{nameof(CountryName)}: {CountryName}\n" +
-		       $"{nameof(RegionCode)}: {RegionCode}\n"   +
-		       $"{nameof(RegionName)}: {RegionName}\n"   +
-		       $"{nameof(City)}: {City}\n"               +
-		       $"{nameof(ZipCode)}: {ZipCode}\n"         +
-		       $"{nameof(TimeZone)}: {TimeZone}\n"       +
-		       $"{nameof(Latitude)}: {Latitude}\n"       +
-		       $"{nameof(Longitude)}: {Longitude}\n"     +
-		       $"{nameof(MetroCode)}: {MetroCode}";
+		return $"{nameof(Status)}: {Status}, {nameof(Country)}: {Country}, " +
+		       $"{nameof(CountryCode)}: {CountryCode}, {nameof(Region)}: {Region}, " +
+		       $"{nameof(RegionName)}: {RegionName}, " + $"{nameof(City)}: {City}, {nameof(Zip)}: {Zip}, " +
+		       $"{nameof(Lat)}: {Lat}, {nameof(Lon)}: {Lon}, " +
+		       $"{nameof(Timezone)}: {Timezone}, {nameof(Isp)}: {Isp}, {nameof(Org)}: {Org}, " +
+		       $"{nameof(As)}: {As}, {nameof(Query)}: {Query}";
 	}
 }

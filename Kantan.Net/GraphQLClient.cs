@@ -1,7 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net;
+using System.Net.Http;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using RestSharp;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
@@ -20,12 +25,18 @@ public class GraphQLClient
 	 */
 
 
-	private readonly RestClient _client;
+	private HttpClient _client;
+
+	private readonly string m_apiUrl;
 
 	public GraphQLClient(string apiUrl)
 	{
-		_client = new RestClient(apiUrl);
-
+		m_apiUrl = apiUrl;
+		_client = new HttpClient()
+		{
+			BaseAddress = new Uri(m_apiUrl),
+			
+		};
 		ServicePointManager.SecurityProtocol =
 			SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
 	}
@@ -34,23 +45,31 @@ public class GraphQLClient
 	                       Dictionary<string, string> additionalHeaders = null,
 	                       int timeout = 0)
 	{
-		var request = new RestRequest("/", Method.POST)
-		{
-			Timeout = timeout
-		};
 
-		if (additionalHeaders is {Count: > 0}) {
+		_client.Timeout = timeout == 0 ? Timeout.InfiniteTimeSpan : TimeSpan.FromMilliseconds(timeout);
+		var request = new HttpRequestMessage(HttpMethod.Post, "/")
+			{ };
+
+
+		if (additionalHeaders is { Count: > 0 }) {
 			foreach ((string key, string value) in additionalHeaders) {
-				request.AddHeader(key, value);
+				request.Headers.Add(key, value);
 			}
 		}
 
-		request.AddJsonBody(new
+		var obj = new
 		{
 			query     = query,
 			variables = variables
-		});
+		};
 
-		return JObject.Parse(_client.Execute(request).Content);
+		request.Content = new StringContent(JsonConvert.SerializeObject(obj), Encoding.UTF8, "application/json");
+
+		var response = _client.Send(request);
+		var task = response.Content.ReadAsStringAsync();
+		task.Wait(_client.Timeout);
+		request.ResetSendStatus();
+
+		return JObject.Parse(task.Result);
 	}
 }

@@ -8,11 +8,10 @@ using AngleSharp.Html.Dom;
 
 namespace Kantan.Net;
 
-public static class Serializing
+public static class HtmlUtilities
 {
 	public static JsonValue TryGetKeyValue(this JsonValue value, string k)
 	{
-			
 		return value.ContainsKey(k) ? value[k] : null;
 	}
 
@@ -24,7 +23,6 @@ public static class Serializing
 	public static IEnumerable<string> QuerySelectorAttributes(this IHtmlDocument document, string s, string a)
 	{
 		return document.QuerySelectorAll(s).Select(element => element.GetAttribute(a));
-
 	}
 
 	public static string TryGetAttribute(this INode n, string s)

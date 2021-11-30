@@ -13,6 +13,7 @@ using System.Net.Http;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -30,7 +31,6 @@ using Kantan.Numeric;
 using Kantan.Text;
 using Kantan.Utilities;
 using Microsoft.Win32.SafeHandles;
-using RestSharp;
 // ReSharper disable MethodHasAsyncOverload
 
 
@@ -45,22 +45,33 @@ namespace Test;
 public static class Program
 {
 	private static ConsoleDialog _dialog;
-
+	
+	
 	private static async Task Main(string[] args)
 	{
-		Trace.WriteLine("butt");
+		var ip = IPUtilities.GetExternalIP();
+		Console.WriteLine(ip);
+		Console.WriteLine(IPUtilities.GetAddressLocation(ip));
 
-		var    i          = "https://i.imgur.com/QtCausw.png";
-		var path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-		var    f          = Path.Combine(path, Path.GetFileName(i));
-		WebUtilities.GetFile(i,path);
+		var g = new GraphQLClient("https://graphql.anilist.co/");
 
-		var x = Network.GetHttpResponse("http://tidder.xyz", ms:5000);
-		Console.WriteLine(x);
-		Console.WriteLine(Network.GetHttpResponse(i));
+		var query = @"query ($id: Int) { # Define which variables will be used in the query (id)
+				Media(id: $id, type: ANIME) { # Insert our variables into the query arguments (id) (type: ANIME is hard-coded in the query)
+					id
+					title {
+						romaji
+						english
+						native
+					}
+				}
+			}";
+
+		Console.WriteLine(g.Execute(query));
+
+
 	}
 
-
+	
 	private class MyClass : IOutline
 	{
 		/// <inheritdoc />

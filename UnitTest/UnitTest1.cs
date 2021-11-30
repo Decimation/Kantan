@@ -299,7 +299,7 @@ public class NetworkTests
 	{
 		const string jpg = "https://i.ytimg.com/vi/r45a-l9Gqdk/hqdefault.jpg";
 
-		var i = Network.GetResponse(jpg).ContentType;
+		var i = HttpUtilities.GetHttpResponse(jpg).Content.Headers.ContentType.ToString();
 		Assert.True(UriUtilities.IsUri(jpg, out var u));
 		Assert.True(MediaTypes.GetExtensions(i).Contains("jpe"));
 		Assert.True(MediaTypes.GetTypeComponent(i) == "image");
