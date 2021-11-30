@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Kantan.Internal;
+using Kantan.Utilities;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -18,25 +21,23 @@ namespace Kantan.Net;
 /// <summary>
 /// Simple GraphQL client
 /// </summary>
-public class GraphQLClient
+public class GraphQLClient : IDisposable
 {
 	/*
 	 * Adapted from https://github.com/latheesan-k/simple-graphql-client
 	 */
 
 
-	private HttpClient _client;
+	private HttpClient m_client;
 
-	private readonly string m_apiUrl;
 
 	public GraphQLClient(string apiUrl)
 	{
-		m_apiUrl = apiUrl;
-		_client = new HttpClient()
+		m_client = new HttpClient()
 		{
-			BaseAddress = new Uri(m_apiUrl),
-			
+			BaseAddress = new Uri(apiUrl),
 		};
+
 		ServicePointManager.SecurityProtocol =
 			SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
 	}
@@ -45,8 +46,8 @@ public class GraphQLClient
 	                       Dictionary<string, string> additionalHeaders = null,
 	                       int timeout = 0)
 	{
+		m_client.Timeout = timeout == 0 ? Timeout.InfiniteTimeSpan : TimeSpan.FromMilliseconds(timeout);
 
-		_client.Timeout = timeout == 0 ? Timeout.InfiniteTimeSpan : TimeSpan.FromMilliseconds(timeout);
 		var request = new HttpRequestMessage(HttpMethod.Post, "/")
 			{ };
 
@@ -63,13 +64,25 @@ public class GraphQLClient
 			variables = variables
 		};
 
-		request.Content = new StringContent(JsonConvert.SerializeObject(obj), Encoding.UTF8, "application/json");
+		request.Content = new StringContent(JsonConvert.SerializeObject(obj), Encoding.UTF8, 
+		                                    "application/json");
 
-		var response = _client.Send(request);
-		var task = response.Content.ReadAsStringAsync();
-		task.Wait(_client.Timeout);
-		request.ResetSendStatus();
+		var clone = ReflectionHelper.Clone(m_client);
+
+		var response = m_client.Send(request);
+		var task     = response.Content.ReadAsStringAsync();
+		task.Wait(m_client.Timeout);
+
+		/*request.ResetStatus();
+		_client.ResetStatus();*/
+
+		m_client = clone;
 
 		return JObject.Parse(task.Result);
+	}
+
+	public void Dispose()
+	{
+		m_client.Dispose();
 	}
 }

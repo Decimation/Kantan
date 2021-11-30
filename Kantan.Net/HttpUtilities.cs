@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -6,6 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Reflection;
+using System.Text;
 using System.Web;
 using JetBrains.Annotations;
 using Kantan.Model;
@@ -42,27 +44,8 @@ public static class HttpUtilities
 	internal const int TIMEOUT_MS = 2000;
 
 	private const int MAX_AUTO_REDIRECTS = 50;
-
-
-#if USE_WC
-	[MustUseReturnValue]
-	public static HttpWebResponse GetWebResponse(string url, int ms = TimeoutMS, string method = "GET",
-	                                             bool redirect = true, int redirects = MAX_AUTO_REDIRECTS)
-	{
-		var h = (HttpWebRequest) WebRequest.Create(url);
-		h.AllowAutoRedirect = redirect;
-		h.Method = method;
-		h.MaximumAutomaticRedirections = redirects;
-		h.Timeout = ms;
-
-		var r = (HttpWebResponse) h.GetResponse();
-
-		return r;
-	}
-
-#else
-
-	public static bool ResetSendStatus(this HttpRequestMessage request)
+	
+	public static bool ResetStatus(this HttpRequestMessage request)
 	{
 		const int MessageNotYetSent  = 0;
 		const int MessageAlreadySent = 1;
@@ -72,18 +55,35 @@ public static class HttpUtilities
 
 		// internal bool MarkAsSent() => Interlocked.CompareExchange(ref _sendStatus, MessageAlreadySent, MessageNotYetSent) == MessageNotYetSent;
 
-		var requestType = request.GetType().GetTypeInfo();
+		var type = request.GetType().GetTypeInfo();
 
+		var field = type.GetField(sendStatusFieldName, 
+		                          BindingFlags.Instance | BindingFlags.NonPublic);
 
-		var sendStatusField =
-			requestType.GetField(sendStatusFieldName, BindingFlags.Instance | BindingFlags.NonPublic);
-
-		if (sendStatusField != null) {
-			sendStatusField.SetValue(request, MessageNotYetSent);
+		if (field != null) {
+			field.SetValue(request, MessageNotYetSent);
 			return true;
 		}
-		else
-			return false;
+
+		return false;
+	}
+
+
+	public static bool ResetStatus(this HttpClient request)
+	{
+		const string sendStatusFieldName = "_operationStarted";
+
+		var type = request.GetType().GetTypeInfo();
+
+		var field = type.GetField(sendStatusFieldName,
+		                          BindingFlags.Instance | BindingFlags.NonPublic);
+
+		if (field != null) {
+			field.SetValue(request, false);
+			return true;
+		}
+
+		return false;
 	}
 
 	[CanBeNull]
@@ -121,8 +121,6 @@ public static class HttpUtilities
 		}
 
 	}
-#endif
-
 
 	public static PingReply Ping(Uri u, int ms = TIMEOUT_MS) => Ping(IPUtilities.GetAddress(u.ToString()), ms);
 
@@ -208,5 +206,72 @@ public static class HttpUtilities
 		} while (maxRedirCount-- > 0);
 
 		return newUrl;
+	}
+
+	public static string ToQueryString(this NameValueCollection nvc)
+	{
+		var array = (
+			            from key in nvc.AllKeys
+			            from value in nvc.GetValues(key)
+			            select string.Format(
+				            "{0}={1}",
+				            HttpUtility.UrlEncode(key),
+				            HttpUtility.UrlEncode(value))
+		            ).ToArray();
+		return "?" + string.Join("&", array);
+	}
+
+	public static Uri AddQuery(this Uri uri, string name, string value)
+	{
+		var httpValueCollection = HttpUtility.ParseQueryString(uri.Query);
+
+		httpValueCollection.Remove(name);
+		httpValueCollection.Add(name, value);
+
+		var ub = new UriBuilder(uri);
+
+		// this code block is taken from httpValueCollection.ToString() method
+		// and modified so it encodes strings with HttpUtility.UrlEncode
+		if (httpValueCollection.Count == 0)
+			ub.Query = String.Empty;
+		else {
+			var sb = new StringBuilder();
+
+			for (int i = 0; i < httpValueCollection.Count; i++) {
+				string text = httpValueCollection.GetKey(i);
+
+				{
+					text = HttpUtility.UrlEncode(text);
+
+					string   val    = (text != null) ? (text + "=") : string.Empty;
+					string[] values = httpValueCollection.GetValues(i);
+
+					if (sb.Length > 0)
+						sb.Append('&');
+
+					if (values == null || values.Length == 0)
+						sb.Append(val);
+					else {
+						if (values.Length == 1) {
+							sb.Append(val);
+							sb.Append(HttpUtility.UrlEncode(values[0]));
+						}
+						else {
+							for (int j = 0; j < values.Length; j++) {
+								if (j > 0)
+									sb.Append('&');
+
+								sb.Append(val);
+								sb.Append(HttpUtility.UrlEncode(values[j]));
+							}
+						}
+					}
+				}
+			}
+
+			ub.Query = sb.ToString();
+		}
+
+		return ub.Uri;
 	}
 }

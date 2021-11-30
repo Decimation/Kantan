@@ -67,11 +67,13 @@ public static class Program
 			}";
 
 		Console.WriteLine(g.Execute(query));
+		Console.WriteLine(g.Execute(query));
+
 
 
 	}
 
-	
+
 	private class MyClass : IOutline
 	{
 		/// <inheritdoc />

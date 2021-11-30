@@ -24,6 +24,7 @@ using MA = System.Runtime.InteropServices.MarshalAsAttribute;
 using UT = System.Runtime.InteropServices.UnmanagedType;
 
 namespace Kantan.Net;
+// todo: deprecate
 
 /// <summary>
 /// Media types, MIME types, etc.
