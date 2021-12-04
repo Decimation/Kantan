@@ -77,7 +77,7 @@ public static class MediaTypes
 	                                           [MA(UT.LPWStr)] string pwzMimeProposed,
 	                                           int dwMimeFlags, out IntPtr ppwzMimeOut, int dwReserved);
 
-	public static string ResolveFromData(string url) => ResolveFromData(WebUtilities.GetStream(url));
+	public static string ResolveFromData(string url) => ResolveFromData(HttpUtilities.GetStream(url));
 
 	public static string ResolveFromData(Stream s)
 	{

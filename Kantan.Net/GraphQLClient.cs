@@ -30,13 +30,11 @@ public class GraphQLClient : IDisposable
 
 	private HttpClient m_client;
 
+	private readonly string m_apiUrl;
 
 	public GraphQLClient(string apiUrl)
 	{
-		m_client = new HttpClient()
-		{
-			BaseAddress = new Uri(apiUrl),
-		};
+		m_apiUrl = apiUrl;
 
 		ServicePointManager.SecurityProtocol =
 			SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
@@ -46,6 +44,11 @@ public class GraphQLClient : IDisposable
 	                       Dictionary<string, string> additionalHeaders = null,
 	                       int timeout = 0)
 	{
+		m_client = new HttpClient()
+		{
+			BaseAddress = new Uri(m_apiUrl),
+		};
+
 		m_client.Timeout = timeout == 0 ? Timeout.InfiniteTimeSpan : TimeSpan.FromMilliseconds(timeout);
 
 		var request = new HttpRequestMessage(HttpMethod.Post, "/")
@@ -64,7 +67,7 @@ public class GraphQLClient : IDisposable
 			variables = variables
 		};
 
-		request.Content = new StringContent(JsonConvert.SerializeObject(obj), Encoding.UTF8, 
+		request.Content = new StringContent(JsonConvert.SerializeObject(obj), Encoding.UTF8,
 		                                    "application/json");
 
 		var clone = ReflectionHelper.Clone(m_client);

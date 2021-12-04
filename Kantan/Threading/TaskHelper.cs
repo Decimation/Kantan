@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 // ReSharper disable UnusedMember.Global
@@ -25,6 +27,7 @@ public static class TaskHelper
 	 * https://stackoverflow.com/questions/32520612/how-to-handle-task-cancellation-in-the-tpl
 	 */
 
+
 	public static async Task AwaitWithTimeout(this Task task, int timeout, Action success, Action error)
 	{
 		if (await Task.WhenAny(task, Task.Delay(timeout)) == task) {
@@ -33,17 +36,5 @@ public static class TaskHelper
 		else {
 			error();
 		}
-	}
-
-	public static TimeSpan MeasureAction(Action f)
-	{
-		var sw = Stopwatch.StartNew();
-		//var x=Environment.TickCount64;
-
-		f();
-		//var d = Environment.TickCount64 - x;
-		sw.Stop();
-		return sw.Elapsed;
-		//return TimeSpan.FromTicks(d);
 	}
 }

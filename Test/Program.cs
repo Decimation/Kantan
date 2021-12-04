@@ -29,6 +29,7 @@ using Kantan.Native.Structures;
 using Kantan.Net;
 using Kantan.Numeric;
 using Kantan.Text;
+using Kantan.Threading;
 using Kantan.Utilities;
 using Microsoft.Win32.SafeHandles;
 // ReSharper disable MethodHasAsyncOverload
@@ -49,7 +50,7 @@ public static class Program
 	
 	private static async Task Main(string[] args)
 	{
-		var ip = IPUtilities.GetExternalIP();
+		/*var ip = IPUtilities.GetExternalIP();
 		Console.WriteLine(ip);
 		Console.WriteLine(IPUtilities.GetAddressLocation(ip));
 
@@ -67,10 +68,13 @@ public static class Program
 			}";
 
 		Console.WriteLine(g.Execute(query));
-		Console.WriteLine(g.Execute(query));
-
-
-
+		Console.WriteLine(g.Execute(query));*/
+		var u = "https://i.imgur.com/QtCausw.png";
+		Console.WriteLine(HttpUtilities.GetStream(u).ReadByte());
+		var u2=AsyncHelper.RunSync(()=>HttpUtilities.get(u));
+		Console.WriteLine(u2.ReadByte());
+		var u3=AsyncHelper.RunSync(() => HttpUtilities.get(u));
+		Console.WriteLine(u3.ReadByte());
 	}
 
 

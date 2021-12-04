@@ -28,6 +28,8 @@ global using CBN = JetBrains.Annotations.CanBeNullAttribute;
 global using ICBN = JetBrains.Annotations.ItemCanBeNullAttribute;
 global using AN = System.Diagnostics.CodeAnalysis.AllowNullAttribute;
 global using MN = System.Diagnostics.CodeAnalysis.MaybeNullAttribute;
+global using MURV = JetBrains.Annotations.MustUseReturnValueAttribute;
+
 
 #endregion
 

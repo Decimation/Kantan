@@ -35,15 +35,14 @@ public static class IPUtilities
 
 	public static IPGeolocation GetAddressLocation(string hostOrIP)
 	{
-		using var rc = new HttpClient();
+		using var client = new HttpClient();
 
-		var u = new Uri(Resources.GeoIPUrl+hostOrIP);
+		var uri = new Uri(Resources.GeoIPUrl + hostOrIP);
 
-		using var request = new HttpRequestMessage(HttpMethod.Get, u);
+		using var request = new HttpRequestMessage(HttpMethod.Get, uri);
+		using var response     = client.Send(request);
 
-		using var res     = rc.Send(request);
-
-		var task = res.Content.ReadAsStringAsync();
+		var task = response.Content.ReadAsStringAsync();
 		task.Wait();
 
 		var json = task.Result;

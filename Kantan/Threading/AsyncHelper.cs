@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -9,6 +10,12 @@ namespace Kantan.Threading;
 
 public static class AsyncHelper
 {
+	//https://github.com/tejacques/AsyncBridge
+	//https://stackoverflow.com/questions/5095183/how-would-i-run-an-async-taskt-method-synchronously
+
+
+#if DISABLED
+
 	/// <summary>
 	/// Executes an async <see cref="Task{TResult}"/> method which has a void return value synchronously
 	/// </summary>
@@ -132,5 +139,38 @@ public static class AsyncHelper
 		{
 			return this;
 		}
+	}
+#endif
+
+	//https://github.com/aspnet/AspNetIdentity/blob/main/src/Microsoft.AspNet.Identity.Core/AsyncHelper.cs
+	private static readonly TaskFactory Factory = new(CancellationToken.None,
+	                                                  TaskCreationOptions.None,
+	                                                  TaskContinuationOptions.None,
+	                                                  TaskScheduler.Default);
+
+	public static TResult RunSync<TResult>(Func<Task<TResult>> func)
+	{
+		var cultureUi = CultureInfo.CurrentUICulture;
+		var culture   = CultureInfo.CurrentCulture;
+
+		return Factory.StartNew(() =>
+		{
+			Thread.CurrentThread.CurrentCulture   = culture;
+			Thread.CurrentThread.CurrentUICulture = cultureUi;
+			return func();
+		}).Unwrap().GetAwaiter().GetResult();
+	}
+
+	public static void RunSync(Func<Task> func)
+	{
+		var cultureUi = CultureInfo.CurrentUICulture;
+		var culture   = CultureInfo.CurrentCulture;
+
+		Factory.StartNew(() =>
+		{
+			Thread.CurrentThread.CurrentCulture   = culture;
+			Thread.CurrentThread.CurrentUICulture = cultureUi;
+			return func();
+		}).Unwrap().GetAwaiter().GetResult();
 	}
 }

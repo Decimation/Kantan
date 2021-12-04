@@ -93,7 +93,6 @@ public static class UriUtilities
 		url = RemoveFeedburnerPart(url);
 		url = RemoveUrlQueries(url);
 		url = RemoveTrailingSlashAndEmptyQuery(url);
-
 		return url;
 	}
 
