@@ -61,20 +61,11 @@ namespace Kantan.Net.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://icanhazip.com/.
+        ///   Looks up a localized string similar to https://ifconfig.co/.
         /// </summary>
-        internal static string ExternalIPUrl {
+        internal static string IFConfigUrl {
             get {
-                return ResourceManager.GetString("ExternalIPUrl", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to http://ip-api.com/json/.
-        /// </summary>
-        internal static string GeoIPUrl {
-            get {
-                return ResourceManager.GetString("GeoIPUrl", resourceCulture);
+                return ResourceManager.GetString("IFConfigUrl", resourceCulture);
             }
         }
         

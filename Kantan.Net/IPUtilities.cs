@@ -11,6 +11,8 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using System.Web;
+using Flurl;
+using Flurl.Http;
 using Kantan.Net.Properties;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -22,32 +24,27 @@ namespace Kantan.Net;
 
 public static class IPUtilities
 {
-	public static IPAddress GetExternalIP()
+	/*public static IPAddress GetExternalIP()
 	{
 		using var client = new HttpClient();
 
 		var s = client.DownloadString(Resources.ExternalIPUrl).Trim();
 
 		return IPAddress.Parse(s);
-	}
-
-	public static IPGeolocation GetAddressLocation(IPAddress ip) => GetAddressLocation(ip.ToString());
-
-	public static IPGeolocation GetAddressLocation(string hostOrIP)
+	}*/
+	
+	public static IPGeolocation GetIPInformation()
 	{
-		using var client = new HttpClient();
+		var task = (Resources.IFConfigUrl).WithHeaders(new
+		{
+			Accept     = "application/json",
+			User_Agent = HttpUtilities.UserAgent
+		}).GetJsonAsync<IPGeolocation>();
 
-		var uri = new Uri(Resources.GeoIPUrl + hostOrIP);
-
-		using var request = new HttpRequestMessage(HttpMethod.Get, uri);
-		using var response     = client.Send(request);
-
-		var task = response.Content.ReadAsStringAsync();
 		task.Wait();
-
-		var json = task.Result;
-		return JsonConvert.DeserializeObject<IPGeolocation>(json);
+		return task.Result;
 	}
+	
 
 	public static IPAddress GetHostAddress(string hostOrIP) => Dns.GetHostAddresses(hostOrIP)[0];
 

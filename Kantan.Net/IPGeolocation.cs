@@ -1,60 +1,84 @@
 ﻿// ReSharper disable InconsistentNaming
 
+using System.Net;
 using Newtonsoft.Json;
 
 namespace Kantan.Net;
 
+// Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse); 
+/*public class UserAgent
+{
+	[JsonProperty("product")]
+	public string Product { get; set; }
+
+	[JsonProperty("version")]
+	public string Version { get; set; }
+
+	[JsonProperty("raw_value")]
+	public string RawValue { get; set; }
+}*/
+
 public struct IPGeolocation
 {
-	[JsonProperty("status")]
-	public string Status { get; set; }
+	[JsonProperty("ip")]
+	// [JsonIgnore]
+	public string Ip { get; set; }
+
+	[JsonProperty("ip_decimal")]
+	public long IpDecimal { get; set; }
 
 	[JsonProperty("country")]
 	public string Country { get; set; }
 
-	[JsonProperty("countryCode")]
-	public string CountryCode { get; set; }
+	[JsonProperty("country_iso")]
+	public string CountryIso { get; set; }
 
-	[JsonProperty("region")]
-	public string Region { get; set; }
+	[JsonProperty("country_eu")]
+	public bool CountryEu { get; set; }
 
-	[JsonProperty("regionName")]
+	[JsonProperty("region_name")]
 	public string RegionName { get; set; }
+
+	[JsonProperty("region_code")]
+	public string RegionCode { get; set; }
+
+	[JsonProperty("metro_code")]
+	public int MetroCode { get; set; }
+
+	[JsonProperty("zip_code")]
+	public string ZipCode { get; set; }
 
 	[JsonProperty("city")]
 	public string City { get; set; }
 
-	[JsonProperty("zip")]
-	public string Zip { get; set; }
-
-	[JsonProperty("lat")]
+	[JsonProperty("latitude")]
 	public double Latitude { get; set; }
 
-	[JsonProperty("lon")]
+	[JsonProperty("longitude")]
 	public double Longitude { get; set; }
 
-	[JsonProperty("timezone")]
-	public string Timezone { get; set; }
+	[JsonProperty("time_zone")]
+	public string TimeZone { get; set; }
 
-	[JsonProperty("isp")]
-	public string ISP { get; set; }
+	[JsonProperty("asn")]
+	public string Asn { get; set; }
 
-	[JsonProperty("org")]
-	public string Organization { get; set; }
+	[JsonProperty("asn_org")]
+	public string AsnOrg { get; set; }
 
-	[JsonProperty("as")]
-	public string As { get; set; }
+	[JsonProperty("hostname")]
+	public string Hostname { get; set; }
 
-	[JsonProperty("query")]
-	public string Query { get; set; }
+	// [JsonProperty("user_agent")]
+	// public UserAgent UserAgent { get; set; }
+
 
 	public override string ToString()
 	{
-		return $"{nameof(Status)}: {Status}, {nameof(Country)}: {Country}, " +
-		       $"{nameof(CountryCode)}: {CountryCode}, {nameof(Region)}: {Region}, " +
-		       $"{nameof(RegionName)}: {RegionName}, " + $"{nameof(City)}: {City}, {nameof(Zip)}: {Zip}, " +
-		       $"{nameof(Latitude)}: {Latitude}, {nameof(Longitude)}: {Longitude}, " +
-		       $"{nameof(Timezone)}: {Timezone}, {nameof(ISP)}: {ISP}, {nameof(Organization)}: {Organization}, " +
-		       $"{nameof(As)}: {As}, {nameof(Query)}: {Query}";
+		return $"{nameof(Ip)}: {Ip}, {nameof(IpDecimal)}: {IpDecimal}, {nameof(Country)}: {Country}, " +
+		       $"{nameof(CountryIso)}: {CountryIso}, {nameof(CountryEu)}: {CountryEu}, {nameof(RegionName)}: {RegionName}, " +
+		       $"{nameof(RegionCode)}: {RegionCode}, {nameof(MetroCode)}: {MetroCode}, {nameof(ZipCode)}: {ZipCode}, " +
+		       $"{nameof(City)}: {City}, {nameof(Latitude)}: {Latitude}, {nameof(Longitude)}: {Longitude}, {nameof(TimeZone)}: {TimeZone}, " +
+		       $"{nameof(Asn)}: {Asn}, {nameof(AsnOrg)}: {AsnOrg}, {nameof(Hostname)}: {Hostname}";
 	}
 }

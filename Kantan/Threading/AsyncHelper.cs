@@ -12,6 +12,7 @@ public static class AsyncHelper
 {
 	//https://github.com/tejacques/AsyncBridge
 	//https://stackoverflow.com/questions/5095183/how-would-i-run-an-async-taskt-method-synchronously
+	//https://github.com/Microsoft/referencesource/blob/master/Microsoft.Bcl.Async/Microsoft.Threading.Tasks/Threading/Tasks/TaskEx.cs
 
 
 #if DISABLED

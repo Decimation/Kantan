@@ -69,12 +69,9 @@ public static class Program
 
 		Console.WriteLine(g.Execute(query));
 		Console.WriteLine(g.Execute(query));*/
-		var u = "https://i.imgur.com/QtCausw.png";
-		Console.WriteLine(HttpUtilities.GetStream(u).ReadByte());
-		var u2=AsyncHelper.RunSync(()=>HttpUtilities.get(u));
-		Console.WriteLine(u2.ReadByte());
-		var u3=AsyncHelper.RunSync(() => HttpUtilities.get(u));
-		Console.WriteLine(u3.ReadByte());
+
+
+		Console.WriteLine(IPUtilities.GetIPInformation());
 	}
 
 
