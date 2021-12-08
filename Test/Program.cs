@@ -50,41 +50,29 @@ public static class Program
 	
 	private static async Task Main(string[] args)
 	{
-		/*var ip = IPUtilities.GetExternalIP();
-		Console.WriteLine(ip);
-		Console.WriteLine(IPUtilities.GetAddressLocation(ip));
-
-		var g = new GraphQLClient("https://graphql.anilist.co/");
-
-		var query = @"query ($id: Int) { # Define which variables will be used in the query (id)
-				Media(id: $id, type: ANIME) { # Insert our variables into the query arguments (id) (type: ANIME is hard-coded in the query)
-					id
-					title {
-						romaji
-						english
-						native
-					}
-				}
-			}";
-
-		Console.WriteLine(g.Execute(query));
-		Console.WriteLine(g.Execute(query));*/
-
-
-		Console.WriteLine(IPUtilities.GetIPInformation());
+		
+		await ConsoleTest();
+		//
+		// Console.WriteLine(IPUtilities.GetIPInformation());
 	}
 
 
-	private class MyClass : IOutline
+	private class MyClass : IConsoleComponent
 	{
 		/// <inheritdoc />
-		public Dictionary<string, object> Outline
+		public Dictionary<string, object> Data
 			=> new()
 			{
 				["a"] = "g",
 				["x"] = "d",
 
 			};
+
+		public ConsoleOption GetConsoleOption()
+		{
+			return null;
+		}
+
 	}
 
 	private static async Task ConsoleTest()
@@ -103,16 +91,17 @@ public static class Program
 			//SelectMultiple = true,
 			Options = ConsoleOption.FromArray(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 }).ToList()
 		};
-		dialog.Options[0].Data = new MyClass();
+		var myClass = new MyClass();
+		dialog.Options[0].Data = myClass.Data;
 
 		for (int i = 0; i < dialog.Options.Count; i++)
 		{
-			dialog.Options[i].Data = new MyClass();
+			dialog.Options[i].Data = myClass.Data;
 		}
 
 		dialog.Options[0].Functions[ConsoleModifiers.Shift] = () =>
 		{
-			Console.WriteLine("butt");
+			Console.WriteLine("shift");
 			return null;
 		};
 

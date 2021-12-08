@@ -16,7 +16,7 @@ public struct KeyEventRecord
 	public ushort wRepeatCount;
 
 	[FieldOffset(6)]
-	public ushort wVirtualKeyCode;
+	public VirtualKey wVirtualKeyCode;
 
 	[FieldOffset(8)]
 	public ushort wVirtualScanCode;

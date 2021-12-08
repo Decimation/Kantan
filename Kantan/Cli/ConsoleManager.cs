@@ -424,10 +424,10 @@ public static class ConsoleManager
 	}
 
 
-	internal static bool         _click;
-	private static  IntPtr       _stdIn;
-	private static  IntPtr       _stdOut;
-	private static  ConsoleModes _oldMode;
+	internal static         bool          _click;
+	private static          IntPtr        _stdIn;
+	private static          IntPtr        _stdOut;
+	private static          ConsoleModes  _oldMode;
 
 	[SupportedOSPlatform(OS_WINDOWS)]
 	public static string ReadBufferLine(int y) => ReadBufferXY(Console.BufferWidth, 0, y);
@@ -489,7 +489,7 @@ public static class ConsoleManager
 		}
 
 		int   attrsWritten = 0;
-		Coord writePos     = new Coord((short) x, (short) y);
+		var writePos     = new Coord((short) x, (short) y);
 
 		if (!Win32.WriteConsoleOutputAttribute(_stdOut, attrs, attrs.Length, writePos, ref attrsWritten)) {
 			throw new Win32Exception();
@@ -578,7 +578,7 @@ public static class ConsoleManager
 		// We should also skip over Shift, Control, and Alt, as well as caps lock.
 		// Apparently we don't need to check for 0xA0 through 0xA5, which are keys like
 		// Left Control & Right Control. See the ConsoleKey enum for these values.
-		var keyCode = (VirtualKey) ir.KeyEvent.wVirtualKeyCode;
+		var keyCode = ir.KeyEvent.wVirtualKeyCode;
 
 		return keyCode is >= VirtualKey.SHIFT and <= VirtualKey.MENU or VirtualKey.CAPITAL
 			       or VirtualKey.NUMLOCK or VirtualKey.SCROLL;
@@ -590,7 +590,7 @@ public static class ConsoleManager
 		// We did NOT have a previous keystroke with repeated characters:
 		while (true) {
 
-			var keyCode = (VirtualKey) ir.KeyEvent.wVirtualKeyCode;
+			var keyCode = ir.KeyEvent.wVirtualKeyCode;
 
 			// First check for non-keyboard events & discard them. Generally we tap into only KeyDown events and ignore the KeyUp events
 			// but it is possible that we are dealing with a Alt+NumPad unicode key sequence, the final unicode char is revealed only when
@@ -636,7 +636,7 @@ public static class ConsoleManager
 
 		var state = ir.KeyEvent.dwControlKeyState;
 
-		return GetKeyInfo(ir.KeyEvent.UnicodeChar, ir.KeyEvent.wVirtualKeyCode, state);
+		return GetKeyInfo(ir.KeyEvent.UnicodeChar, (int) ir.KeyEvent.wVirtualKeyCode, state);
 
 	}
 
@@ -662,10 +662,14 @@ public static class ConsoleManager
 		        (ControlKeyState.LeftAltPressed | ControlKeyState.RightAltPressed)) != 0;
 	}
 
+	private static readonly InputRecord[] InputBuffer = new InputRecord[1];
+
 	public static bool InputAvailable
 	{
 		get
 		{
+			// todo
+
 			if (!OperatingSystem.IsWindows()) {
 				return Console.KeyAvailable;
 			}
@@ -683,12 +687,9 @@ public static class ConsoleManager
 					}
 
 					// Skip non key-down && mod key events.
-					
-					var rg = new InputRecord[1];
-				
 
 					if (!IsMouseEvent(ir) && (!IsKeyDownEvent(ir) || IsModKey(ir))) {
-						if (!Win32.ReadConsoleInput(_stdIn, rg, 1, out numEventsRead))
+						if (!Win32.ReadConsoleInput(_stdIn, InputBuffer, (uint) InputBuffer.Length, out numEventsRead))
 							throw new Win32Exception();
 					}
 					else {

@@ -284,6 +284,27 @@ public class Tests
 public class NetworkTests
 {
 	[Test]
+	public void GraphQLTest()
+	{
+		var g = new GraphQLClient("https://graphql.anilist.co/");
+
+		var query = @"query ($id: Int) { # Define which variables will be used in the query (id)
+				Media(id: $id, type: ANIME) { # Insert our variables into the query arguments (id) (type: ANIME is hard-coded in the query)
+					id
+					title {
+						romaji
+						english
+						native
+					}
+				}
+			}";
+
+		dynamic execute = g.Execute(query);
+
+		Assert.True(execute.data.Media.title.english.ToString().Contains("Cowboy Bebop"));
+	}
+
+	[Test]
 	[TestCase(@"https://i.imgur.com/QtCausw.png", true)]
 	[TestCase(@"http://tidder.xyz/?imagelink=https://i.imgur.com/QtCausw.png", false)]
 	[TestCase(@"http://tidder.xyz/", false)]

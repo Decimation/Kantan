@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Flurl.Http;
 using Kantan.Internal;
 using Kantan.Utilities;
 using Newtonsoft.Json;
@@ -23,6 +24,11 @@ namespace Kantan.Net;
 /// </summary>
 public class GraphQLClient : IDisposable
 {
+	/*
+	 * Adapted from https://github.com/latheesan-k/simple-graphql-client
+	 */
+
+
 	/*
 	 * Adapted from https://github.com/latheesan-k/simple-graphql-client
 	 */
@@ -55,8 +61,10 @@ public class GraphQLClient : IDisposable
 			{ };
 
 
-		if (additionalHeaders is { Count: > 0 }) {
-			foreach ((string key, string value) in additionalHeaders) {
+		if (additionalHeaders is { Count: > 0 })
+		{
+			foreach ((string key, string value) in additionalHeaders)
+			{
 				request.Headers.Add(key, value);
 			}
 		}

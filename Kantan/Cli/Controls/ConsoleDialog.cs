@@ -79,7 +79,7 @@ public class ConsoleDialog
 	///     executes the <see cref="ConsoleOption.Function" /> with the appropriate modifiers
 	/// </summary>
 	/// <remarks>
-	///     <see cref="MAX_DISPLAY_OPTIONS" />
+	///     <see cref="ConsoleOption.MAX_DISPLAY_OPTIONS" />
 	/// </remarks>
 	public IList<ConsoleOption> Options { get; init; }
 
@@ -214,7 +214,7 @@ public class ConsoleDialog
 
 			// Handle option
 
-			int idx = GetIndexFromDisplayOption(keyChar);
+			int idx = ConsoleOption.GetIndexFromDisplayOption(keyChar);
 
 			if (idx < Options.Count && idx >= 0) {
 				var option = Options[idx];
@@ -335,7 +335,7 @@ public class ConsoleDialog
 
 					int indexOf = Options.IndexOf(option);
 
-					char c = GetDisplayOptionFromIndex(indexOf);
+					char c = ConsoleOption.GetDisplayOptionFromIndex(indexOf);
 
 					// note: KeyChar argument is slightly inaccurate (case insensitive; always uppercase)
 					cki = ConsoleManager.GetKeyInfo(c, c, me.dwControlKeyState);
@@ -354,8 +354,20 @@ public class ConsoleDialog
 		}
 
 		//packet.Input = cki2;
-		/*Debug.WriteLine($"{ir} | {(ir.EventType == ConsoleEventType.MOUSE_EVENT ? ir.MouseEvent : "")}",
-		                nameof(ConsoleDialog));*/
+
+#if DEBUG
+		var debugStr = ir.EventType switch
+		{
+			ConsoleEventType.MOUSE_EVENT => ir.MouseEvent.ToString(),
+			ConsoleEventType.KEY_EVENT   => ir.KeyEvent.ToString(),
+
+			_ => string.Empty,
+		};
+
+		Debug.WriteLine($"{ir} | {(debugStr)}",
+		                nameof(ConsoleDialog));
+#endif
+
 
 		if (cki == default) {
 			output.Key = null;
@@ -428,12 +440,12 @@ public class ConsoleDialog
 			ConsoleManager.NewLine();
 		}
 
-		int clamp = Math.Clamp(Options.Count, 0, MAX_DISPLAY_OPTIONS);
+		int clamp = Math.Clamp(Options.Count, 0, ConsoleOption.MAX_DISPLAY_OPTIONS);
 
 		for (int i = 0; i < clamp; i++) {
 			ConsoleOption option = Options[i];
 
-			string s = FormatOption(option, i);
+			string s = ConsoleOption.FormatOption(option, i);
 
 			var top = Console.CursorTop;
 			m_optionPositions[top] = option;
@@ -455,71 +467,6 @@ public class ConsoleDialog
 		}
 	}
 
-	private static char GetDisplayOptionFromIndex(int i)
-	{
-		if (i < MAX_OPTION_N) {
-			return Char.Parse(i.ToString());
-		}
-
-		int d = OPTION_LETTER_START + (i - MAX_OPTION_N);
-
-		return (char) d;
-	}
-
-	private static int GetIndexFromDisplayOption(char c)
-	{
-		if (Char.IsNumber(c)) {
-			return (int) Char.GetNumericValue(c);
-		}
-
-		if (Char.IsLetter(c)) {
-			c = Char.ToUpper(c);
-			return MAX_OPTION_N + (c - OPTION_LETTER_START);
-		}
-
-		return Common.INVALID;
-	}
-
-	private static string FormatOption(ConsoleOption option, int i)
-	{
-		var  sb = new StringBuilder();
-		char c  = GetDisplayOptionFromIndex(i);
-
-		string name = option.Name;
-
-		if (option.Color.HasValue) {
-			name = name.AddColor(option.Color.Value);
-		}
-
-		if (option.ColorBG.HasValue) {
-			name = name.AddColorBG(option.ColorBG.Value);
-		}
-
-		sb.Append($"[{c}]: ");
-
-		if (name != null) {
-			sb.Append($"{name} ");
-		}
-
-		if (option.Data != null) {
-
-			sb.AppendLine();
-
-			sb.Append($"{Strings.Indent(Strings.OutlineString(option.Data))}");
-		}
-
-		if (!sb.ToString().EndsWith(Strings.Constants.NEW_LINE)) {
-			sb.AppendLine();
-		}
-
-		string f = ConsoleManager.FormatString(null, sb.ToString());
-
-		return f;
-	}
-
-	private const int  MAX_OPTION_N        = 10;
-	private const char OPTION_LETTER_START = 'A';
-	private const int  MAX_DISPLAY_OPTIONS = 36;
 
 	/// <summary>
 	///     Exits <see cref="ReadInput" />
@@ -592,7 +539,7 @@ public class ConsoleDialog
 	{
 		unsafe {
 			var ptr = (int*) Unsafe.AsPointer(ref m_status);
-			Interlocked.Exchange(ref Unsafe.AsRef<int>(ptr),(int) ConsoleStatus.Refresh);
+			Interlocked.Exchange(ref Unsafe.AsRef<int>(ptr), (int) ConsoleStatus.Refresh);
 		}
 
 	}

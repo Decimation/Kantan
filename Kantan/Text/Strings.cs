@@ -303,26 +303,7 @@ public static partial class Strings
 	}
 
 
-	public static string OutlineString(IOutline view)
-	{
-		var esb = new StringBuilder();
-
-		foreach (var (key, value) in view.Outline) {
-			switch (value) {
-				case null:
-					continue;
-				case IOutline view2:
-					esb.Append(OutlineString(view2));
-					break;
-				default:
-					esb.Append(key, value);
-					break;
-			}
-
-		}
-
-		return esb.ToString();
-	}
+	
 
 	#endregion
 
