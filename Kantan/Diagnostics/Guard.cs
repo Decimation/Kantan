@@ -30,10 +30,10 @@ global using AN = System.Diagnostics.CodeAnalysis.AllowNullAttribute;
 global using MN = System.Diagnostics.CodeAnalysis.MaybeNullAttribute;
 global using MURV = JetBrains.Annotations.MustUseReturnValueAttribute;
 
-
 #endregion
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -41,6 +41,8 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using JetBrains.Annotations;
+using Kantan.Collections;
+using Kantan.Text;
 using static Kantan.Internal.Common;
 
 #nullable enable
@@ -71,7 +73,29 @@ public static class Guard
 	private const ACT ACT_NOT_NULL = ACT.IS_NOT_NULL;
 
 	#endregion
-	
+
+	public static bool print(object o, [CallerArgumentExpression("o")] string? call = null)
+	{
+		string? s;
+
+		if (o is IEnumerable xx) {
+			List<object> rg = xx.CopyToList();
+
+			s = rg.QuickJoin();
+		}
+		else {
+			s = o switch
+			{
+				null => null,
+				_    => o.ToString(),
+			};
+		}
+
+		Console.WriteLine(s);
+
+		return true;
+	}
+
 
 	[DNR, DH, AM]
 	[CA(UNCONDITIONAL_HALT), SFM(STRING_FORMAT_ARG)]
@@ -101,7 +125,7 @@ public static class Guard
 
 	[DH, AM]
 	[CA(COND_FALSE_HALT)]
-	public static void Assert([AC(ACT_TRUE)] [DNRI(false)] bool condition,
+	public static void Assert([AC(ACT_TRUE), DNRI(false)] bool condition,
 	                          string? msg = null, params object[] args)
 		=> Assert<Exception>(condition, msg, args);
 
@@ -110,7 +134,7 @@ public static class Guard
 	/// </summary>
 	[DH, AM]
 	[CA(COND_FALSE_HALT), SFM(STRING_FORMAT_ARG)]
-	public static void Assert<TException>([AC(ACT_TRUE)] [DNRI(false)] bool condition,
+	public static void Assert<TException>([AC(ACT_TRUE), DNRI(false)] bool condition,
 	                                      string? msg = null, params object[] args)
 		where TException : Exception, new()
 	{
@@ -121,24 +145,24 @@ public static class Guard
 
 	[DH, AM]
 	[CA(COND_FALSE_HALT)]
-	public static void AssertArgument([AC(ACT_TRUE)] [DNRI(false)] bool condition,
+	public static void AssertArgument([AC(ACT_TRUE), DNRI(false)] bool condition,
 	                                  string? name = null)
 		=> Assert<ArgumentException>(condition, name);
 
 	[DH, AM]
 	[CA(VALUE_NULL_HALT)]
-	public static void AssertArgumentNotNull([NN] [AC(ACT_NOT_NULL)] object? value,
+	public static void AssertArgumentNotNull([NN, AC(ACT_NOT_NULL)] object? value,
 	                                         string? name = null)
 		=> Assert<ArgumentNullException>(value != null, name);
 
 	[DH, AM]
 	[CA(VALUE_NULL_HALT)]
-	public static void AssertNotNull([NN] [AC(ACT_NOT_NULL)] object? value, string? name = null)
+	public static void AssertNotNull([NN, AC(ACT_NOT_NULL)] object? value, string? name = null)
 		=> Assert<NullReferenceException>(value != null, name);
 
 	[DH, AM]
 	[CA(VALUE_NULL_HALT)]
-	public static void AssertNotNullOrWhiteSpace([NN] [AC(ACT_NOT_NULL)] string? value, string? name = null)
+	public static void AssertNotNullOrWhiteSpace([NN, AC(ACT_NOT_NULL)] string? value, string? name = null)
 		=> Assert<NullReferenceException>(!String.IsNullOrWhiteSpace(value), name);
 
 	[DH, AM]
@@ -175,7 +199,7 @@ public static class Guard
 	}
 
 	[DH, AM]
-	public static void AssertAll([DNRI(false)] [AC(ACT_TRUE)] params bool[] conditions)
+	public static void AssertAll([AC(ACT_TRUE), DNRI(false)] params bool[] conditions)
 	{
 		foreach (bool condition in conditions) {
 			Assert(condition);

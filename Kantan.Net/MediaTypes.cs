@@ -73,8 +73,7 @@ public static class MediaTypes
 	[DllImport("urlmon.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = false)]
 	private static extern int FindMimeFromData(IntPtr pBC, [MA(UT.LPWStr)] string pwzUrl,
 	                                           [MA(UT.LPArray, ArraySubType = UT.I1, SizeParamIndex = 3)]
-	                                           byte[] pBuffer, int cbSize,
-	                                           [MA(UT.LPWStr)] string pwzMimeProposed,
+	                                           byte[] pBuffer, int cbSize, [MA(UT.LPWStr)] string pwzMimeProposed,
 	                                           int dwMimeFlags, out IntPtr ppwzMimeOut, int dwReserved);
 
 	public static string ResolveFromData(string url) => ResolveFromData(HttpUtilities.GetStream(url));

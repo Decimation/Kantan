@@ -29,8 +29,6 @@ public delegate object ConsoleOptionFunction();
 /// </summary>
 public class ConsoleOption
 {
-	
-
 	public ConsoleOption()
 	{
 		Data = new();
@@ -52,7 +50,7 @@ public class ConsoleOption
 	}
 
 	/// <summary>
-	///     Information about this <see cref="IConsoleComponent" />
+	///     Information about this <see cref="IConsoleOption" />
 	/// </summary>
 	public Dictionary<string, object> Data { get; set; }
 
@@ -67,16 +65,17 @@ public class ConsoleOption
 
 	};
 
-	public static string OutlineString(ConsoleOption view)
+	[Pure]
+	private string GetDataString()
 	{
 		var esb = new StringBuilder();
 
-		foreach (var (key, value) in view.Data) {
+		foreach (var (key, value) in Data) {
 			switch (value) {
 				case null:
 					continue;
 				case ConsoleOption view2:
-					esb.Append(OutlineString(view2));
+					esb.Append(view2.GetDataString());
 					break;
 				default:
 					esb.Append(key, value);
@@ -113,19 +112,20 @@ public class ConsoleOption
 		return Common.INVALID;
 	}
 
-	public static string FormatOption(ConsoleOption option, int i)
+	[Pure]
+	internal string GetConsoleString(int i)
 	{
 		var  sb = new StringBuilder();
 		char c  = GetDisplayOptionFromIndex(i);
 
-		string name = option.Name;
+		string name = Name;
 
-		if (option.Color.HasValue) {
-			name = name.AddColor(option.Color.Value);
+		if (Color.HasValue) {
+			name = name.AddColor(Color.Value);
 		}
 
-		if (option.ColorBG.HasValue) {
-			name = name.AddColorBG(option.ColorBG.Value);
+		if (ColorBG.HasValue) {
+			name = name.AddColorBG(ColorBG.Value);
 		}
 
 		sb.Append($"[{c}]: ");
@@ -134,14 +134,14 @@ public class ConsoleOption
 			sb.Append($"{name} ");
 		}
 
-		if (option.Data.Any()) {
+		if (Data.Any()) {
 
 			sb.AppendLine();
 
-			sb.Append($"{Strings.Indent(ConsoleOption.OutlineString(option))}");
+			sb.Append($"{Strings.Indent(GetDataString())}");
 		}
 
-		if (!sb.ToString().EndsWith(Strings.Constants.NEW_LINE)) {
+		if (!sb.ToString().EndsWith(SC.NEW_LINE)) {
 			sb.AppendLine();
 		}
 
@@ -150,14 +150,16 @@ public class ConsoleOption
 		return f;
 	}
 
-	public const ConsoleModifiers NC_FN_MAIN          = 0;
-	public const ConsoleModifiers NC_FN_ALT           = ConsoleModifiers.Alt;
-	public const ConsoleModifiers NC_FN_CTRL          = ConsoleModifiers.Control;
-	public const ConsoleModifiers NC_FN_SHIFT         = ConsoleModifiers.Shift;
-	public const ConsoleModifiers NC_FN_COMBO         = NC_FN_CTRL | NC_FN_ALT;
-	public const int              MAX_OPTION_N        = 10;
-	public const char             OPTION_LETTER_START = 'A';
-	public const int              MAX_DISPLAY_OPTIONS = 36;
+	public const ConsoleModifiers NC_FN_MAIN  = 0;
+	public const ConsoleModifiers NC_FN_ALT   = ConsoleModifiers.Alt;
+	public const ConsoleModifiers NC_FN_CTRL  = ConsoleModifiers.Control;
+	public const ConsoleModifiers NC_FN_SHIFT = ConsoleModifiers.Shift;
+	public const ConsoleModifiers NC_FN_COMBO = NC_FN_CTRL | NC_FN_ALT;
+
+
+	public const int  MAX_OPTION_N        = 10;
+	public const char OPTION_LETTER_START = 'A';
+	public const int  MAX_DISPLAY_OPTIONS = 36;
 
 	#region From
 
@@ -185,7 +187,8 @@ public class ConsoleOption
 	public static ConsoleOption[] FromEnum<TEnum>() where TEnum : Enum
 	{
 		var options = (TEnum[]) Enum.GetValues(typeof(TEnum));
-		return FromArray(options, e => Enum.GetName(typeof(TEnum), e) ?? 
+
+		return FromArray(options, e => Enum.GetName(typeof(TEnum), e) ??
 		                               throw new InvalidOperationException());
 	}
 

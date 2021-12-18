@@ -54,10 +54,15 @@ public static class Program
 		await ConsoleTest();
 		//
 		// Console.WriteLine(IPUtilities.GetIPInformation());
+
+
+		Guard.print(new HashSet<string>() { "a", "b" });
+
+
 	}
 
 
-	private class MyClass : IConsoleComponent
+	private class MyClass : IConsoleOption
 	{
 		/// <inheritdoc />
 		public Dictionary<string, object> Data

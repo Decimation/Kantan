@@ -226,4 +226,17 @@ public static class EnumerableHelper
 	}
 
 	#endregion
+
+	public static List<object> CopyToList(this IEnumerable value)
+	{
+		var e = value.GetEnumerator();
+		var rg = new List<object>();
+
+		while (e.MoveNext()) {
+			var item = e.Current;
+			rg.Add(item);
+		}
+
+		return rg;
+	}
 }

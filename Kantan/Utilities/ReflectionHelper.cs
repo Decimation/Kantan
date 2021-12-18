@@ -7,8 +7,9 @@ namespace Kantan.Utilities
 	{
 		public static T Clone<T>(T t) where T : class
 		{
-			var method = t.GetType().GetMethod(nameof(MemberwiseClone), BindingFlags.Instance |
-			                                                            BindingFlags.NonPublic);
+			var method = t.GetType().GetMethod(nameof(MemberwiseClone),
+			                                   BindingFlags.Instance |
+			                                   BindingFlags.NonPublic);
 
 			if (method is not { }) {
 				return default(T);

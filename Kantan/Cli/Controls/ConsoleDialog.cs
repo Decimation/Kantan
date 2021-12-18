@@ -1,4 +1,5 @@
-﻿using System;
+﻿global using SC=Kantan.Text.Strings.Constants;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -407,7 +408,7 @@ public class ConsoleDialog
 		if (SelectMultiple) {
 			ConsoleManager.NewLine();
 
-			string optionsStr = $"{Strings.Constants.CHEVRON} {output.Output.QuickJoin()}"
+			string optionsStr = $"{SC.CHEVRON} {output.Output.QuickJoin()}"
 				.AddColor(ConsoleManager.ColorOptions);
 
 			ConsoleManager.Write(true, optionsStr);
@@ -433,7 +434,7 @@ public class ConsoleDialog
 
 		if (Subtitle != null) {
 
-			string subStr = ConsoleManager.FormatString(Strings.Constants.CHEVRON, Subtitle, false)
+			string subStr = ConsoleManager.FormatString(SC.CHEVRON, Subtitle, false)
 			                              .AddColor(ConsoleManager.ColorOptions);
 
 			ConsoleManager.Write(true, subStr);
@@ -445,7 +446,7 @@ public class ConsoleDialog
 		for (int i = 0; i < clamp; i++) {
 			ConsoleOption option = Options[i];
 
-			string s = ConsoleOption.FormatOption(option, i);
+			string s = option.GetConsoleString(i);
 
 			var top = Console.CursorTop;
 			m_optionPositions[top] = option;

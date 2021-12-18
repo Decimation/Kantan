@@ -24,15 +24,6 @@ namespace Kantan.Net;
 
 public static class IPUtilities
 {
-	/*public static IPAddress GetExternalIP()
-	{
-		using var client = new HttpClient();
-
-		var s = client.DownloadString(Resources.ExternalIPUrl).Trim();
-
-		return IPAddress.Parse(s);
-	}*/
-	
 	public static IPGeolocation GetIPInformation()
 	{
 		var task = (Resources.IFConfigUrl).WithHeaders(new
@@ -44,7 +35,7 @@ public static class IPUtilities
 		task.Wait();
 		return task.Result;
 	}
-	
+
 
 	public static IPAddress GetHostAddress(string hostOrIP) => Dns.GetHostAddresses(hostOrIP)[0];
 
@@ -52,11 +43,11 @@ public static class IPUtilities
 	{
 		string s = null;
 
-		if (IPAddress.TryParse(hostOrIP, out var ip)) {
+		if (IPAddress.TryParse(hostOrIP, out IPAddress ip)) {
 			s = ip.ToString();
 		}
 
-		if (UriUtilities.IsUri(hostOrIP, out var ux)) {
+		if (UriUtilities.IsUri(hostOrIP, out Uri ux)) {
 			s = UriUtilities.GetHostComponent(ux);
 		}
 

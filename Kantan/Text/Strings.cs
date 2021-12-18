@@ -1,5 +1,6 @@
 #nullable disable
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -385,8 +386,13 @@ public static partial class Strings
 	{
 		return values.Select(toString).QuickJoin(delim);
 	}
-
+	
 	public static string QuickJoin<T>(this IEnumerable<T> enumerable, string delim = Constants.JOIN_COMMA)
+	{
+		return String.Join(delim, enumerable);
+	}
+
+	public static string QuickJoin(this IEnumerable enumerable, string delim = Constants.JOIN_COMMA)
 	{
 		return String.Join(delim, enumerable);
 	}

@@ -50,6 +50,8 @@ public class GraphQLClient : IDisposable
 	                       Dictionary<string, string> additionalHeaders = null,
 	                       int timeout = 0)
 	{
+		//todo
+
 		m_client = new HttpClient()
 		{
 			BaseAddress = new Uri(m_apiUrl),
@@ -61,10 +63,8 @@ public class GraphQLClient : IDisposable
 			{ };
 
 
-		if (additionalHeaders is { Count: > 0 })
-		{
-			foreach ((string key, string value) in additionalHeaders)
-			{
+		if (additionalHeaders is { Count: > 0 }) {
+			foreach ((string key, string value) in additionalHeaders) {
 				request.Headers.Add(key, value);
 			}
 		}

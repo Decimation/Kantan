@@ -8,9 +8,7 @@ using Kantan.Cli.Controls;
 
 namespace Kantan.Model;
 
-public interface IConsoleComponent
+public interface IConsoleOption
 {
-	
-
 	public ConsoleOption GetConsoleOption();
 }
