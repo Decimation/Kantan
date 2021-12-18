@@ -24,6 +24,27 @@ namespace UnitTest;
 [TestFixture]
 public class EnumerableTests
 {
+
+	[Test]
+	public void Test1()
+	{
+		var rg = Enumerable.Range(1,5).ToArray();
+		var s  = new Span<int>(rg);
+
+		for (int i = 0; i < s.Length; i++) {
+			var x = s.TryIndex(i, out var v);
+			Assert.True(x);
+			Assert.AreEqual(s[i],v );
+		}
+
+		for (int i = s.Length; i < 100; i++) {
+			var x = s.TryIndex(i, out var v);
+
+			Assert.False(x);
+			Assert.AreEqual(v, default(int));
+		}
+	}
+
 	[Test]
 	public void AllIndexesOfTest()
 	{

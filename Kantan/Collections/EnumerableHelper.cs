@@ -6,6 +6,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using JetBrains.Annotations;
 using static Kantan.Internal.Common;
 using Map = System.Collections.Generic.Dictionary<object, object>;
 
@@ -161,9 +162,58 @@ public static class EnumerableHelper
 		}
 	}
 
-	public static IEnumerable<T> Difference<T>(this IEnumerable<T> a, IEnumerable<T> b)
-		=> b.Where(c => !a.Contains(c));
-	
+	/*[CBN]
+	public static T TryIndex<T>(this Span<T> s, Index i)
+	{
+		if (i.Value >= s.Length) {
+			return default;
+		}
+
+		return s[i];
+	}*/
+
+	private static bool TryIndex__<T>(Index i, int max, Func<T> fx2, out T value)
+	{
+		if (i.Value >= max) {
+			value = default;
+
+			return false;
+		}
+
+		value = fx2();
+
+		return true;
+	}
+
+	public static bool TryIndex<T>(this IList<T> span, Index i, [CBN] out T value)
+	{
+		/*if (i.Value >= span.Count) {
+			value = default;
+			return false;
+		}
+
+		value = span[i];
+		return true;*/
+
+		return TryIndex__(i, span.Count, () => span[i], out value);
+	}
+
+	public static bool TryIndex<T>(this Span<T> span, Index i, [CBN] out T value)
+	{
+		/*if (i.Value >= span.Length) {
+			value = default;
+			return false;
+		}
+
+		value = span[i];
+		return true;*/
+
+		return TryIndex__(i, span.Length, () => span[i], out value);
+
+	}
+
+	public static IEnumerable<T> Difference<T>(this IEnumerable<T> a, IEnumerable<T> b) => b.Where(c => !a.Contains(c));
+
 	public static void Replace<T>(this List<T> list, Predicate<T> oldItemSelector, T newItem)
 	{
 		//check for different situations here and throw exception
@@ -229,7 +279,7 @@ public static class EnumerableHelper
 
 	public static List<object> CopyToList(this IEnumerable value)
 	{
-		var e = value.GetEnumerator();
+		var e  = value.GetEnumerator();
 		var rg = new List<object>();
 
 		while (e.MoveNext()) {
