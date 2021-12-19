@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 // ReSharper disable JoinDeclarationAndInitializer
 // ReSharper disable ConditionIsAlwaysTrueOrFalse
 #pragma warning disable CA2255
+[assembly:InternalsVisibleTo("Test")]
 namespace Kantan.Net;
 
 internal static class Init

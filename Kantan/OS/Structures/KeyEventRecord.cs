@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 // ReSharper disable InconsistentNaming
 
-namespace Kantan.Win32.Structures;
+namespace Kantan.OS.Structures;
 
 [DebuggerDisplay("KeyCode: {wVirtualKeyCode}")]
 [StructLayout(LayoutKind.Explicit)]

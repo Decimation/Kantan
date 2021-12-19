@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 // ReSharper disable UnusedMember.Global
 
-namespace Kantan.Win32.Structures;
+namespace Kantan.OS.Structures;
 
 /// <summary>
 /// Specifies a Unicode or ASCII character and its attributes.

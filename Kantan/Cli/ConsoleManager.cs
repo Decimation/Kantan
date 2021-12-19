@@ -9,9 +9,9 @@ using System.Runtime.Versioning;
 using System.Threading;
 using JetBrains.Annotations;
 using Kantan.Cli.Controls;
+using Kantan.OS;
+using Kantan.OS.Structures;
 using Kantan.Utilities;
-using Kantan.Win32;
-using Kantan.Win32.Structures;
 using static Kantan.Internal.Common;
 using static Kantan.Text.Strings;
 
@@ -424,10 +424,10 @@ public static class ConsoleManager
 	}
 
 
-	internal static         bool          _click;
-	private static          IntPtr        _stdIn;
-	private static          IntPtr        _stdOut;
-	private static          ConsoleModes  _oldMode;
+	internal static bool         _click;
+	internal static IntPtr       _stdIn;
+	internal static IntPtr       _stdOut;
+	private static  ConsoleModes _oldMode;
 
 	[SupportedOSPlatform(OS_WINDOWS)]
 	public static string ReadBufferLine(int y) => ReadBufferXY(Console.BufferWidth, 0, y);
@@ -468,8 +468,7 @@ public static class ConsoleManager
 	/// <param name="y">Row position of the starting location.</param>
 	/// <returns></returns>
 	[SupportedOSPlatform(OS_WINDOWS)]
-	public static int WriteBufferXY(string text, int x, int y)
-		=> WriteBufferXY(text.ToCharArray(), text.Length, x, y);
+	public static int WriteBufferXY(string text, int x, int y) => WriteBufferXY(text.ToCharArray(), text.Length, x, y);
 
 	public static int WriteAttributesXY(ConsoleCharAttribute[] attrs, int x, int y)
 		=> WriteAttributesXY(attrs, attrs.Length, x, y);
@@ -488,7 +487,7 @@ public static class ConsoleManager
 			throw new ArgumentException();
 		}
 
-		int   attrsWritten = 0;
+		int attrsWritten = 0;
 		var writePos     = new Coord((short) x, (short) y);
 
 		if (!Native.WriteConsoleOutputAttribute(_stdOut, attrs, attrs.Length, writePos, ref attrsWritten)) {
@@ -664,7 +663,7 @@ public static class ConsoleManager
 
 	private static readonly InputRecord[] InputBuffer = new InputRecord[1];
 
-	public static bool InputAvailable
+	/*public static bool InputAvailable
 	{
 		get
 		{
@@ -702,6 +701,39 @@ public static class ConsoleManager
 
 			}
 		}
+	}*/
+
+	public static bool InputAvailable
+	{
+		get
+		{
+			var b            = Native.GetNumberOfConsoleInputEvents(_stdIn, out var lp);
+			var inputRecords = new InputRecord[1];
+
+			if (lp == 0) {
+				return false;
+			}
+
+			Native.PeekConsoleInput(_stdIn, inputRecords, 1, out var lpNumber);
+			// var xx = !IsMouseEvent(ir) && (!IsKeyDownEvent(ir) || IsModKey(ir));
+
+			var ir = inputRecords[0];
+
+			if (!IsMouseEvent(ir) && (!IsKeyDownEvent(ir) || IsModKey(ir))) {
+				Native.ReadConsoleInput(_stdIn, InputBuffer, (uint) InputBuffer.Length, out var numEventsRead);
+
+				// return false;
+			}
+			else {
+				return true;
+
+			}
+
+			// Marshal.DestroyStructure(Marshal.UnsafeAddrOfPinnedArrayElement(rg, 0), typeof(InputRecord));
+			// goto g;
+			// return lp != 0;
+			return false;
+		}
 	}
 
 	[SupportedOSPlatform(OS_WINDOWS)]
@@ -738,11 +770,10 @@ public static class ConsoleManager
 			throw new Win32Exception();
 		}
 
-		_oldMode = mode;
-
-		mode |= ConsoleModes.ENABLE_MOUSE_INPUT;
-		mode &= ~ConsoleModes.ENABLE_QUICK_EDIT_MODE;
-		mode |= ConsoleModes.ENABLE_EXTENDED_FLAGS;
+		_oldMode =  mode;
+		mode     |= ConsoleModes.ENABLE_MOUSE_INPUT;
+		mode     &= ~ConsoleModes.ENABLE_QUICK_EDIT_MODE;
+		mode     |= ConsoleModes.ENABLE_EXTENDED_FLAGS;
 
 		if (!Native.SetConsoleMode(_stdIn, mode)) {
 			throw new Win32Exception();

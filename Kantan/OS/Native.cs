@@ -2,7 +2,7 @@
 global using MA = System.Runtime.InteropServices.MarshalAsAttribute;
 using System;
 using System.Runtime.InteropServices;
-using Kantan.Win32.Structures;
+using Kantan.OS.Structures;
 
 // ReSharper disable CommentTypo
 
@@ -12,7 +12,7 @@ using Kantan.Win32.Structures;
 
 // ReSharper disable UnusedMember.Global
 
-namespace Kantan.Win32;
+namespace Kantan.OS;
 
 internal static class Native
 {
@@ -41,14 +41,34 @@ internal static class Native
 	[DllImport(KERNEL32_DLL, SetLastError = true)]
 	internal static extern bool SetConsoleCP(int wCodePageID);
 
-	[DllImport(KERNEL32_DLL, CharSet = CharSet.Unicode, SetLastError = true)]
+	/*[DllImport(KERNEL32_DLL, CharSet = CharSet.Unicode, SetLastError = true)]
 	[return: MA(UT.Bool)]
 	internal static extern bool PeekConsoleInput(IntPtr hConsoleInput, out InputRecord lpBuffer,
-	                                             uint nLength, out uint lpNumberOfEventsRead);
+	                                             uint nLength, out uint lpNumberOfEventsRead);*/
+
+	[DllImport("kernel32.dll", EntryPoint = "PeekConsoleInputW", CharSet = CharSet.Unicode, SetLastError = true)]
+	internal static extern BOOL PeekConsoleInput(
+		IntPtr hConsoleInput,
+		[MarshalAs(UnmanagedType.LPArray), Out] InputRecord[] lpBuffer,
+			uint nLength,
+		out uint lpNumberOfEventsRead);
+
+	internal const UInt32 INFINITE       = 0xFFFFFFFF;
+	internal const UInt32 WAIT_ABANDONED = 0x00000080;
+	internal const UInt32 WAIT_OBJECT_0  = 0x00000000;
+	internal const UInt32 WAIT_TIMEOUT   = 0x00000102;
+	[DllImport("kernel32.dll", SetLastError = true)]
+	internal static extern bool FlushConsoleInputBuffer(IntPtr hConsoleInput);
+	[DllImport("kernel32.dll", SetLastError = true)]
+	internal static extern UInt32 WaitForSingleObject(IntPtr hHandle, UInt32 dwMilliseconds);
 
 	[DllImport(KERNEL32_DLL, SetLastError = true)]
 	[return: MA(UT.Bool)]
 	internal static extern bool GetConsoleMode(IntPtr hConsoleHandle, out ConsoleModes lpMode);
+
+	[DllImport(KERNEL32_DLL, SetLastError = true)]
+	[return: MA(UT.Bool)]
+	internal static extern bool GetNumberOfConsoleInputEvents(IntPtr hConsoleHandle, out uint lpMode);
 
 	[DllImport(KERNEL32_DLL, SetLastError = true)]
 	internal static extern IntPtr GetStdHandle(StandardHandle nStdHandle);

@@ -1,6 +1,6 @@
 ﻿// ReSharper disable IdentifierTypo
 // ReSharper disable UnusedMember.Global
-namespace Kantan.Win32.Structures;
+namespace Kantan.OS.Structures;
 
 public enum VirtualKey : short
 {

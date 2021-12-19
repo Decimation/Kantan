@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Kantan.Win32.Structures;
+namespace Kantan.OS.Structures;
 
 /// <summary>
 /// Equivalent of the Keys enumerations, but includes a value allowing Windows Logo keys to act as a modifer key.

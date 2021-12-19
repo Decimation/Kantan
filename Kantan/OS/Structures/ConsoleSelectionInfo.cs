@@ -2,7 +2,7 @@
 
 // ReSharper disable UnusedMember.Global
 
-namespace Kantan.Win32.Structures;
+namespace Kantan.OS.Structures;
 
 /// <summary>
 /// Contains information for a console selection.

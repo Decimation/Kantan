@@ -2,19 +2,20 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
-using Kantan.Win32.Structures;
+using Kantan.OS.Structures;
 
 // ReSharper disable UnusedMember.Global
 
 // ReSharper disable EmptyDestructor
 
-namespace Kantan.Win32;
+namespace Kantan.OS;
 
 public sealed class KeyboardListener : IDisposable
 {
 	public KeyboardListener() : this(IntPtr.Zero) { }
 
-	public KeyboardListener(string windowName, ISet<VirtualKey> whitelist = null) : this(Native.FindWindow(windowName), whitelist) { }
+	public KeyboardListener(string windowName, ISet<VirtualKey> whitelist = null) : this(
+		Native.FindWindow(windowName), whitelist) { }
 
 	public KeyboardListener(IntPtr handle, ISet<VirtualKey> whitelist = null)
 	{

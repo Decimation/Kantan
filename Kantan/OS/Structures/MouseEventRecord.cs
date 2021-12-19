@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 // ReSharper disable InconsistentNaming
 
-namespace Kantan.Win32.Structures;
+namespace Kantan.OS.Structures;
 
 [DebuggerDisplay("{dwMousePosition.X}, {dwMousePosition.Y}")]
 public struct MouseEventRecord

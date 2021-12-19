@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 // ReSharper disable UnusedMember.Global
 
-namespace Kantan.Win32.Structures;
+namespace Kantan.OS.Structures;
 
 /// <summary>
 /// Helper class that simplifies working with foreground and background colors.

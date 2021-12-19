@@ -2,7 +2,7 @@
 
 // ReSharper disable InconsistentNaming
 
-namespace Kantan.Win32.Structures;
+namespace Kantan.OS.Structures;
 
 [DebuggerDisplay("{X}, {Y}")]
 public struct Coord

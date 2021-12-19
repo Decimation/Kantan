@@ -6,7 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using Kantan.Win32;
+using Kantan.OS;
 
 // ReSharper disable UnusedVariable
 

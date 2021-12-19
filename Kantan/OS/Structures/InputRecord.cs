@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 // ReSharper disable InconsistentNaming
 
-namespace Kantan.Win32.Structures;
+namespace Kantan.OS.Structures;
 
 [DebuggerDisplay("EventType: {EventType}")]
 [StructLayout(LayoutKind.Explicit)]

@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Kantan.Win32.Structures;
+namespace Kantan.OS.Structures;
 
 /// <summary>
 /// Reports focus events in a console input record.
