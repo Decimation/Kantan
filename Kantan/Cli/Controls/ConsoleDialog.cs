@@ -13,10 +13,9 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Kantan.Diagnostics;
 using Kantan.Internal;
-using Kantan.Native;
-using Kantan.Native.Structures;
 using Kantan.Text;
 using Kantan.Utilities;
+using Kantan.Win32.Structures;
 
 // ReSharper disable SuggestVarOrType_DeconstructionDeclarations
 

@@ -172,46 +172,6 @@ public static class EnumerableHelper
 		return s[i];
 	}*/
 
-	private static bool TryIndex__<T>(Index i, int max, Func<T> fx2, out T value)
-	{
-		if (i.Value >= max) {
-			value = default;
-
-			return false;
-		}
-
-		value = fx2();
-
-		return true;
-	}
-
-	public static bool TryIndex<T>(this IList<T> span, Index i, [CBN] out T value)
-	{
-		/*if (i.Value >= span.Count) {
-			value = default;
-			return false;
-		}
-
-		value = span[i];
-		return true;*/
-
-		return TryIndex__(i, span.Count, () => span[i], out value);
-	}
-
-	public static bool TryIndex<T>(this Span<T> span, Index i, [CBN] out T value)
-	{
-		/*if (i.Value >= span.Length) {
-			value = default;
-			return false;
-		}
-
-		value = span[i];
-		return true;*/
-
-		return TryIndex__(i, span.Length, () => span[i], out value);
-
-	}
-
 	public static IEnumerable<T> Difference<T>(this IEnumerable<T> a, IEnumerable<T> b) => b.Where(c => !a.Contains(c));
 
 	public static void Replace<T>(this List<T> list, Predicate<T> oldItemSelector, T newItem)
@@ -223,9 +183,76 @@ public static class EnumerableHelper
 		list[oldItemIndex] = newItem;
 	}
 
-	#region Dictionary
 
-	#region Serialize
+	public static bool TryCastDictionary<T>(T obj, out Map buf) where T : IDictionary
+	{
+		bool condition = obj.GetType().GetInterface(nameof(IDictionary)) != null;
+
+		if (!condition) {
+			buf = null;
+			return false;
+		}
+
+		var enumerator = obj.GetEnumerator();
+
+		buf = new Map();
+
+		while (enumerator.MoveNext()) {
+			buf.Add(enumerator.Key, enumerator.Value);
+
+		}
+
+		return true;
+	}
+
+	public static List<object> CopyToList(this IEnumerable value) => CopyToList<object>(value);
+
+	public static List<T> CopyToList<T>(this IEnumerable value)
+	{
+		var e  = value.GetEnumerator();
+		var rg = new List<T>();
+
+		while (e.MoveNext()) {
+			var item = e.Current;
+			rg.Add((T)item);
+		}
+
+		return rg;
+	}
+
+	private static bool TryIndex<T>(Index i, int len, out T value)
+	{
+		value = default;
+
+		if (i.Value >= len) {
+			return false;
+		}
+
+		return true;
+	}
+
+	public static bool TryIndex<T>(this IList<T> list, Index i, [CBN] out T value)
+	{
+		var b = TryIndex(i, list.Count, out value);
+
+		if (b) {
+			value = list[i];
+		}
+
+		return b;
+	}
+
+	public static bool TryIndex<T>(this Span<T> span, Index i, [CBN] out T value)
+	{
+		var b = TryIndex(i, span.Length, out value);
+
+		if (b) {
+			value = span[i];
+		}
+
+		return b;
+
+	}
 
 	/// <summary>
 	/// Writes a <see cref="Dictionary{TKey,TValue}"/> to file <paramref name="filename"/>.
@@ -250,43 +277,4 @@ public static class EnumerableHelper
 	}
 
 	private const string DICT_DELIM = "=";
-
-	#endregion
-
-
-	public static bool TryCastDictionary<T>(T obj, out Map buf) where T : IDictionary
-	{
-		bool condition = obj.GetType().GetInterface(nameof(IDictionary)) != null;
-
-		if (!condition) {
-			buf = null;
-			return false;
-		}
-
-		var enumerator = obj.GetEnumerator();
-
-		buf = new Map();
-
-		while (enumerator.MoveNext()) {
-			buf.Add(enumerator.Key, enumerator.Value);
-
-		}
-
-		return true;
-	}
-
-	#endregion
-
-	public static List<object> CopyToList(this IEnumerable value)
-	{
-		var e  = value.GetEnumerator();
-		var rg = new List<object>();
-
-		while (e.MoveNext()) {
-			var item = e.Current;
-			rg.Add(item);
-		}
-
-		return rg;
-	}
 }

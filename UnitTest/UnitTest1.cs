@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Unicode;
@@ -11,6 +12,7 @@ using Kantan.Numeric;
 using Kantan.Text;
 using Kantan.Utilities;
 using NUnit.Framework;
+// ReSharper disable PossibleMultipleEnumeration
 
 // ReSharper disable MemberCanBePrivate.Local
 
@@ -24,17 +26,28 @@ namespace UnitTest;
 [TestFixture]
 public class EnumerableTests
 {
+	[Test]
+	public void CopyToListTest()
+	{
+
+		var range = Enumerable.Range(1, 5);
+		var array  = range.ToArray();
+		var enumerable     = (IEnumerable) range;
+		Assert.True(enumerable.CopyToList<int>().SequenceEqual(array));
+		Assert.True(enumerable.CopyToList().SequenceEqual(array.Cast<object>()));
+
+	}
 
 	[Test]
-	public void Test1()
+	public void TryIndexTest()
 	{
-		var rg = Enumerable.Range(1,5).ToArray();
+		var rg = Enumerable.Range(1, 5).ToArray();
 		var s  = new Span<int>(rg);
 
 		for (int i = 0; i < s.Length; i++) {
 			var x = s.TryIndex(i, out var v);
 			Assert.True(x);
-			Assert.AreEqual(s[i],v );
+			Assert.AreEqual(s[i], v);
 		}
 
 		for (int i = s.Length; i < 100; i++) {

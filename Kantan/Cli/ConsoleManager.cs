@@ -9,9 +9,9 @@ using System.Runtime.Versioning;
 using System.Threading;
 using JetBrains.Annotations;
 using Kantan.Cli.Controls;
-using Kantan.Native;
-using Kantan.Native.Structures;
 using Kantan.Utilities;
+using Kantan.Win32;
+using Kantan.Win32.Structures;
 using static Kantan.Internal.Common;
 using static Kantan.Text.Strings;
 
@@ -379,7 +379,7 @@ public static class ConsoleManager
 
 		// Get the current screen buffer window position.
 
-		if (!Win32.GetConsoleScreenBufferInfo(_stdOut, csbiInfo)) {
+		if (!Native.GetConsoleScreenBufferInfo(_stdOut, csbiInfo)) {
 			throw new Win32Exception();
 		}
 
@@ -391,7 +391,7 @@ public static class ConsoleManager
 			srctWindow.Left   = 0;              // no change
 			srctWindow.Right  = 0;              // no change
 
-			if (!Win32.SetConsoleWindowInfo(_stdOut, false, srctWindow)) {
+			if (!Native.SetConsoleWindowInfo(_stdOut, false, srctWindow)) {
 				throw new Win32Exception();
 			}
 
@@ -401,7 +401,7 @@ public static class ConsoleManager
 	[SupportedOSPlatform(OS_WINDOWS)]
 	private static ConsoleScreenBufferInfo GetBufferInfo(out bool ok)
 	{
-		ok = Win32.GetConsoleScreenBufferInfo(_stdOut, out ConsoleScreenBufferInfo csbi);
+		ok = Native.GetConsoleScreenBufferInfo(_stdOut, out ConsoleScreenBufferInfo csbi);
 
 		return csbi;
 	}
@@ -448,8 +448,8 @@ public static class ConsoleManager
 		char[] buff      = new char[nChars];
 		int    charsRead = 0;
 
-		if (!Win32.ReadConsoleOutputCharacter(_stdOut, buff, nChars, new Coord((ushort) x, (ushort) y),
-		                                      ref charsRead)) {
+		if (!Native.ReadConsoleOutputCharacter(_stdOut, buff, nChars, new Coord((ushort) x, (ushort) y),
+		                                       ref charsRead)) {
 			throw new Win32Exception();
 		}
 
@@ -491,7 +491,7 @@ public static class ConsoleManager
 		int   attrsWritten = 0;
 		var writePos     = new Coord((short) x, (short) y);
 
-		if (!Win32.WriteConsoleOutputAttribute(_stdOut, attrs, attrs.Length, writePos, ref attrsWritten)) {
+		if (!Native.WriteConsoleOutputAttribute(_stdOut, attrs, attrs.Length, writePos, ref attrsWritten)) {
 			throw new Win32Exception();
 		}
 
@@ -515,7 +515,7 @@ public static class ConsoleManager
 		var bufferPos   = new Coord((short) buffX, (short) buffY);
 		var writeRegion = new SmallRect((short) left, (short) top, (short) right, (short) bottom);
 
-		if (!Win32.WriteConsoleOutput(_stdOut, buff, bufferSize, bufferPos, writeRegion)) {
+		if (!Native.WriteConsoleOutput(_stdOut, buff, bufferSize, bufferPos, writeRegion)) {
 			throw new Win32Exception();
 		}
 	}
@@ -541,7 +541,7 @@ public static class ConsoleManager
 
 		var writePos = new Coord((ushort) x, (ushort) y);
 
-		if (!Win32.WriteConsoleOutputCharacter(_stdOut, text, nChars, writePos, ref charsWritten)) {
+		if (!Native.WriteConsoleOutputCharacter(_stdOut, text, nChars, writePos, ref charsWritten)) {
 			throw new Win32Exception();
 		}
 
@@ -676,7 +676,7 @@ public static class ConsoleManager
 
 			while (true) {
 				unsafe {
-					if (!Win32.PeekConsoleInput(_stdIn, out InputRecord ir, 1, out uint numEventsRead)) {
+					if (!Native.PeekConsoleInput(_stdIn, out InputRecord ir, 1, out uint numEventsRead)) {
 						throw new Win32Exception();
 					}
 
@@ -689,7 +689,7 @@ public static class ConsoleManager
 					// Skip non key-down && mod key events.
 
 					if (!IsMouseEvent(ir) && (!IsKeyDownEvent(ir) || IsModKey(ir))) {
-						if (!Win32.ReadConsoleInput(_stdIn, InputBuffer, (uint) InputBuffer.Length, out numEventsRead))
+						if (!Native.ReadConsoleInput(_stdIn, InputBuffer, (uint) InputBuffer.Length, out numEventsRead))
 							throw new Win32Exception();
 					}
 					else {
@@ -709,7 +709,7 @@ public static class ConsoleManager
 	{
 		var record = new InputRecord[1];
 
-		if (!Win32.ReadConsoleInput(_stdIn, record, 1, out uint lpNumberOfEventsRead)) {
+		if (!Native.ReadConsoleInput(_stdIn, record, 1, out uint lpNumberOfEventsRead)) {
 			throw new Win32Exception();
 		}
 
@@ -722,7 +722,7 @@ public static class ConsoleManager
 	[SupportedOSPlatform(OS_WINDOWS)]
 	public static void CloseNative()
 	{
-		Win32.SetConsoleMode(_stdIn, _oldMode);
+		Native.SetConsoleMode(_stdIn, _oldMode);
 		_stdIn   = IntPtr.Zero;
 		_stdOut  = IntPtr.Zero;
 		_oldMode = 0;
@@ -731,10 +731,10 @@ public static class ConsoleManager
 	[SupportedOSPlatform(OS_WINDOWS)]
 	public static void InitNative()
 	{
-		_stdOut = Win32.GetStdHandle(StandardHandle.STD_OUTPUT_HANDLE);
-		_stdIn  = Win32.GetStdHandle(StandardHandle.STD_INPUT_HANDLE);
+		_stdOut = Native.GetStdHandle(StandardHandle.STD_OUTPUT_HANDLE);
+		_stdIn  = Native.GetStdHandle(StandardHandle.STD_INPUT_HANDLE);
 
-		if (!Win32.GetConsoleMode(_stdIn, out ConsoleModes mode)) {
+		if (!Native.GetConsoleMode(_stdIn, out ConsoleModes mode)) {
 			throw new Win32Exception();
 		}
 
@@ -744,7 +744,7 @@ public static class ConsoleManager
 		mode &= ~ConsoleModes.ENABLE_QUICK_EDIT_MODE;
 		mode |= ConsoleModes.ENABLE_EXTENDED_FLAGS;
 
-		if (!Win32.SetConsoleMode(_stdIn, mode)) {
+		if (!Native.SetConsoleMode(_stdIn, mode)) {
 			throw new Win32Exception();
 		}
 	}

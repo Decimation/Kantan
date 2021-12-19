@@ -1,65 +1,33 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Drawing;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Net;
-using System.Net.Http;
-using System.Numerics;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Kantan.Cli;
 using Kantan.Cli.Controls;
-using Kantan.Collections;
-using Kantan.Diagnostics;
-using Kantan.Internal;
 using Kantan.Model;
-using Kantan.Native;
-using Kantan.Native.Structures;
-using Kantan.Net;
-using Kantan.Numeric;
 using Kantan.Text;
-using Kantan.Threading;
-using Kantan.Utilities;
-using Microsoft.Win32.SafeHandles;
 // ReSharper disable MethodHasAsyncOverload
-
 
 // ReSharper disable UnusedMember.Local
 #pragma warning disable 4014
 
 // ReSharper disable UnusedParameter.Local
-#pragma warning disable IDE0060, CS1998
+#pragma warning disable IDE0060, CS1998,IDE0051
+
 
 namespace Test;
 
 public static class Program
 {
-	private static ConsoleDialog _dialog;
-	
-	
-	private static async Task Main(string[] args)
+
+	private static void Main(string[] args)
 	{
-		
-		await ConsoleTest();
-		//
-		// Console.WriteLine(IPUtilities.GetIPInformation());
-
-
-		Guard.print(new HashSet<string>() { "a", "b" });
-
-
+		//...
 	}
+
+
+
+	private static ConsoleDialog _dialog;
 
 
 	private class MyClass : IConsoleOption
@@ -77,7 +45,6 @@ public static class Program
 		{
 			return null;
 		}
-
 	}
 
 	private static async Task ConsoleTest()
@@ -99,8 +66,7 @@ public static class Program
 		var myClass = new MyClass();
 		dialog.Options[0].Data = myClass.Data;
 
-		for (int i = 0; i < dialog.Options.Count; i++)
-		{
+		for (int i = 0; i < dialog.Options.Count; i++) {
 			dialog.Options[i].Data = myClass.Data;
 		}
 
@@ -157,9 +123,9 @@ public static class Program
 
 				},
 			},
-			Status = "(status)",
+			Status         = "(status)",
 			SelectMultiple = false,
-			Options = ConsoleOption.FromEnum<MyEnum>().ToList()
+			Options        = ConsoleOption.FromEnum<MyEnum>().ToList()
 		};
 
 
@@ -182,9 +148,9 @@ public static class Program
 
 				},
 			},
-			Status = "hi1",
+			Status         = "hi1",
 			SelectMultiple = true,
-			Options = ConsoleOption.FromEnum<MyEnum>().ToList()
+			Options        = ConsoleOption.FromEnum<MyEnum>().ToList()
 		};
 
 
