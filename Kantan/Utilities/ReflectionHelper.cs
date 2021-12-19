@@ -12,7 +12,7 @@ namespace Kantan.Utilities
 			                                   BindingFlags.NonPublic);
 
 			if (method is not { }) {
-				return default(T);
+				return default;
 			}
 
 			var o     = method.Invoke(t, null);

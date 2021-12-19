@@ -11,13 +11,11 @@ using Kantan.Model;
 using Kantan.Text;
 using Kantan.Utilities;
 
-#pragma warning disable 8603
 
 // ReSharper disable InconsistentNaming
 
 // ReSharper disable UnusedMember.Global
 
-#pragma warning disable CS8618, CS8602
 
 namespace Kantan.Cli.Controls;
 

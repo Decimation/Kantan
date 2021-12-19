@@ -1,4 +1,4 @@
-﻿global using SC=Kantan.Text.Strings.Constants;
+﻿global using SC = Kantan.Text.Strings.Constants;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -28,7 +28,6 @@ using Kantan.Utilities;
 // ReSharper disable EmptyConstructor
 // ReSharper disable UnusedMember.Global
 // ReSharper disable NonReadonlyMemberInGetHashCode
-#pragma warning disable	CA1416
 
 namespace Kantan.Cli.Controls;
 
@@ -154,7 +153,7 @@ public class ConsoleDialog
 
 		ConsoleKeyInfo cki;
 
-		ConsoleManager.InitNative();
+		ConsoleManager.Init();
 
 		m_optionPositions.Clear();
 
@@ -272,7 +271,7 @@ public class ConsoleDialog
 
 		}
 
-		InputRecord ir = ConsoleManager.ReadInputRecord();
+		InputRecord ir = ConsoleManager.ReadInput();
 
 		ConsoleKeyInfo cki;
 
@@ -283,7 +282,7 @@ public class ConsoleDialog
 			case ConsoleEventType.KEY_EVENT:
 				// Key was read
 
-				cki = ConsoleManager.GetKeyInfoFromRecord(ir);
+				cki = ir.ToConsoleKeyInfo();
 				string dragAndDropFile = TryReadFile(cki);
 
 				if (!String.IsNullOrWhiteSpace(dragAndDropFile)) {
@@ -294,7 +293,7 @@ public class ConsoleDialog
 				}
 
 				break;
-			case ConsoleEventType.MOUSE_EVENT when ConsoleManager.IsMouseScroll(ir):
+			case ConsoleEventType.MOUSE_EVENT when ir.IsMouseScroll:
 
 				bool scrollDown = me.dwButtonState.HasFlag(ButtonState.SCROLL_DOWN);
 
