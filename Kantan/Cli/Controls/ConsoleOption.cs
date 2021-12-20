@@ -10,6 +10,7 @@ using Kantan.Internal;
 using Kantan.Model;
 using Kantan.Text;
 using Kantan.Utilities;
+// ReSharper disable SuggestVarOrType_DeconstructionDeclarations
 
 
 // ReSharper disable InconsistentNaming
@@ -66,23 +67,23 @@ public class ConsoleOption
 	[Pure]
 	private string GetDataString()
 	{
-		var esb = new StringBuilder();
+		var sb = new StringBuilder();
 
 		foreach (var (key, value) in Data) {
 			switch (value) {
 				case null:
 					continue;
-				case ConsoleOption view2:
-					esb.Append(view2.GetDataString());
+				case ConsoleOption option:
+					sb.Append(option.GetDataString());
 					break;
 				default:
-					esb.Append(key, value);
+					sb.Append(key, value);
 					break;
 			}
 
 		}
 
-		return esb.ToString();
+		return sb.ToString();
 	}
 
 	internal static char GetDisplayOptionFromIndex(int i)

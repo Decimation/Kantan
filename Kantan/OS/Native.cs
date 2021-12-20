@@ -10,7 +10,6 @@ using Kantan.OS.Structures;
 
 // ReSharper disable InconsistentNaming
 
-// ReSharper disable UnusedMember.Global
 
 namespace Kantan.OS;
 
@@ -25,8 +24,7 @@ internal static class Native
 	 * http://mischel.com/pubs/consoledotnet/consoledotnet.zip,
 	 * https://www.medo64.com/2013/05/console-mouse-input-in-c/
 	 */
-
-	private const string USER32_DLL = "user32.dll";
+	
 
 	[DllImport(KERNEL32_DLL, SetLastError = true)]
 	internal static extern bool GetConsoleScreenBufferInfo(IntPtr hConsoleOutput,
@@ -46,21 +44,15 @@ internal static class Native
 	internal static extern bool PeekConsoleInput(IntPtr hConsoleInput, out InputRecord lpBuffer,
 	                                             uint nLength, out uint lpNumberOfEventsRead);*/
 
-	[DllImport("kernel32.dll", EntryPoint = "PeekConsoleInputW", CharSet = CharSet.Unicode, SetLastError = true)]
-	internal static extern BOOL PeekConsoleInput(
-		IntPtr hConsoleInput,
-		[MarshalAs(UnmanagedType.LPArray), Out] InputRecord[] lpBuffer,
-			uint nLength,
-		out uint lpNumberOfEventsRead);
+	[DllImport(KERNEL32_DLL, EntryPoint = "PeekConsoleInputW", CharSet = CharSet.Unicode, SetLastError = true)]
+	internal static extern BOOL PeekConsoleInput(IntPtr hConsoleInput,
+	                                             [MA(UT.LPArray), Out] InputRecord[] lpBuffer,
+	                                             uint nLength, out uint lpNumberOfEventsRead);
 
-	internal const UInt32 INFINITE       = 0xFFFFFFFF;
-	internal const UInt32 WAIT_ABANDONED = 0x00000080;
-	internal const UInt32 WAIT_OBJECT_0  = 0x00000000;
-	internal const UInt32 WAIT_TIMEOUT   = 0x00000102;
-	[DllImport("kernel32.dll", SetLastError = true)]
+	
+
+	[DllImport(KERNEL32_DLL, SetLastError = true)]
 	internal static extern bool FlushConsoleInputBuffer(IntPtr hConsoleInput);
-	[DllImport("kernel32.dll", SetLastError = true)]
-	internal static extern UInt32 WaitForSingleObject(IntPtr hHandle, UInt32 dwMilliseconds);
 
 	[DllImport(KERNEL32_DLL, SetLastError = true)]
 	[return: MA(UT.Bool)]
@@ -134,24 +126,6 @@ internal static class Native
 	                                                        [In] [MA(UT.LPArray, SizeParamIndex = 2)]
 	                                                        char[] lpCharacter, int nLength,
 	                                                        Coord dwWriteCoord, ref int lpNumberOfCharsWritten);
-
-	[DllImport(USER32_DLL, SetLastError = true, CharSet = CharSet.Unicode)]
-	private static extern IntPtr FindWindow(IntPtr zeroOnly, string lpWindowName);
-
-	public static IntPtr FindWindow(string lpWindowName) => FindWindow(IntPtr.Zero, lpWindowName);
-
-	[DllImport(USER32_DLL)]
-	public static extern short GetKeyState(VirtualKey k);
-
-	[DllImport(USER32_DLL)]
-	public static extern short GetAsyncKeyState(VirtualKey k);
-
-	[DllImport(USER32_DLL)]
-	[return: MarshalAs(UnmanagedType.Bool)]
-	public static extern bool GetKeyboardState([MarshalAs(UnmanagedType.LPArray), In] byte[] r);
-
-	[DllImport(USER32_DLL, CharSet = CharSet.Auto, ExactSpelling = true)]
-	public static extern IntPtr GetForegroundWindow();
 }
 
 #region Enums

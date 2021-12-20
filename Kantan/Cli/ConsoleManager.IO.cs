@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using Kantan.OS;
 using Kantan.OS.Structures;
@@ -132,16 +133,14 @@ public static partial class ConsoleManager
 		return canResize;
 	}
 
-	internal static bool _click;
+	private static ConsoleModes _oldMode;
 
-	internal static ConsoleModes _oldMode;
-
-	public static IntPtr StdIn  { get; private set; }
+	public static IntPtr StdIn { get; private set; }
 
 	public static IntPtr StdOut { get; private set; }
 
-	public static string ReadBufferLine(int y)      => ReadBufferXY(Console.BufferWidth, 0, y);
-	
+	public static string ReadBufferLine(int y) => ReadBufferXY(Console.BufferWidth, 0, y);
+
 	public static string ReadBufferXY(int x, int y) => ReadBufferXY(Console.BufferWidth, x, y);
 
 	/// <summary>
@@ -164,17 +163,17 @@ public static partial class ConsoleManager
 		return new string(buff, 0, charsRead);
 	}
 
-	public static int WriteBufferLine(string text, int y) => WriteBufferXY(text.ToCharArray(), text.Length, 0, y);
+	public static int WriteBufferLine(string s, int y) => WriteBufferXY(s.ToCharArray(), s.Length, 0, y);
 
 	/// <summary>
 	/// Writes characters to the buffer at the given position.
 	/// The cursor position is not updated.
 	/// </summary>
-	/// <param name="text">The string to be output.</param>
+	/// <param name="s">The string to be output.</param>
 	/// <param name="x">Column position of the starting location.</param>
 	/// <param name="y">Row position of the starting location.</param>
 	/// <returns></returns>
-	public static int WriteBufferXY(string text, int x, int y) => WriteBufferXY(text.ToCharArray(), text.Length, x, y);
+	public static int WriteBufferXY(string s, int x, int y) => WriteBufferXY(s.ToCharArray(), s.Length, x, y);
 
 	public static int WriteAttributesXY(ConsoleCharAttribute[] attrs, int x, int y)
 		=> WriteAttributesXY(attrs, attrs.Length, x, y);
@@ -183,14 +182,14 @@ public static partial class ConsoleManager
 	/// Writes character attributes to the screen buffer at the given cursor position.
 	/// </summary>
 	/// <param name="attrs">An array of attributes to be written to the screen buffer.</param>
-	/// <param name="nattrs">The number of attributes to be written.</param>
+	/// <param name="numAttrs">The number of attributes to be written.</param>
 	/// <param name="x">Column position in which to write the first attribute.</param>
 	/// <param name="y">Row position in which to write the first attribute.</param>
 	/// <returns>Returns the number of attributes written.</returns>
-	public static int WriteAttributesXY(ConsoleCharAttribute[] attrs, int nattrs, int x, int y)
+	public static int WriteAttributesXY(ConsoleCharAttribute[] attrs, int numAttrs, int x, int y)
 	{
-		if (nattrs > attrs.Length) {
-			throw new ArgumentException();
+		if (numAttrs > attrs.Length) {
+			throw new ArgumentException(null, nameof(attrs));
 		}
 
 		int attrsWritten = 0;
@@ -263,6 +262,8 @@ public static partial class ConsoleManager
 		return info;
 	}
 
+	internal static ConcurrentStack<InputRecord> _history=new();
+
 	public static InputRecord ReadInput()
 	{
 		var record = new InputRecord[1];
@@ -272,6 +273,7 @@ public static partial class ConsoleManager
 		}
 
 		var read = record[0];
+		_history.Push(read);
 
 		return read;
 

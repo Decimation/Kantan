@@ -93,6 +93,7 @@ public static partial class ConsoleManager
 	private const char OPTION_N = 'N';
 
 	private const char OPTION_Y = 'Y';
+
 	
 
 	/// <summary>

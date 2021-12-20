@@ -158,11 +158,11 @@ public class ConsoleDialog
 		m_optionPositions.Clear();
 
 		do {
-
 			Display(output);
 
-			var inputTask = Task.Run(() => InputTask(output));
+			var inputStatus = new ConsoleInputStatus();
 
+			var inputTask = Task.Run(() => InputTask(output, inputStatus));
 			await inputTask;
 
 			// Input was read
@@ -244,29 +244,29 @@ public class ConsoleDialog
 		return output;
 	}
 
-	private void InputTask(ConsoleOutputResult output)
+	private class ConsoleInputStatus { }
+
+	private void InputTask(ConsoleOutputResult output, ConsoleInputStatus m)
 	{
 		// Block until input is entered.
+
 
 		_ReadInput:
 		int prevCount = Options.Count;
 
+		bool click = false;
+
 		while (!ConsoleManager.InputAvailable) {
-			unsafe {
-				var ptr = (int*) Unsafe.AsPointer(ref m_status);
+			bool refresh = ExchangeStatus(ConsoleStatus.Ok) == ConsoleStatus.Refresh;
 
-				bool refresh = Interlocked.Exchange(ref Unsafe.AsRef<int>(ptr), (int) ConsoleStatus.Ok) ==
-				               (int) ConsoleStatus.Refresh;
+			// Refresh buffer if collection was updated
 
-				// Refresh buffer if collection was updated
+			int currentCount = Options.Count;
 
-				int currentCount = Options.Count;
-
-				if ((refresh || prevCount != currentCount)) {
-					Debug.WriteLine("update", nameof(ConsoleDialog));
-					Display(output);
-					prevCount = currentCount;
-				}
+			if ((refresh || prevCount != currentCount)) {
+				Debug.WriteLine("update", nameof(ConsoleDialog));
+				Display(output);
+				prevCount = currentCount;
 			}
 
 		}
@@ -277,9 +277,10 @@ public class ConsoleDialog
 
 		MouseEventRecord me = ir.MouseEvent;
 
+
 		switch (ir.EventType) {
 
-			case ConsoleEventType.KEY_EVENT:
+			case InputEventType.KEY_EVENT:
 				// Key was read
 
 				cki = ir.ToConsoleKeyInfo();
@@ -293,7 +294,7 @@ public class ConsoleDialog
 				}
 
 				break;
-			case ConsoleEventType.MOUSE_EVENT when ir.IsMouseScroll:
+			case InputEventType.MOUSE_EVENT when ir.IsMouseScroll:
 
 				bool scrollDown = me.dwButtonState.HasFlag(ButtonState.SCROLL_DOWN);
 
@@ -302,31 +303,22 @@ public class ConsoleDialog
 				bool b = ConsoleManager.Scroll(increment);
 
 				goto _ReadInput;
-			case ConsoleEventType.MOUSE_EVENT:
+			case InputEventType.MOUSE_EVENT:
 				// Mouse was read
 
 				var (x, y) = (me.dwMousePosition.X, me.dwMousePosition.Y);
+				
 
-
-				// hack: wtf
-
-				//Debug.WriteLine($"{me}");
-
-				if (me.dwButtonState == ButtonState.FROM_LEFT_1ST_BUTTON_PRESSED) {
-					ConsoleManager._click = true;
+				if (ConsoleManager._history.TryPeek(out var ir2)) {
+					if (ir2.MouseEvent.dwButtonState == ButtonState.FROM_LEFT_1ST_BUTTON_PRESSED) {
+						click = true;
+					}
 				}
 
-				if (ConsoleManager._click && me.dwButtonState == 0) {
-					//ConsoleManager._click = false;
-					goto default;
+				if (click) {
+					goto _ReadInput;
 				}
-
-				/*if (me.dwButtonState == 0 && ConsoleManager.m_prevRecord.dwButtonState == ButtonState.FROM_LEFT_1ST_BUTTON_PRESSED) {
-					Debug.WriteLine("ignoring 2nd press");
-					ConsoleManager.m_prevRecord = me;
-					goto default;
-					
-				}*/
+				
 
 
 				if (m_optionPositions.ContainsKey(y)) {
@@ -340,6 +332,7 @@ public class ConsoleDialog
 					cki = ConsoleManager.GetKeyInfo(c, c, me.dwControlKeyState);
 
 					HighlightClick(y, x);
+
 				}
 				else {
 					goto default;
@@ -352,13 +345,12 @@ public class ConsoleDialog
 				break;
 		}
 
-		//packet.Input = cki2;
 
 #if DEBUG
 		var debugStr = ir.EventType switch
 		{
-			ConsoleEventType.MOUSE_EVENT => ir.MouseEvent.ToString(),
-			ConsoleEventType.KEY_EVENT   => ir.KeyEvent.ToString(),
+			InputEventType.MOUSE_EVENT => ir.MouseEvent.ToString(),
+			InputEventType.KEY_EVENT   => ir.KeyEvent.ToString(),
 
 			_ => string.Empty,
 		};
@@ -376,19 +368,24 @@ public class ConsoleDialog
 		}
 	}
 
+	private unsafe ConsoleStatus ExchangeStatus(ConsoleStatus s)
+	{
+		var ptr    = (int*) Unsafe.AsPointer(ref m_status);
+		var status = (ConsoleStatus) Interlocked.Exchange(ref Unsafe.AsRef<int>(ptr), (int) s);
+
+		return status;
+	}
+
 	private static void HighlightClick(ushort y, ushort x)
 	{
 		const char SPACE = (char) 32;
 
 		var bufferLine = ConsoleManager.ReadBufferLine(y).Trim(SPACE);
 
-		Debug.WriteLine($"click ({x}, {y})", nameof(ConsoleDialog));
+		Debug.WriteLine($"highlight ({x}, {y})", nameof(ConsoleDialog));
 
 		ConsoleManager.Highlight(ConsoleManager.HighlightAttribute, bufferLine.Length, 0, y);
-
-		//ConsoleManager.WriteBufferLine(s1, y);
-
-		Thread.Sleep(50);
+		Thread.Sleep(TimeSpan.FromMilliseconds(50));
 	}
 
 
@@ -536,11 +533,7 @@ public class ConsoleDialog
 
 	public void Refresh()
 	{
-		unsafe {
-			var ptr = (int*) Unsafe.AsPointer(ref m_status);
-			Interlocked.Exchange(ref Unsafe.AsRef<int>(ptr), (int) ConsoleStatus.Refresh);
-		}
-
+		ExchangeStatus(ConsoleStatus.Refresh);
 	}
 
 	public override int GetHashCode()

@@ -13,31 +13,33 @@ namespace Kantan.OS.Structures;
 [StructLayout(LayoutKind.Explicit)]
 public struct InputRecord
 {
-	[FieldOffset(0)]
-	public ConsoleEventType EventType;
+	private const int OFFSET = 4;
 
-	[FieldOffset(4)]
+	[FieldOffset(0)]
+	public InputEventType EventType;
+
+	[FieldOffset(OFFSET)]
 	public KeyEventRecord KeyEvent;
 
-	[FieldOffset(4)]
+	[FieldOffset(OFFSET)]
 	public MouseEventRecord MouseEvent;
 
 	/// <summary>
 	/// Window buffer size information if this is a window buffer size event.
 	/// </summary>
-	[FieldOffset(4)]
+	[FieldOffset(OFFSET)]
 	public WindowBufferSizeEvent WindowBufferSizeEvent;
 
 	/// <summary>
 	/// Menu event information if this is a menu event.
 	/// </summary>
-	[FieldOffset(4)]
+	[FieldOffset(OFFSET)]
 	public MenuEvent MenuEvent;
 
 	/// <summary>
 	/// Focus event information if this is a focus event.
 	/// </summary>
-	[FieldOffset(4)]
+	[FieldOffset(OFFSET)]
 	public FocusEvent FocusEvent;
 
 	public override string ToString()
@@ -50,7 +52,7 @@ public struct InputRecord
 		get
 		{
 			var keyEvent = KeyEvent;
-			return EventType == ConsoleEventType.KEY_EVENT && keyEvent.bKeyDown != BOOL.FALSE;
+			return EventType == InputEventType.KEY_EVENT && keyEvent.bKeyDown != BOOL.FALSE;
 		}
 	}
 
@@ -63,7 +65,7 @@ public struct InputRecord
 			var mouseWheel = mouseEvent.dwEventFlags is MouseEventFlags.MOUSE_WHEELED
 				                 or MouseEventFlags.MOUSE_HWHEELED;
 
-			return EventType == ConsoleEventType.MOUSE_EVENT &&
+			return EventType == InputEventType.MOUSE_EVENT &&
 			       mouseEvent.dwEventFlags != MouseEventFlags.MOUSE_MOVED && mouseWheel;
 		}
 	}
@@ -74,7 +76,7 @@ public struct InputRecord
 		{
 			var mouseEvent = MouseEvent;
 
-			return EventType == ConsoleEventType.MOUSE_EVENT &&
+			return EventType == InputEventType.MOUSE_EVENT &&
 			       mouseEvent.dwEventFlags != MouseEventFlags.MOUSE_MOVED || IsMouseScroll;
 		}
 	}
@@ -166,7 +168,7 @@ public struct InputRecord
 	}
 }
 
-public enum ConsoleEventType : short
+public enum InputEventType : short
 {
 	FOCUS_EVENT              = 0x0010,
 	KEY_EVENT                = 0x0001,
