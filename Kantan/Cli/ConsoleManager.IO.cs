@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.ComponentModel;
-using Kantan.OS;
-using Kantan.OS.Structures;
+using Kantan.Utilities.Structures;
 
 // ReSharper disable InconsistentNaming
 
@@ -16,7 +15,7 @@ public static partial class ConsoleManager
 	{
 		get
 		{
-			var b = Native.GetNumberOfConsoleInputEvents(StdIn, out var n);
+			var b = ConsoleManager.Win32.GetNumberOfConsoleInputEvents(StdIn, out var n);
 
 			var buffer = new InputRecord[1];
 
@@ -24,14 +23,14 @@ public static partial class ConsoleManager
 				return false;
 			}
 
-			Native.PeekConsoleInput(StdIn, buffer, 1, out var lpNumber);
+			ConsoleManager.Win32.PeekConsoleInput(StdIn, buffer, 1, out var lpNumber);
 
 			var ir = buffer[0];
 
 			if (!ir.IsMouseEvent && (!ir.IsKeyDownEvent || ir.IsModKey)) {
 
-				Native.ReadConsoleInput(StdIn, buffer, (uint) buffer.Length,
-				                        out var numEventsRead);
+				ConsoleManager.Win32.ReadConsoleInput(StdIn, buffer, (uint) buffer.Length,
+				                                      out var numEventsRead);
 
 			}
 			else {
@@ -112,7 +111,7 @@ public static partial class ConsoleManager
 
 	private static ConsoleScreenBufferInfo GetBufferInfo(out bool ok)
 	{
-		ok = Native.GetConsoleScreenBufferInfo(StdOut, out ConsoleScreenBufferInfo csbi);
+		ok = ConsoleManager.Win32.GetConsoleScreenBufferInfo(StdOut, out ConsoleScreenBufferInfo csbi);
 
 		return csbi;
 	}
@@ -133,7 +132,9 @@ public static partial class ConsoleManager
 		return canResize;
 	}
 
-	private static ConsoleModes _oldMode;
+	private static ConsoleManager.ConsoleModes _oldMode;
+
+	internal static ConcurrentStack<InputRecord> History { get; private set; } = new();
 
 	public static IntPtr StdIn { get; private set; }
 
@@ -155,8 +156,8 @@ public static partial class ConsoleManager
 		char[] buff      = new char[nChars];
 		int    charsRead = 0;
 
-		if (!Native.ReadConsoleOutputCharacter(StdOut, buff, nChars, new Coord((ushort) x, (ushort) y),
-		                                       ref charsRead)) {
+		if (!ConsoleManager.Win32.ReadConsoleOutputCharacter(StdOut, buff, nChars, new Coord((ushort) x, (ushort) y),
+		                                                     ref charsRead)) {
 			throw new Win32Exception();
 		}
 
@@ -195,7 +196,7 @@ public static partial class ConsoleManager
 		int attrsWritten = 0;
 		var writePos     = new Coord((short) x, (short) y);
 
-		if (!Native.WriteConsoleOutputAttribute(StdOut, attrs, attrs.Length, writePos, ref attrsWritten)) {
+		if (!ConsoleManager.Win32.WriteConsoleOutputAttribute(StdOut, attrs, attrs.Length, writePos, ref attrsWritten)) {
 			throw new Win32Exception();
 		}
 
@@ -219,7 +220,7 @@ public static partial class ConsoleManager
 		var bufferPos   = new Coord((short) buffX, (short) buffY);
 		var writeRegion = new SmallRect((short) left, (short) top, (short) right, (short) bottom);
 
-		if (!Native.WriteConsoleOutput(StdOut, buff, bufferSize, bufferPos, writeRegion)) {
+		if (!ConsoleManager.Win32.WriteConsoleOutput(StdOut, buff, bufferSize, bufferPos, writeRegion)) {
 			throw new Win32Exception();
 		}
 	}
@@ -244,7 +245,7 @@ public static partial class ConsoleManager
 
 		var writePos = new Coord((ushort) x, (ushort) y);
 
-		if (!Native.WriteConsoleOutputCharacter(StdOut, text, nChars, writePos, ref charsWritten)) {
+		if (!ConsoleManager.Win32.WriteConsoleOutputCharacter(StdOut, text, nChars, writePos, ref charsWritten)) {
 			throw new Win32Exception();
 		}
 
@@ -262,48 +263,46 @@ public static partial class ConsoleManager
 		return info;
 	}
 
-	internal static ConcurrentStack<InputRecord> _history=new();
-
 	public static InputRecord ReadInput()
 	{
 		var record = new InputRecord[1];
 
-		if (!Native.ReadConsoleInput(StdIn, record, (uint) record.Length, out uint lpNumberOfEventsRead)) {
+		if (!ConsoleManager.Win32.ReadConsoleInput(StdIn, record, (uint) record.Length, out uint n)) {
 			throw new Win32Exception();
 		}
 
 		var read = record[0];
-		_history.Push(read);
+		History.Push(read);
 
 		return read;
-
 	}
 
 	public static void Close()
 	{
-		Native.SetConsoleMode(StdIn, _oldMode);
+		ConsoleManager.Win32.SetConsoleMode(StdIn, _oldMode);
 		StdIn    = IntPtr.Zero;
 		StdOut   = IntPtr.Zero;
 		_oldMode = 0;
+		History.Clear();
 	}
 
 	public static void Init()
 	{
-		StdOut = Native.GetStdHandle(StandardHandle.STD_OUTPUT_HANDLE);
-		StdIn  = Native.GetStdHandle(StandardHandle.STD_INPUT_HANDLE);
+		StdOut = ConsoleManager.Win32.GetStdHandle(ConsoleManager.StandardHandle.STD_OUTPUT_HANDLE);
+		StdIn  = ConsoleManager.Win32.GetStdHandle(ConsoleManager.StandardHandle.STD_INPUT_HANDLE);
 
-		if (!Native.GetConsoleMode(StdIn, out ConsoleModes mode)) {
+		if (!ConsoleManager.Win32.GetConsoleMode(StdIn, out ConsoleManager.ConsoleModes mode)) {
 			throw new Win32Exception();
 		}
 
 
 		_oldMode = mode;
 
-		mode |= ConsoleModes.ENABLE_MOUSE_INPUT;
-		mode &= ~ConsoleModes.ENABLE_QUICK_EDIT_MODE;
-		mode |= ConsoleModes.ENABLE_EXTENDED_FLAGS;
+		mode |= ConsoleManager.ConsoleModes.ENABLE_MOUSE_INPUT;
+		mode &= ~ConsoleManager.ConsoleModes.ENABLE_QUICK_EDIT_MODE;
+		mode |= ConsoleManager.ConsoleModes.ENABLE_EXTENDED_FLAGS;
 
-		if (!Native.SetConsoleMode(StdIn, mode)) {
+		if (!ConsoleManager.Win32.SetConsoleMode(StdIn, mode)) {
 			throw new Win32Exception();
 		}
 	}

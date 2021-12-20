@@ -13,9 +13,9 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Kantan.Diagnostics;
 using Kantan.Internal;
-using Kantan.OS.Structures;
 using Kantan.Text;
 using Kantan.Utilities;
+using Kantan.Utilities.Structures;
 
 // ReSharper disable SuggestVarOrType_DeconstructionDeclarations
 
@@ -139,9 +139,8 @@ public class ConsoleDialog
 	/// <item><description><see cref="NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
 	/// </list>
 	/// </remarks>
-	public async Task<ConsoleOutputResult> ReadInputAsync()
+	public async Task<ConsoleOutputResult> ReadInputAsync(CancellationToken? c = null)
 	{
-		//var selectedOptions = new HashSet<object>();
 		var output = new ConsoleOutputResult
 		{
 			SelectMultiple = SelectMultiple,
@@ -158,11 +157,11 @@ public class ConsoleDialog
 		m_optionPositions.Clear();
 
 		do {
+
 			Display(output);
 
-			var inputStatus = new ConsoleInputStatus();
-
-			var inputTask = Task.Run(() => InputTask(output, inputStatus));
+			var inputTask = Task.Run(() => InputTask(output), c?? CancellationToken.None);
+			
 			await inputTask;
 
 			// Input was read
@@ -178,13 +177,8 @@ public class ConsoleDialog
 			else {
 				cki = default;
 				continue;
-
-				// throw new InvalidOperationException();
 			}
-
-			/*Debug.WriteLine($"{nameof(ConsoleManager)}: ({cki.Key} {(int) cki.Key}) " +
-			                $"| ({cki.KeyChar} {(int) cki.KeyChar})", LogCategories.C_DEBUG);*/
-
+			
 			// Handle special keys
 
 			if (cki.Key is <= ConsoleKey.F12 and >= ConsoleKey.F1) {
@@ -244,24 +238,18 @@ public class ConsoleDialog
 		return output;
 	}
 
-	private class ConsoleInputStatus { }
-
-	private void InputTask(ConsoleOutputResult output, ConsoleInputStatus m)
+	private void InputTask(ConsoleOutputResult output)
 	{
 		// Block until input is entered.
-
 
 		_ReadInput:
 		int prevCount = Options.Count;
 
-		bool click = false;
-
 		while (!ConsoleManager.InputAvailable) {
-			bool refresh = ExchangeStatus(ConsoleStatus.Ok) == ConsoleStatus.Refresh;
+			bool refresh      = ExchangeStatus(ConsoleStatus.Ok) == ConsoleStatus.Refresh;
+			int  currentCount = Options.Count;
 
 			// Refresh buffer if collection was updated
-
-			int currentCount = Options.Count;
 
 			if ((refresh || prevCount != currentCount)) {
 				Debug.WriteLine("update", nameof(ConsoleDialog));
@@ -271,12 +259,10 @@ public class ConsoleDialog
 
 		}
 
-		InputRecord ir = ConsoleManager.ReadInput();
 
-		ConsoleKeyInfo cki;
-
+		InputRecord      ir = ConsoleManager.ReadInput();
+		ConsoleKeyInfo   cki;
 		MouseEventRecord me = ir.MouseEvent;
-
 
 		switch (ir.EventType) {
 
@@ -293,40 +279,39 @@ public class ConsoleDialog
 					return;
 				}
 
+
 				break;
 			case InputEventType.MOUSE_EVENT when ir.IsMouseScroll:
-
+				// Mouse scroll was read
 				bool scrollDown = me.dwButtonState.HasFlag(ButtonState.SCROLL_DOWN);
+				int  increment  = scrollDown ? ConsoleManager.ScrollIncrement : -ConsoleManager.ScrollIncrement;
 
-				int increment = scrollDown ? ConsoleManager.ScrollIncrement : -ConsoleManager.ScrollIncrement;
-
-				bool b = ConsoleManager.Scroll(increment);
+				ConsoleManager.Scroll(increment);
 
 				goto _ReadInput;
 			case InputEventType.MOUSE_EVENT:
 				// Mouse was read
 
-				var (x, y) = (me.dwMousePosition.X, me.dwMousePosition.Y);
-				
+				bool click = false;
 
-				if (ConsoleManager._history.TryPeek(out var ir2)) {
+				var (x, y) = (me.dwMousePosition.X, me.dwMousePosition.Y);
+
+				if (ConsoleManager.History.TryPeek(out var ir2)) {
 					if (ir2.MouseEvent.dwButtonState == ButtonState.FROM_LEFT_1ST_BUTTON_PRESSED) {
 						click = true;
 					}
 				}
 
-				if (click) {
-					goto _ReadInput;
-				}
-				
 
+				if (click) {
+					output.Status.SkipNext = true;
+					// goto _ReadInput;
+				}
 
 				if (m_optionPositions.ContainsKey(y)) {
-					ConsoleOption option = m_optionPositions[y];
-
-					int indexOf = Options.IndexOf(option);
-
-					char c = ConsoleOption.GetDisplayOptionFromIndex(indexOf);
+					var  option  = m_optionPositions[y];
+					int  indexOf = Options.IndexOf(option);
+					char c       = ConsoleOption.GetDisplayOptionFromIndex(indexOf);
 
 					// note: KeyChar argument is slightly inaccurate (case insensitive; always uppercase)
 					cki = ConsoleManager.GetKeyInfo(c, c, me.dwControlKeyState);
@@ -335,6 +320,7 @@ public class ConsoleDialog
 
 				}
 				else {
+					output.Status.SkipNext = true;
 					goto default;
 				}
 
@@ -352,7 +338,7 @@ public class ConsoleDialog
 			InputEventType.MOUSE_EVENT => ir.MouseEvent.ToString(),
 			InputEventType.KEY_EVENT   => ir.KeyEvent.ToString(),
 
-			_ => string.Empty,
+			_ => String.Empty,
 		};
 
 		Debug.WriteLine($"{ir} | {(debugStr)}",
@@ -394,6 +380,13 @@ public class ConsoleDialog
 	/// </summary>
 	private void Display(ConsoleOutputResult output)
 	{
+		if (output.Status.SkipNext) {
+			// Avoid unnecessary display update
+
+			output.Status.SkipNext = false;
+			return;
+		}
+
 		Debug.WriteLine($"{nameof(ConsoleDialog)}: Update display");
 
 		Display();
@@ -407,11 +400,8 @@ public class ConsoleDialog
 				.AddColor(ConsoleManager.ColorOptions);
 
 			ConsoleManager.Write(true, optionsStr);
-
 			ConsoleManager.NewLine();
-
 			ConsoleManager.Write(SelectMultiplePrompt);
-
 		}
 	}
 
@@ -458,7 +448,6 @@ public class ConsoleDialog
 
 		if (Description != null) {
 			ConsoleManager.NewLine();
-
 			ConsoleManager.Write(Description);
 		}
 	}

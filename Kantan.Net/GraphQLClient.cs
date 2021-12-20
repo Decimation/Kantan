@@ -78,7 +78,7 @@ public class GraphQLClient : IDisposable
 		request.Content = new StringContent(JsonConvert.SerializeObject(obj), Encoding.UTF8,
 		                                    "application/json");
 
-		var clone = ReflectionHelper.Clone(m_client);
+		// var clone = ReflectionHelper.Clone(m_client);
 
 		var response = m_client.Send(request);
 		var task     = response.Content.ReadAsStringAsync();
@@ -87,7 +87,7 @@ public class GraphQLClient : IDisposable
 		/*request.ResetStatus();
 		_client.ResetStatus();*/
 
-		m_client = clone;
+		// m_client = clone;
 
 		return JObject.Parse(task.Result);
 	}

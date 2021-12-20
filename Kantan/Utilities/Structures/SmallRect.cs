@@ -2,7 +2,7 @@
 
 // ReSharper disable UnusedMember.Global
 
-namespace Kantan.OS.Structures;
+namespace Kantan.Utilities.Structures;
 
 /// <summary>
 /// Defines the coordinates of the upper left and lower right corners of

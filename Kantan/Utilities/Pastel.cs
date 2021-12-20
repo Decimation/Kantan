@@ -6,7 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using Kantan.OS;
+using Kantan.Cli;
 
 // ReSharper disable UnusedVariable
 
@@ -132,11 +132,11 @@ public static class Pastel
 	{
 
 		if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-			var iStdOut = Native.GetStdHandle(StandardHandle.STD_OUTPUT_HANDLE);
+			var iStdOut = ConsoleManager.Win32.GetStdHandle(ConsoleManager.StandardHandle.STD_OUTPUT_HANDLE);
 
 
-			bool enable = Native.GetConsoleMode(iStdOut, out var outConsoleMode)
-			              && Native.SetConsoleMode(iStdOut, outConsoleMode | ConsoleModes.ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+			bool enable = ConsoleManager.Win32.GetConsoleMode(iStdOut, out var outConsoleMode)
+			              && ConsoleManager.Win32.SetConsoleMode(iStdOut, outConsoleMode | ConsoleManager.ConsoleModes.ENABLE_VIRTUAL_TERMINAL_PROCESSING);
 		}
 
 

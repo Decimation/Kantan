@@ -2,7 +2,7 @@
 
 // ReSharper disable InconsistentNaming
 
-namespace Kantan.OS.Structures;
+namespace Kantan.Utilities.Structures;
 
 [DebuggerDisplay("{X}, {Y}")]
 public struct Coord
@@ -10,7 +10,6 @@ public struct Coord
 	public ushort X;
 	public ushort Y;
 
-		
 
 	public Coord(ushort x, ushort y)
 	{
@@ -18,7 +17,5 @@ public struct Coord
 		Y = y;
 	}
 
-	public Coord(short x, short y):this((ushort)x,(ushort)y)
-	{
-	}
+	public Coord(short x, short y) : this((ushort) x, (ushort) y) { }
 }

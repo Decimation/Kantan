@@ -9,8 +9,6 @@ using System.Runtime.Versioning;
 using System.Threading;
 using JetBrains.Annotations;
 using Kantan.Cli.Controls;
-using Kantan.OS;
-using Kantan.OS.Structures;
 using Kantan.Utilities;
 using static Kantan.Internal.Common;
 using static Kantan.Text.Strings;

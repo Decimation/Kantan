@@ -7,7 +7,7 @@ using Kantan.Cli;
 
 // ReSharper disable InconsistentNaming
 
-namespace Kantan.OS.Structures;
+namespace Kantan.Utilities.Structures;
 
 [DebuggerDisplay("EventType: {EventType}")]
 [StructLayout(LayoutKind.Explicit)]
@@ -52,7 +52,7 @@ public struct InputRecord
 		get
 		{
 			var keyEvent = KeyEvent;
-			return EventType == InputEventType.KEY_EVENT && keyEvent.bKeyDown != BOOL.FALSE;
+			return EventType == InputEventType.KEY_EVENT && keyEvent.bKeyDown != ConsoleManager.BOOL.FALSE;
 		}
 	}
 
@@ -175,4 +175,136 @@ public enum InputEventType : short
 	MENU_EVENT               = 0x0008,
 	MOUSE_EVENT              = 0x0002,
 	WINDOW_BUFFER_SIZE_EVENT = 0x0004
+}
+
+/// <summary>
+/// Reports menu events in a console input record.
+/// Use of this event type is not documented.
+/// </summary>
+[StructLayout(LayoutKind.Explicit)]
+public struct MenuEvent
+{
+	[FieldOffset(0)]
+	public int dwCommandId;
+}
+
+[DebuggerDisplay("{dwMousePosition.X}, {dwMousePosition.Y}")]
+public struct MouseEventRecord
+{
+	public Coord           dwMousePosition;
+	public ButtonState     dwButtonState;
+	public ControlKeyState dwControlKeyState;
+	public MouseEventFlags dwEventFlags;
+
+
+	/// <inheritdoc />
+	public override string ToString()
+	{
+		return $"{nameof(dwMousePosition)}: {dwMousePosition}, \n" +
+		       $"\t{nameof(dwButtonState)}: {dwButtonState}, \n" +
+		       $"\t{nameof(dwControlKeyState)}: {dwControlKeyState}, \n" +
+		       $"\t{nameof(dwEventFlags)}: {dwEventFlags}\n";
+	}
+}
+
+[Flags]
+public enum ControlKeyState
+{
+	RightAltPressed  = 0x0001,
+	LeftAltPressed   = 0x0002,
+	RightCtrlPressed = 0x0004,
+	LeftCtrlPressed  = 0x0008,
+	ShiftPressed     = 0x0010,
+	NumLockOn        = 0x0020,
+	ScrollLockOn     = 0x0040,
+	CapsLockOn       = 0x0080,
+	EnhancedKey      = 0x0100
+}
+
+public enum ButtonState
+{
+	FROM_LEFT_1ST_BUTTON_PRESSED = 0x0001,
+	FROM_LEFT_2ND_BUTTON_PRESSED = 0x0004,
+	FROM_LEFT_3RD_BUTTON_PRESSED = 0x0008,
+	FROM_LEFT_4TH_BUTTON_PRESSED = 0x0010,
+	RIGHTMOST_BUTTON_PRESSED     = 0x0002,
+
+	/// <summary>
+	///     For mouse wheel events, if this flag is set, the wheel was scrolled down.
+	///     If cleared, the wheel was scrolled up.
+	///     This is not officially documented.
+	/// </summary>
+	SCROLL_DOWN = unchecked((int)0xFF000000)
+}
+
+public enum MouseEventFlags
+{
+	DOUBLE_CLICK   = 0x0002,
+	MOUSE_HWHEELED = 0x0008,
+	MOUSE_MOVED    = 0x0001,
+	MOUSE_WHEELED  = 0x0004,
+
+	/// <summary>
+	/// A mouse button was pressed or released
+	/// </summary>
+	MOUSE_BUTTON = 0,
+}
+
+/// <summary>
+/// Reports focus events in a console input record.
+/// Use of this event type is not documented.
+/// </summary>
+[StructLayout(LayoutKind.Explicit)]
+public struct FocusEvent
+{
+	[FieldOffset(0)]
+	public uint bSetFocus;
+}
+
+[DebuggerDisplay("KeyCode: {wVirtualKeyCode}")]
+[StructLayout(LayoutKind.Explicit)]
+public struct KeyEventRecord
+{
+	[FieldOffset(0)]
+	public ConsoleManager.BOOL bKeyDown;
+
+	[FieldOffset(4)]
+	public ushort wRepeatCount;
+
+	[FieldOffset(6)]
+	public VirtualKey wVirtualKeyCode;
+
+	[FieldOffset(8)]
+	public ushort wVirtualScanCode;
+
+	[FieldOffset(10)]
+	public char UnicodeChar;
+
+	[FieldOffset(10)]
+	public byte AsciiChar;
+
+	[FieldOffset(12)]
+	public ControlKeyState dwControlKeyState;
+
+	/// <inheritdoc />
+	public override string ToString()
+	{
+		return $"{nameof(bKeyDown)}: {bKeyDown}, \n" +
+		       $"{nameof(wRepeatCount)}: {wRepeatCount}, \n" +
+		       $"{nameof(wVirtualKeyCode)}: {wVirtualKeyCode}, \n" +
+		       $"{nameof(wVirtualScanCode)}: {wVirtualScanCode}, \n" +
+		       $"{nameof(UnicodeChar)}: {UnicodeChar}, \n" +
+		       $"{nameof(AsciiChar)}: {AsciiChar}, \n" +
+		       $"{nameof(dwControlKeyState)}: {dwControlKeyState}";
+	}
+};
+
+/// <summary>
+/// Reports window buffer sizing events in a console input record.
+/// </summary>
+[StructLayout(LayoutKind.Explicit)]
+public struct WindowBufferSizeEvent
+{
+	[FieldOffset(0)]
+	public Coord dwSize;
 }

@@ -18,10 +18,18 @@ public sealed class ConsoleOutputResult
 	public ConsoleOutputResult()
 	{
 		Output = new HashSet<object>();
+		Status = new ConsoleInputStatus();
 	}
 
 	public override string ToString()
 	{
 		return $"{Key} | {SelectMultiple} | {DragAndDrop} | {Output.QuickJoin()}";
 	}
+
+	internal ConsoleInputStatus Status { get; set; }
+}
+
+internal sealed class ConsoleInputStatus
+{
+	internal bool SkipNext { get; set; }
 }

@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 using Kantan.Cli;
 using Kantan.Cli.Controls;
 using Kantan.Model;
-using Kantan.OS;
-using Kantan.OS.Structures;
 using Kantan.Text;
 
 // ReSharper disable MethodHasAsyncOverload
@@ -77,7 +75,6 @@ public static class Program
 
 	private class MyClass : IConsoleOption
 	{
-		/// <inheritdoc />
 		public Dictionary<string, object> Data
 			=> new()
 			{
