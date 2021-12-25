@@ -1,4 +1,6 @@
 #nullable disable
+using System.Drawing;
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -9,6 +11,8 @@ using System.Text.RegularExpressions;
 using System.Text.Unicode;
 using JetBrains.Annotations;
 using Kantan.Collections;
+using Kantan.Text;
+using Kantan.Utilities;
 using Kantan.Model;
 using static Kantan.Internal.Common;
 
@@ -16,7 +20,6 @@ using static Kantan.Internal.Common;
 
 // ReSharper disable InconsistentNaming
 
-#pragma warning disable 8509
 
 // ReSharper disable UnusedMember.Local
 
@@ -289,7 +292,20 @@ public static partial class Strings
 	}
 
 	public static string Center(string str) => Center(str, Console.BufferWidth);
+	public static string GetMapString(Dictionary<string, string> map, Color? c = null)
+	{
+		return map.Select(kv =>
+		{
+			var key = kv.Key;
 
+			if (c.HasValue)
+			{
+				key = key.AddColor(c.Value);
+			}
+
+			return $"{key}: {kv.Value}";
+		}).QuickJoin(" | ");
+	}
 	#region Outline
 
 	public static string Indent(string s) => Indent(s, Constants.Indentation);

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.Threading;
+using System;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -23,19 +24,11 @@ using Newtonsoft.Json;
 
 // ReSharper disable UnusedVariable
 // ReSharper disable UnusedMember.Local
-
-#pragma warning disable 8600
-#pragma warning disable 8604
-#pragma warning disable IDE0055,IDE0059,CS0219
-
-
 // ReSharper disable CognitiveComplexity
-
 // ReSharper disable InconsistentNaming
-
 // ReSharper disable SwitchStatementHandlesSomeKnownEnumValuesWithDefault
-
 // ReSharper disable UnusedMember.Global
+
 #nullable disable
 
 namespace Kantan.Net;
@@ -56,56 +49,13 @@ public static class HttpUtilities
 	public static string UserAgent { get; set; } = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
 	                                               "(KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36";
 
-#if DISABLED
-	public static bool ResetStatus(this HttpRequestMessage request)
-	{
-		const int MessageNotYetSent = 0;
-		const int MessageAlreadySent = 1;
-		const int MessageIsRedirect = 2;
-
-		const string sendStatusFieldName = "_sendStatus";
-
-		// internal bool MarkAsSent() => Interlocked.CompareExchange(ref _sendStatus, MessageAlreadySent, MessageNotYetSent) == MessageNotYetSent;
-
-		var type = request.GetType().GetTypeInfo();
-
-		var field = type.GetField(sendStatusFieldName,
-		                          BindingFlags.Instance | BindingFlags.NonPublic);
-
-		if (field != null) {
-			field.SetValue(request, MessageNotYetSent);
-			return true;
-		}
-
-		return false;
-	}
-
-
-	public static bool ResetStatus(this HttpClient request)
-	{
-		const string sendStatusFieldName = "_operationStarted";
-
-		var type = request.GetType().GetTypeInfo();
-
-		var field = type.GetField(sendStatusFieldName,
-		                          BindingFlags.Instance | BindingFlags.NonPublic);
-
-		if (field != null) {
-			field.SetValue(request, false);
-			return true;
-		}
-
-		return false;
-	}
-
-#endif
-
 	[CanBeNull]
 	[MustUseReturnValue]
-	public static HttpResponseMessage GetHttpResponse(string url, int ms = TIMEOUT_MS,
-	                                                  [CanBeNull] HttpMethod method = null,
-	                                                  bool allowAutoRedirect = true,
-	                                                  int maxAutoRedirects = MAX_AUTO_REDIRECTS)
+	public static async Task<HttpResponseMessage> GetHttpResponseAsync(string url, int ms = TIMEOUT_MS,
+	                                                                   [CanBeNull] HttpMethod method = null,
+	                                                                   bool allowAutoRedirect = true,
+	                                                                   int maxAutoRedirects = MAX_AUTO_REDIRECTS,
+	                                                                   CancellationToken? token = null)
 	{
 
 		using var request = new HttpRequestMessage
@@ -125,14 +75,38 @@ public static class HttpUtilities
 		client.Timeout = TimeSpan.FromMilliseconds(ms);
 
 		try {
-			var response = client.Send(request);
+			var c = token ?? CancellationToken.None;
+
+			var response = await client.SendAsync(request, c);
 
 			return response;
 		}
 		catch (Exception x) {
+			// Debug.WriteLine($"{x}");
 			return null;
 		}
 
+	}
+
+	[CanBeNull]
+	[MustUseReturnValue]
+	public static HttpResponseMessage GetHttpResponse(string url, int ms = TIMEOUT_MS,
+	                                                  [CanBeNull] HttpMethod method = null,
+	                                                  bool allowAutoRedirect = true,
+	                                                  int maxAutoRedirects = MAX_AUTO_REDIRECTS)
+	{
+
+		var c = CancellationToken.None;
+		var v = GetHttpResponseAsync(url, ms, method, allowAutoRedirect, maxAutoRedirects, c);
+		// v.Wait(c.Token);
+
+		if (v is { }) {
+			v.Wait(c);
+			return v.Result;
+
+		}
+
+		return null;
 	}
 
 	public static PingReply Ping(Uri u, int ms = TIMEOUT_MS) => Ping(IPUtilities.GetAddress(u.ToString()), ms);
@@ -214,7 +188,7 @@ public static class HttpUtilities
 		             from value in nvc.GetValues(key)
 		             select $"{HttpUtility.UrlEncode(key)}={HttpUtility.UrlEncode(value)}"
 		            ).ToArray();
-		return "?" + String.Join("&", array);
+		return '?' + String.Join('&', array);
 	}
 
 	public static Uri AddQuery(this Uri uri, string name, string value)
@@ -228,8 +202,7 @@ public static class HttpUtilities
 
 		// this code block is taken from httpValueCollection.ToString() method
 		// and modified so it encodes strings with HttpUtility.UrlEncode
-		if (collection.Count == 0)
-		{
+		if (collection.Count == 0) {
 			ub.Query = String.Empty;
 		}
 		else {
@@ -298,9 +271,6 @@ public static class HttpUtilities
 
 	public static Stream GetStream(string url)
 	{
-		// using var wc = new WebClient();
-		// return wc.OpenRead(url);
-
 		var stream = url.GetStreamAsync();
 		var r      = stream.GetAwaiter().GetResult();
 		return r;
@@ -316,8 +286,6 @@ public static class HttpUtilities
 	{
 		using var h = new HttpClient();
 		return h.DownloadString(url);
-
-
 	}
 
 	public static string DownloadString(this HttpClient client, string url)

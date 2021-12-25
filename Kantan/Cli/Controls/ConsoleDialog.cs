@@ -15,7 +15,6 @@ using Kantan.Diagnostics;
 using Kantan.Internal;
 using Kantan.Text;
 using Kantan.Utilities;
-using Kantan.Utilities.Structures;
 
 // ReSharper disable SuggestVarOrType_DeconstructionDeclarations
 
@@ -160,8 +159,14 @@ public class ConsoleDialog
 
 			Display(output);
 
-			var inputTask = Task.Run(() => InputTask(output), c?? CancellationToken.None);
-			
+			var token = c ?? CancellationToken.None;
+
+			var inputTask = Task.Run(() => InputTask(output, token), token);
+
+			if (inputTask.IsCanceled || token.IsCancellationRequested) {
+				return output;
+			}
+
 			await inputTask;
 
 			// Input was read
@@ -178,7 +183,7 @@ public class ConsoleDialog
 				cki = default;
 				continue;
 			}
-			
+
 			// Handle special keys
 
 			if (cki.Key is <= ConsoleKey.F12 and >= ConsoleKey.F1) {
@@ -238,7 +243,7 @@ public class ConsoleDialog
 		return output;
 	}
 
-	private void InputTask(ConsoleOutputResult output)
+	private void InputTask(ConsoleOutputResult output, CancellationToken? t = null)
 	{
 		// Block until input is entered.
 
@@ -251,8 +256,13 @@ public class ConsoleDialog
 
 			// Refresh buffer if collection was updated
 
+			if (t is { IsCancellationRequested: true }) {
+				// break;
+				output.Cancelled = true;
+				return;
+			}
+
 			if ((refresh || prevCount != currentCount)) {
-				Debug.WriteLine("update", nameof(ConsoleDialog));
 				Display(output);
 				prevCount = currentCount;
 			}
@@ -260,9 +270,9 @@ public class ConsoleDialog
 		}
 
 
-		InputRecord      ir = ConsoleManager.ReadInput();
-		ConsoleKeyInfo   cki;
-		MouseEventRecord me = ir.MouseEvent;
+		InputRecord ir = ConsoleManager.ReadInput();
+		ConsoleKeyInfo             cki;
+		MouseEventRecord           me = ir.MouseEvent;
 
 		switch (ir.EventType) {
 
@@ -274,7 +284,6 @@ public class ConsoleDialog
 
 				if (!String.IsNullOrWhiteSpace(dragAndDropFile)) {
 
-					Debug.WriteLine($">> {dragAndDropFile}");
 					output.DragAndDrop = dragAndDropFile;
 					return;
 				}
@@ -304,14 +313,15 @@ public class ConsoleDialog
 
 
 				if (click) {
-					output.Status.SkipNext = true;
-					// goto _ReadInput;
+					// output.Status.SkipNext = true;
+					goto _ReadInput;
 				}
 
 				if (m_optionPositions.ContainsKey(y)) {
 					var  option  = m_optionPositions[y];
 					int  indexOf = Options.IndexOf(option);
 					char c       = ConsoleOption.GetDisplayOptionFromIndex(indexOf);
+
 
 					// note: KeyChar argument is slightly inaccurate (case insensitive; always uppercase)
 					cki = ConsoleManager.GetKeyInfo(c, c, me.dwControlKeyState);
@@ -368,7 +378,7 @@ public class ConsoleDialog
 
 		var bufferLine = ConsoleManager.ReadBufferLine(y).Trim(SPACE);
 
-		Debug.WriteLine($"highlight ({x}, {y})", nameof(ConsoleDialog));
+		// Debug.WriteLine($"highlight ({x}, {y})", nameof(ConsoleDialog));
 
 		ConsoleManager.Highlight(ConsoleManager.HighlightAttribute, bufferLine.Length, 0, y);
 		Thread.Sleep(TimeSpan.FromMilliseconds(50));
@@ -463,19 +473,6 @@ public class ConsoleDialog
 	/// </summary>
 	public const ConsoleKey NC_GLOBAL_REFRESH_KEY = ConsoleKey.F5;
 
-	private enum ConsoleStatus
-	{
-		/// <summary>
-		///     Signals to reload interface
-		/// </summary>
-		Refresh,
-
-		/// <summary>
-		///     Signals to continue displaying current interface
-		/// </summary>
-		Ok,
-	}
-
 	/// <summary>
 	///     Determines whether the console buffer contains a file directory that was
 	///     input via drag-and-drop.
@@ -487,7 +484,7 @@ public class ConsoleDialog
 	///     primary disk letter. If so, then the rest of the buffer is read until the current sequence is a
 	/// string resembling a valid file path.
 	/// </remarks>
-	internal static string TryReadFile(ConsoleKeyInfo cki)
+	private static string TryReadFile(ConsoleKeyInfo cki)
 	{
 		const char QUOTE = '\"';
 
@@ -541,5 +538,18 @@ public class ConsoleDialog
 		hashCode.Add(Subtitle?.GetHashCode());
 
 		return hashCode.ToHashCode();
+	}
+
+	private enum ConsoleStatus
+	{
+		/// <summary>
+		///     Signals to reload interface
+		/// </summary>
+		Refresh,
+
+		/// <summary>
+		///     Signals to continue displaying current interface
+		/// </summary>
+		Ok,
 	}
 }

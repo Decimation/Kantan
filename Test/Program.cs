@@ -2,12 +2,16 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Kantan.Cli;
 using Kantan.Cli.Controls;
 using Kantan.Model;
+using Kantan.Net;
 using Kantan.Text;
+using Kantan.Utilities;
+using Microsoft.VisualBasic.CompilerServices;
 
 // ReSharper disable MethodHasAsyncOverload
 
@@ -24,17 +28,28 @@ public static class Program
 {
 	private static async Task Main(string[] args)
 	{
-		/*ConsoleManager.InitNative();
+		ConsoleManager.Init();
+		var b = new ConsoleManager.ConsoleScreenBufferInfoEx();
 
-		g:
+		bool b1 = ConsoleManager.Win32.GetConsoleScreenBufferInfoEx(ConsoleManager.StdOut, b);
+		Console.WriteLine(b1);
+		Console.WriteLine(b.wAttributes);
+
+		// Console.WriteLine($"\x1b[7m"+"hi");
+		
+
+		b1 = ConsoleManager.Win32.SetConsoleScreenBufferInfoEx(ConsoleManager.StdOut, b);
+		Console.WriteLine(b1);
+		Console.WriteLine("g".AddNegative());
 
 
-		var a = Native.GetNumberOfConsoleInputEvents(ConsoleManager._stdIn, out var d);
-		Console.WriteLine($">>{d}");
-		var b12 = Native.WaitForSingleObject(ConsoleManager._stdIn, Native.INFINITE);
-		Console.WriteLine(b12);*/
-		// Native.FlushConsoleInputBuffer(ConsoleManager._stdIn);
-		/*Native.WriteConsoleInput(ConsoleManager._stdIn, new[]
+	}
+
+	private static void ConsoleTest4()
+	{
+		ConsoleManager.Init();
+
+		ConsoleManager.Win32.WriteConsoleInput(ConsoleManager.StdIn, new[]
 		{
 			new InputRecord()
 			{
@@ -43,43 +58,22 @@ public static class Program
 					UnicodeChar = 'A'
 				}
 			}
-		}, 1, out _);*/
-
-		// goto g;
-
-		/*ThreadPool.QueueUserWorkItem((x) =>
-		{
-
-			bool b1 = false;
-			while (!b1) {
-				var b  = Native.GetNumberOfConsoleInputEvents(ConsoleManager._stdIn, out var d);
-				Debug.WriteLine($"{b} {d}");
-				var b12 = Native.WaitForSingleObject(ConsoleManager._stdIn, 1000);
-				// Thread.Sleep(1000);
-				Debug.WriteLine(b12);
-				b1 = b12 == Native.WAIT_OBJECT_0;
-				// Native.ReadConsoleInput(ConsoleManager._stdIn, new InputRecord[d], d, out var vv);
-			}
-
-
-		});*/
-		//...
-
-		// Thread.Sleep(1000*6);
-		await ConsoleTest2();
+		}, 1, out _);
 	}
-
 
 	private static ConsoleDialog _dialog;
 
 
 	private class MyClass : IConsoleOption
 	{
+		public string a;
+		public int    x;
+
 		public Dictionary<string, object> Data
 			=> new()
 			{
-				["a"] = "g",
-				["x"] = "d",
+				["a"] = a,
+				["x"] = x,
 
 			};
 
@@ -153,9 +147,10 @@ public static class Program
 		c = 1 << 2
 	}
 
-	private static async Task ConsoleTest3()
+
+	private static async Task ConsoleTest3(CancellationToken c)
 	{
-		_dialog = new ConsoleDialog()
+		var dialog = new ConsoleDialog()
 		{
 			Functions = new()
 			{
@@ -165,16 +160,16 @@ public static class Program
 
 				},
 			},
-			Status         = "(status)",
-			SelectMultiple = false,
+			Status         = "hi1",
+			SelectMultiple = true,
 			Options        = ConsoleOption.FromEnum<MyEnum>().ToList()
 		};
 
 
-		var r = _dialog.ReadInputAsync();
+		var r = dialog.ReadInputAsync(c);
 		await r;
 
-		Console.WriteLine(r.Result);
+		Console.WriteLine(r.Result.Output.QuickJoin());
 
 	}
 

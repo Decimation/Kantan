@@ -1,7 +1,9 @@
 #nullable enable
 using System;
 using System.Collections;
+using System.Drawing;
 using System.Text;
+using Kantan.Utilities;
 
 // ReSharper disable UnusedMember.Global
 
@@ -10,7 +12,7 @@ namespace Kantan.Text;
 public static class StringBuilderHelper
 {
 	public static StringBuilder Append(this StringBuilder sb, string name, object? val, string? valStr = null,
-	                                   bool newLine = true)
+	                                   bool newLine = true, Color? nameColor = null)
 	{
 		if (val != null) {
 
@@ -24,6 +26,10 @@ public static class StringBuilderHelper
 				default:
 				{
 					valStr ??= val.ToString();
+
+					if (nameColor.HasValue) {
+						name = name.AddColor(nameColor.Value);
+					}
 
 					string fs = $"{name}: {valStr}".Truncate();
 

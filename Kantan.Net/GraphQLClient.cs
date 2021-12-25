@@ -95,5 +95,6 @@ public class GraphQLClient : IDisposable
 	public void Dispose()
 	{
 		m_client.Dispose();
+		GC.SuppressFinalize(this);
 	}
 }

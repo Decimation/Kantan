@@ -26,13 +26,19 @@ public static class Pastel
 	private const string FORMAT_STRING_START   = "\u001b[{0};2;";
 	private const string FORMAT_STRING_COLOR   = "{1};{2};{3}m";
 	private const string FORMAT_STRING_CONTENT = "{4}";
-	private const string FORMAT_STRING_END     = "\u001b[0m";
+	private const string FORMAT_STRING_END     = ANSI_RESET;
+
+
+	private const string ANSI_RESET     = "\x1b[0m";
+	private const string ANSI_UNDERLINE = "\x1b[4m";
+	private const string ANSI_NEGATIVE  = "\x1b[7m";
 
 
 	public static bool Enabled { get; set; }
 
-	private static readonly string FormatStringFull =
-		$"{FORMAT_STRING_START}{FORMAT_STRING_COLOR}{FORMAT_STRING_CONTENT}{FORMAT_STRING_END}";
+	private const string FORMAT_STRING_FULL = FORMAT_STRING_START + FORMAT_STRING_COLOR
+	                                                              + FORMAT_STRING_CONTENT
+	                                                              + FORMAT_STRING_END;
 
 
 	private static readonly ReadOnlyDictionary<ColorPlane, string> PlaneFormatModifiers =
@@ -68,7 +74,7 @@ public static class Pastel
 		hc => Int32.Parse(hc.Replace("#", ""), NumberStyles.HexNumber);
 
 	private static readonly Func<string, Color, ColorPlane, string> ColorFormat = (i, c, p) =>
-		String.Format(FormatStringFull, PlaneFormatModifiers[p], c.R, c.G, c.B, CloseNestedPastelStrings(i, c, p));
+		String.Format(FORMAT_STRING_FULL, PlaneFormatModifiers[p], c.R, c.G, c.B, CloseNestedPastelStrings(i, c, p));
 
 	private static readonly Func<string, string, ColorPlane, string> ColorHexFormat =
 		(i, c, p) => ColorFormat(i, Color.FromArgb(ParseHexColor(c)), p);
@@ -136,16 +142,12 @@ public static class Pastel
 
 
 			bool enable = ConsoleManager.Win32.GetConsoleMode(iStdOut, out var outConsoleMode)
-			              && ConsoleManager.Win32.SetConsoleMode(iStdOut, outConsoleMode | ConsoleManager.ConsoleModes.ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+			              && ConsoleManager.Win32.SetConsoleMode(
+				              iStdOut, outConsoleMode | ConsoleManager.ConsoleModes.ENABLE_VIRTUAL_TERMINAL_PROCESSING);
 		}
 
 
-		if (Environment.GetEnvironmentVariable("NO_COLOR") == null) {
-			Enabled = true;
-		}
-		else {
-			Enabled = false;
-		}
+		Enabled = Environment.GetEnvironmentVariable("NO_COLOR") == null;
 	}
 
 
@@ -156,7 +158,7 @@ public static class Pastel
 		closedString = CloseNestedPastelStringRegex2.Replace(closedString, $"{FORMAT_STRING_END}$0");
 
 		closedString = CloseNestedPastelStringRegex3[colorPlane].Replace(closedString,
-		                                                                 $"$0{String.Format($"{FORMAT_STRING_START}{FORMAT_STRING_COLOR}", PlaneFormatModifiers[colorPlane], color.R, color.G, color.B)}");
+		                                                                 $"$0{String.Format($"{FORMAT_STRING_START}" + $"{FORMAT_STRING_COLOR}", PlaneFormatModifiers[colorPlane], color.R, color.G, color.B)}");
 
 		return closedString;
 	}
@@ -216,12 +218,16 @@ public static class Pastel
 		return HexColorFormatFunctions[Enabled][ColorPlane.Background](input, hexColor);
 	}
 
+	public static string AddNegative(this string s)
+	{
+		s = $"{ANSI_NEGATIVE}{s}{ANSI_RESET}";
+		return s;
+	}
 
 	public static string AddHighlight(this string s, Color? c = null)
 	{
 		c ??= Console.BackgroundColor.ToColor();
 		var f = c.Value.Invert();
-
 		return s.AddColorBG(f).AddColor(c.Value);
 	}
 
@@ -238,7 +244,4 @@ public static class Pastel
 		return Regex.Replace(s, "(\x9B|\x1B\\[)[0-?]*[ -/]*[@-~]", String.Empty);
 
 	}
-
-	private const string ANSI_RESET     = "\x1b[0m";
-	private const string ANSI_UNDERLINE = "\x1b[4m";
 }

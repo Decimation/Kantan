@@ -10,6 +10,7 @@ using Kantan.Internal;
 using Kantan.Model;
 using Kantan.Text;
 using Kantan.Utilities;
+
 // ReSharper disable SuggestVarOrType_DeconstructionDeclarations
 
 
@@ -22,6 +23,7 @@ namespace Kantan.Cli.Controls;
 
 [CanBeNull]
 public delegate object ConsoleOptionFunction();
+
 
 /// <summary>
 ///     Represents an interactive console/shell option
@@ -58,6 +60,8 @@ public class ConsoleOption
 
 	public virtual Color? ColorBG { get; set; }
 
+	public virtual Color? ColorAlt { get; set; }
+
 	public Dictionary<ConsoleModifiers, ConsoleOptionFunction> Functions { get; init; } = new()
 	{
 		//[0] = () => { return null; },
@@ -77,7 +81,7 @@ public class ConsoleOption
 					sb.Append(option.GetDataString());
 					break;
 				default:
-					sb.Append(key, value);
+					sb.Append(key, value, nameColor: ColorAlt);
 					break;
 			}
 

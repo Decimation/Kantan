@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.ComponentModel;
-using Kantan.Utilities.Structures;
 
 // ReSharper disable InconsistentNaming
 
@@ -15,7 +14,7 @@ public static partial class ConsoleManager
 	{
 		get
 		{
-			var b = ConsoleManager.Win32.GetNumberOfConsoleInputEvents(StdIn, out var n);
+			var b = Win32.GetNumberOfConsoleInputEvents(StdIn, out var n);
 
 			var buffer = new InputRecord[1];
 
@@ -23,13 +22,13 @@ public static partial class ConsoleManager
 				return false;
 			}
 
-			ConsoleManager.Win32.PeekConsoleInput(StdIn, buffer, 1, out var lpNumber);
+			Win32.PeekConsoleInput(StdIn, buffer, 1, out var lpNumber);
 
 			var ir = buffer[0];
 
 			if (!ir.IsMouseEvent && (!ir.IsKeyDownEvent || ir.IsModKey)) {
 
-				ConsoleManager.Win32.ReadConsoleInput(StdIn, buffer, (uint) buffer.Length,
+				Win32.ReadConsoleInput(StdIn, buffer, (uint) buffer.Length,
 				                                      out var numEventsRead);
 
 			}
@@ -111,7 +110,7 @@ public static partial class ConsoleManager
 
 	private static ConsoleScreenBufferInfo GetBufferInfo(out bool ok)
 	{
-		ok = ConsoleManager.Win32.GetConsoleScreenBufferInfo(StdOut, out ConsoleScreenBufferInfo csbi);
+		ok = Win32.GetConsoleScreenBufferInfo(StdOut, out ConsoleScreenBufferInfo csbi);
 
 		return csbi;
 	}
@@ -132,7 +131,7 @@ public static partial class ConsoleManager
 		return canResize;
 	}
 
-	private static ConsoleManager.ConsoleModes _oldMode;
+	private static ConsoleModes _oldMode;
 
 	internal static ConcurrentStack<InputRecord> History { get; private set; } = new();
 
@@ -156,7 +155,7 @@ public static partial class ConsoleManager
 		char[] buff      = new char[nChars];
 		int    charsRead = 0;
 
-		if (!ConsoleManager.Win32.ReadConsoleOutputCharacter(StdOut, buff, nChars, new Coord((ushort) x, (ushort) y),
+		if (!Win32.ReadConsoleOutputCharacter(StdOut, buff, nChars, new Coord((ushort) x, (ushort) y),
 		                                                     ref charsRead)) {
 			throw new Win32Exception();
 		}
@@ -196,7 +195,7 @@ public static partial class ConsoleManager
 		int attrsWritten = 0;
 		var writePos     = new Coord((short) x, (short) y);
 
-		if (!ConsoleManager.Win32.WriteConsoleOutputAttribute(StdOut, attrs, attrs.Length, writePos, ref attrsWritten)) {
+		if (!Win32.WriteConsoleOutputAttribute(StdOut, attrs, attrs.Length, writePos, ref attrsWritten)) {
 			throw new Win32Exception();
 		}
 
@@ -220,7 +219,7 @@ public static partial class ConsoleManager
 		var bufferPos   = new Coord((short) buffX, (short) buffY);
 		var writeRegion = new SmallRect((short) left, (short) top, (short) right, (short) bottom);
 
-		if (!ConsoleManager.Win32.WriteConsoleOutput(StdOut, buff, bufferSize, bufferPos, writeRegion)) {
+		if (!Win32.WriteConsoleOutput(StdOut, buff, bufferSize, bufferPos, writeRegion)) {
 			throw new Win32Exception();
 		}
 	}
@@ -245,7 +244,7 @@ public static partial class ConsoleManager
 
 		var writePos = new Coord((ushort) x, (ushort) y);
 
-		if (!ConsoleManager.Win32.WriteConsoleOutputCharacter(StdOut, text, nChars, writePos, ref charsWritten)) {
+		if (!Win32.WriteConsoleOutputCharacter(StdOut, text, nChars, writePos, ref charsWritten)) {
 			throw new Win32Exception();
 		}
 
@@ -267,7 +266,7 @@ public static partial class ConsoleManager
 	{
 		var record = new InputRecord[1];
 
-		if (!ConsoleManager.Win32.ReadConsoleInput(StdIn, record, (uint) record.Length, out uint n)) {
+		if (!Win32.ReadConsoleInput(StdIn, record, (uint) record.Length, out uint n)) {
 			throw new Win32Exception();
 		}
 
@@ -279,7 +278,7 @@ public static partial class ConsoleManager
 
 	public static void Close()
 	{
-		ConsoleManager.Win32.SetConsoleMode(StdIn, _oldMode);
+		Win32.SetConsoleMode(StdIn, _oldMode);
 		StdIn    = IntPtr.Zero;
 		StdOut   = IntPtr.Zero;
 		_oldMode = 0;
@@ -288,21 +287,22 @@ public static partial class ConsoleManager
 
 	public static void Init()
 	{
-		StdOut = ConsoleManager.Win32.GetStdHandle(ConsoleManager.StandardHandle.STD_OUTPUT_HANDLE);
-		StdIn  = ConsoleManager.Win32.GetStdHandle(ConsoleManager.StandardHandle.STD_INPUT_HANDLE);
+		StdOut = Win32.GetStdHandle(StandardHandle.STD_OUTPUT_HANDLE);
+		StdIn  = Win32.GetStdHandle(StandardHandle.STD_INPUT_HANDLE);
 
-		if (!ConsoleManager.Win32.GetConsoleMode(StdIn, out ConsoleManager.ConsoleModes mode)) {
+		if (!Win32.GetConsoleMode(StdIn, out ConsoleModes mode)) {
 			throw new Win32Exception();
 		}
 
 
 		_oldMode = mode;
 
-		mode |= ConsoleManager.ConsoleModes.ENABLE_MOUSE_INPUT;
-		mode &= ~ConsoleManager.ConsoleModes.ENABLE_QUICK_EDIT_MODE;
-		mode |= ConsoleManager.ConsoleModes.ENABLE_EXTENDED_FLAGS;
+		mode |= ConsoleModes.ENABLE_MOUSE_INPUT;
+		mode &= ~ConsoleModes.ENABLE_QUICK_EDIT_MODE;
+		mode |= ConsoleModes.ENABLE_EXTENDED_FLAGS; 
+		mode |= ConsoleModes.ENABLE_VIRTUAL_TERMINAL_PROCESSING;
 
-		if (!ConsoleManager.Win32.SetConsoleMode(StdIn, mode)) {
+		if (!Win32.SetConsoleMode(StdIn, mode)) {
 			throw new Win32Exception();
 		}
 	}

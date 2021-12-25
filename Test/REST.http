@@ -1,0 +1,21 @@
+﻿@hostname = localhost
+@port = 8080
+@host = {{hostname}}:{{port}}
+@contentType = application/json
+
+POST https://{{host}}/authors/create
+Content-Type:{{contentType}}
+
+{
+    "name": "Joe",
+    "permissions": "author"
+}
+
+###
+
+# Comments
+GET https://{{host}}/authors/
+
+###
+
+GET https://raw.githubusercontent.com/lguilhermee/Discord-DX11-Overlay-Hook/master/Images/demo.png

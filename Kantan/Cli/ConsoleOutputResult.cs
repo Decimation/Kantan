@@ -15,6 +15,8 @@ public sealed class ConsoleOutputResult
 
 	public ConsoleKeyInfo? Key { get; internal set; }
 
+	public bool Cancelled { get; internal set; }
+
 	public ConsoleOutputResult()
 	{
 		Output = new HashSet<object>();

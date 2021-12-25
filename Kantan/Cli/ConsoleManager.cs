@@ -55,7 +55,7 @@ namespace Kantan.Cli;
 ///     </item>
 ///     <item>
 ///         <description>
-///             <see cref="ConsoleProgressIndicator" />
+///             <see cref="UI.ProgressIndicator" />
 ///         </description>
 ///     </item>
 /// </list>
