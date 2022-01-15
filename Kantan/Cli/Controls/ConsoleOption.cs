@@ -28,7 +28,7 @@ public delegate object ConsoleOptionFunction();
 /// <summary>
 ///     Represents an interactive console/shell option
 /// </summary>
-public class ConsoleOption
+public class ConsoleOption:IMap
 {
 	public ConsoleOption()
 	{
@@ -50,10 +50,7 @@ public class ConsoleOption
 		set => Functions[NC_FN_MAIN] = value;
 	}
 
-	/// <summary>
-	///     Information about this <see cref="IConsoleOption" />
-	/// </summary>
-	public Dictionary<string, object> Data { get; set; }
+	
 
 
 	public virtual Color? Color { get; set; }
@@ -67,14 +64,17 @@ public class ConsoleOption
 		//[0] = () => { return null; },
 
 	};
+	
 
 	[Pure]
-	private string GetDataString()
+	public string GetDataString()
 	{
 		var sb = new StringBuilder();
 
-		foreach (var (key, value) in Data) {
-			switch (value) {
+		foreach (var (key, value) in Data)
+		{
+			switch (value)
+			{
 				case null:
 					continue;
 				case ConsoleOption option:
@@ -196,4 +196,10 @@ public class ConsoleOption
 	}
 
 	#endregion
+
+	public Dictionary<string, object> Data
+	{
+		get ;
+		set;
+	}
 }

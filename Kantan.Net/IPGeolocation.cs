@@ -21,7 +21,6 @@ namespace Kantan.Net;
 public struct IPGeolocation
 {
 	[JsonProperty("ip")]
-	// [JsonIgnore]
 	public string Ip { get; set; }
 
 	[JsonProperty("ip_decimal")]

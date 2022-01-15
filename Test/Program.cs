@@ -7,19 +7,21 @@ using System.Threading;
 using System.Threading.Tasks;
 using Kantan.Cli;
 using Kantan.Cli.Controls;
+using Kantan.Collections;
 using Kantan.Model;
 using Kantan.Net;
 using Kantan.Text;
 using Kantan.Utilities;
 using Microsoft.VisualBasic.CompilerServices;
+// ReSharper disable InconsistentNaming
+
 
 // ReSharper disable MethodHasAsyncOverload
 
 // ReSharper disable UnusedMember.Local
-#pragma warning disable 4014
 
 // ReSharper disable UnusedParameter.Local
-#pragma warning disable IDE0060, CS1998,IDE0051
+#pragma warning disable IDE0060, CS1998, IDE0051,CS0169,4014,CS0649
 
 
 namespace Test;
@@ -28,21 +30,43 @@ public static class Program
 {
 	private static async Task Main(string[] args)
 	{
-		ConsoleManager.Init();
-		var b = new ConsoleManager.ConsoleScreenBufferInfoEx();
+		/*var u= @"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png";
+		var r = HttpUtilities.GetHttpResponse(u);
 
-		bool b1 = ConsoleManager.Win32.GetConsoleScreenBufferInfoEx(ConsoleManager.StdOut, b);
-		Console.WriteLine(b1);
-		Console.WriteLine(b.wAttributes);
+		var b = r.Content.ReadAsByteArrayAsync();
+		b.Wait();
+		Console.WriteLine(r.Content.Headers.ContentType.MediaType);
+		Console.WriteLine(MediaTypes.ResolveFromData(b.Result));*/
 
-		// Console.WriteLine($"\x1b[7m"+"hi");
+
+		/*var task = Task.Run(() =>
+		{
+			Thread.Sleep(1000);
+			return 1;
+
+		});
+		var xc = task.RunSync();
+		Console.WriteLine(xc);
+		task = Task.Run(() =>
+		{
+			Thread.Sleep(1000);
+			return 1;
+
+		});
+		Console.WriteLine(task.Result);
+		task = Task.Run(() =>
+		{
+			Thread.Sleep(1000);
+			return 1;
+
+		});
+		Console.WriteLine(task.RunSync());*/
+
+
+		foreach (var v in BinarySniffer.Scan("https://www.zerochan.net/2750747", b: new BinaryImageFilter())) {
+			Console.WriteLine(v.Url);
+		}
 		
-
-		b1 = ConsoleManager.Win32.SetConsoleScreenBufferInfoEx(ConsoleManager.StdOut, b);
-		Console.WriteLine(b1);
-		Console.WriteLine("g".AddNegative());
-
-
 	}
 
 	private static void ConsoleTest4()

@@ -37,6 +37,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
@@ -76,6 +77,7 @@ public static class Guard
 
 	public static bool print(object o, [CallerArgumentExpression("o")] string? call = null)
 	{
+		//todo
 		string? s;
 
 		if (o is IEnumerable xx) {
@@ -121,6 +123,20 @@ public static class Guard
 		}
 
 		throw exception;
+	}
+
+	private static bool Throws<TException>(Action f) where TException : Exception
+	{
+		bool throws = false;
+
+		try {
+			f();
+		}
+		catch (TException) {
+			throws = true;
+		}
+
+		return throws;
 	}
 
 	[DH, AM]
@@ -180,23 +196,12 @@ public static class Guard
 	[DH, AM]
 	public static void AssertPositive([NNV] long value, string? name = null) => Assert(value > 0, name);
 
+	[DH, AM]
+	public static void AssertFileExists(string value, string? name = null)
+		=> Assert<FileNotFoundException>(File.Exists(value), name);
 
 	[DH, AM]
-	public static void AssertThrows<TException>(Action f) where TException : Exception
-	{
-		bool throws = false;
-
-		try {
-			f();
-		}
-		catch (TException) {
-			throws = true;
-		}
-
-		if (!throws) {
-			Fail();
-		}
-	}
+	public static void AssertThrows<TException>(Action f) where TException : Exception => Assert(Throws<TException>(f));
 
 	[DH, AM]
 	public static void AssertAll([AC(ACT_TRUE), DNRI(false)] params bool[] conditions)

@@ -1,6 +1,5 @@
 #nullable disable
 using System.Drawing;
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -200,6 +199,20 @@ public static partial class Strings
 		// Step 7
 		return d[n, m];
 	}
+	public static string GetMapString(Dictionary<string, string> map, Color? c = null)
+	{
+		return map.Select(kv =>
+		{
+			var key = kv.Key;
+
+			if (c.HasValue)
+			{
+				key = key.AddColor(c.Value);
+			}
+
+			return $"{key}: {kv.Value}";
+		}).QuickJoin(" | ");
+	}
 
 	#region Substring
 
@@ -292,20 +305,7 @@ public static partial class Strings
 	}
 
 	public static string Center(string str) => Center(str, Console.BufferWidth);
-	public static string GetMapString(Dictionary<string, string> map, Color? c = null)
-	{
-		return map.Select(kv =>
-		{
-			var key = kv.Key;
 
-			if (c.HasValue)
-			{
-				key = key.AddColor(c.Value);
-			}
-
-			return $"{key}: {kv.Value}";
-		}).QuickJoin(" | ");
-	}
 	#region Outline
 
 	public static string Indent(string s) => Indent(s, Constants.Indentation);
@@ -318,9 +318,6 @@ public static partial class Strings
 
 		return indent + j;
 	}
-
-
-	
 
 	#endregion
 
@@ -402,7 +399,7 @@ public static partial class Strings
 	{
 		return values.Select(toString).QuickJoin(delim);
 	}
-	
+
 	public static string QuickJoin<T>(this IEnumerable<T> enumerable, string delim = Constants.JOIN_COMMA)
 	{
 		return String.Join(delim, enumerable);

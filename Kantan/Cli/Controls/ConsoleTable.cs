@@ -12,7 +12,7 @@ using System.Text.RegularExpressions;
 
 // ReSharper disable UnusedMember.Global
 
-namespace Kantan.Model;
+namespace Kantan.Cli.Controls;
 // https://github.com/khalidabuhakmeh/ConsoleTables
 
 /// <summary>

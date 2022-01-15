@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text.Unicode;
 using Kantan.Cli;
 using Kantan.Collections;
@@ -12,6 +13,7 @@ using Kantan.Numeric;
 using Kantan.Text;
 using Kantan.Utilities;
 using NUnit.Framework;
+
 // ReSharper disable PossibleMultipleEnumeration
 
 // ReSharper disable MemberCanBePrivate.Local
@@ -23,6 +25,21 @@ using NUnit.Framework;
 
 namespace UnitTest;
 
+
+[TestFixture]
+public class MimeTypeTests
+{
+	[Test]
+	[TestCase("https://www.zerochan.net/2750747", "http://s1.zerochan.net/atago.(azur.lane).600.2750747.jpg")]
+	[TestCase("https://www.zerochan.net/2750747", "http://static.zerochan.net/atago.(azur.lane).full.2750747.png")]
+
+	public void Test1(string u, string s)
+	{
+		var binaryUris = BinarySniffer.Scan(u, new BinaryImageFilter());
+		Assert.True(binaryUris.Select(x=>x.Url.ToString()).ToList().Contains(s));
+	}
+}
+
 [TestFixture]
 public class EnumerableTests
 {
@@ -30,9 +47,9 @@ public class EnumerableTests
 	public void CopyToListTest()
 	{
 
-		var range = Enumerable.Range(1, 5);
-		var array  = range.ToArray();
-		var enumerable     = (IEnumerable) range;
+		var range      = Enumerable.Range(1, 5);
+		var array      = range.ToArray();
+		var enumerable = (IEnumerable) range;
 		Assert.True(enumerable.CopyToList<int>().SequenceEqual(array));
 		Assert.True(enumerable.CopyToList().SequenceEqual(array.Cast<object>()));
 
@@ -354,11 +371,32 @@ public class NetworkTests
 	{
 		const string jpg = "https://i.ytimg.com/vi/r45a-l9Gqdk/hqdefault.jpg";
 
-		var i = HttpUtilities.GetHttpResponse(jpg).Content.Headers.ContentType.ToString();
+		var message = HttpUtilities.GetHttpResponse(jpg);
 		Assert.True(UriUtilities.IsUri(jpg, out var u));
-		Assert.True(MediaTypes.GetExtensions(i).Contains("jpe"));
-		Assert.True(MediaTypes.GetTypeComponent(i) == "image");
-		Assert.True(MediaTypes.GetSubTypeComponent(i) == "jpeg");
+		Assert.True(BinarySniffer.ResolveMimeType(message).Contains("jpe"));
+
+
+	}
+
+	[Test]
+	public void MediaTypesTest2()
+	{
+		var u = @"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png";
+		var r = HttpUtilities.GetHttpResponse(u);
+
+		if (r == null) {
+			Assert.Inconclusive();
+		}
+
+		var b = r.Content.ReadAsByteArrayAsync();
+		b.Wait();
+
+		string type = r.Content.Headers.ContentType.MediaType;
+
+		var type2 = BinarySniffer.ResolveMimeType(b.Result);
+
+
+		Assert.AreEqual(type2, "image/png");
 	}
 
 	[Test]

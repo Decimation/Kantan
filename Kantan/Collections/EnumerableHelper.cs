@@ -1,12 +1,9 @@
 using System;
-using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using JetBrains.Annotations;
 using static Kantan.Internal.Common;
 using Map = System.Collections.Generic.Dictionary<object, object>;
 
@@ -74,10 +71,11 @@ public static class EnumerableHelper
 
 	public static object[] CastObjectArray(this Array r)
 	{
-		var rg = new object[r.Length];
+		/*var rg = new object[r.Length];
 		r.CopyTo(rg, 0);
+		return rg;*/
+		return r.Cast<object>().ToArray();
 
-		return rg;
 	}
 
 	public delegate int IndexOfCallback<in T>(T search, int start);
@@ -183,6 +181,32 @@ public static class EnumerableHelper
 		list[oldItemIndex] = newItem;
 	}
 
+	public static Dictionary<TKey, TValue> CastDictionary<TKey, TValue>(this IDictionary dic)
+		=> dic.CastDictionary(k => (TKey) k, v => (TValue) v);
+
+	public static Dictionary<TKey, TValue> CastDictionary<TKey, TValue>(
+		this IDictionary dic, Func<object, TKey> keySelector, Func<object, TValue> valueSelector)
+	{
+		// return dic.Keys.Cast<TKey>().ToDictionary(k => keySelector(k), v => valueSelector(dic[v]));
+		// var keys = dic.Keys.Cast<object>().Select(keySelector);
+		// var keys = dic.Keys.Cast<TKey>();
+		var keys = dic.Keys.Cast<object>();
+
+		return keys.ToDictionary(k => keySelector(k), v => valueSelector(dic[v]));
+
+	}
+
+	/*public static Dictionary<T, T2> CastDictionary<T, T2>(this IDictionary iDic)
+	{
+		var dic        = new Dictionary<T, T2>();
+		var enumerator = iDic.GetEnumerator();
+
+		while (enumerator.MoveNext()) {
+			dic[(T) enumerator.Key] = (T2) (enumerator.Value);
+		}
+
+		return dic;
+	}*/
 
 	public static bool TryCastDictionary<T>(T obj, out Map buf) where T : IDictionary
 	{
@@ -209,15 +233,16 @@ public static class EnumerableHelper
 
 	public static List<T> CopyToList<T>(this IEnumerable value)
 	{
-		var e  = value.GetEnumerator();
+		/*var e  = value.GetEnumerator();
 		var rg = new List<T>();
 
 		while (e.MoveNext()) {
 			var item = e.Current;
-			rg.Add((T)item);
+			rg.Add((T) item);
 		}
 
-		return rg;
+		return rg;*/
+		return value.Cast<T>().ToList();
 	}
 
 	private static bool TryIndex<T>(Index i, int len, out T value)

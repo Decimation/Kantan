@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Threading;
+using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using Kantan.Collections;
 using Kantan.Numeric;
+using Kantan.Utilities;
 
 namespace Benchmark;
 
@@ -29,6 +32,39 @@ public class Benchmarks1
 	}
 }
 
+public class Benchmarks4
+{
+	private Action m_action;
+
+	[GlobalSetup]
+	public void Setup()
+	{
+		m_action = static () =>
+		{
+			Thread.Sleep(TimeSpan.FromSeconds(1));
+		};
+	}
+
+	[Benchmark]
+	public void RunSync2()
+	{
+		Task.Run(m_action).RunSync();
+	}
+
+	[Benchmark]
+	public void RunSync()
+	{
+		TaskHelper.RunSync(() => Task.Run(m_action));
+	}
+
+	[Benchmark]
+	public void Wait()
+	{
+
+		Task task = Task.Run(m_action);
+		task.Wait();
+	}
+}
 
 public class Benchmarks2
 {
@@ -50,13 +86,13 @@ public class Benchmarks3
 	[Benchmark]
 	public BigInteger gcd2()
 	{
-		return MathHelper.GCD( (long) (BigInteger)123, (long) (BigInteger)456);
+		return MathHelper.GCD((long) (BigInteger) 123, (long) (BigInteger) 456);
 	}
 
 	[Benchmark]
 	public long gcd1()
 	{
-		return MathHelper.GCD( 123, 456);
+		return MathHelper.GCD(123, 456);
 	}
 }
 
@@ -64,7 +100,7 @@ public static class Program
 {
 	public static void Main(string[] args)
 	{
-		BenchmarkRunner.Run<Benchmarks3>();
+		BenchmarkRunner.Run<Benchmarks4>();
 
 	}
 }

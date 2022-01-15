@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Kantan.Cli;
+using Kantan.Utilities;
 
 // ReSharper disable UnusedVariable
 
@@ -17,7 +18,7 @@ using Kantan.Cli;
 // ReSharper disable ParameterTypeCanBeEnumerable.Global
 // ReSharper disable StringCompareToIsCultureSpecific
 #pragma warning disable IDE0059
-namespace Kantan.Utilities;
+namespace Kantan.Text;
 
 public static class Pastel
 {

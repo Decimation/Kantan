@@ -1,14 +1,17 @@
 ﻿using System.Threading;
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
@@ -16,10 +19,10 @@ using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Flurl.Http;
 using JetBrains.Annotations;
+using Kantan.Diagnostics;
 using Kantan.Model;
 using Kantan.Net.Properties;
 using Newtonsoft.Json;
-
 #pragma warning disable CS0168
 
 // ReSharper disable UnusedVariable
@@ -29,7 +32,19 @@ using Newtonsoft.Json;
 // ReSharper disable SwitchStatementHandlesSomeKnownEnumValuesWithDefault
 // ReSharper disable UnusedMember.Global
 
+// ReSharper disable InconsistentNaming
+
+// ReSharper disable IdentifierTypo
+#pragma warning disable 8602
+#pragma warning disable 8604
+#pragma warning disable 8625
+#pragma warning disable 8618
+#pragma warning disable IDE0059
+
+// ReSharper disable UnusedMember.Global
 #nullable disable
+using MA = System.Runtime.InteropServices.MarshalAsAttribute;
+using UT = System.Runtime.InteropServices.UnmanagedType;
 
 namespace Kantan.Net;
 
@@ -42,80 +57,20 @@ namespace Kantan.Net;
 /// <seealso cref="HttpUtility"/>
 public static class HttpUtilities
 {
-	internal const int TIMEOUT_MS = 2000;
+	public static int Timeout { get; set; } = 2000;
 
-	private const int MAX_AUTO_REDIRECTS = 50;
+	public static int MaxAutoRedirects { get; set; } = 50;
 
 	public static string UserAgent { get; set; } = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
 	                                               "(KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36";
 
-	[CanBeNull]
-	[MustUseReturnValue]
-	public static async Task<HttpResponseMessage> GetHttpResponseAsync(string url, int ms = TIMEOUT_MS,
-	                                                                   [CanBeNull] HttpMethod method = null,
-	                                                                   bool allowAutoRedirect = true,
-	                                                                   int maxAutoRedirects = MAX_AUTO_REDIRECTS,
-	                                                                   CancellationToken? token = null)
-	{
+	public static PingReply Ping(Uri u, int? ms = null) => Ping(IPUtilities.GetAddress(u.ToString()), ms);
 
-		using var request = new HttpRequestMessage
-		{
-			RequestUri = new Uri(url),
-			Method     = method ?? HttpMethod.Get
-		};
-
-		using var clientHandler = new HttpClientHandler
-		{
-			AllowAutoRedirect        = allowAutoRedirect,
-			MaxAutomaticRedirections = maxAutoRedirects
-		};
-
-		using var client = new HttpClient(clientHandler);
-
-		client.Timeout = TimeSpan.FromMilliseconds(ms);
-
-		try {
-			var c = token ?? CancellationToken.None;
-
-			var response = await client.SendAsync(request, c);
-
-			return response;
-		}
-		catch (Exception x) {
-			// Debug.WriteLine($"{x}");
-			return null;
-		}
-
-	}
-
-	[CanBeNull]
-	[MustUseReturnValue]
-	public static HttpResponseMessage GetHttpResponse(string url, int ms = TIMEOUT_MS,
-	                                                  [CanBeNull] HttpMethod method = null,
-	                                                  bool allowAutoRedirect = true,
-	                                                  int maxAutoRedirects = MAX_AUTO_REDIRECTS)
-	{
-
-		var c = CancellationToken.None;
-		var v = GetHttpResponseAsync(url, ms, method, allowAutoRedirect, maxAutoRedirects, c);
-		// v.Wait(c.Token);
-
-		if (v is { }) {
-			v.Wait(c);
-			return v.Result;
-
-		}
-
-		return null;
-	}
-
-	public static PingReply Ping(Uri u, int ms = TIMEOUT_MS) => Ping(IPUtilities.GetAddress(u.ToString()), ms);
-
-	public static PingReply Ping(string hostOrIP, int ms = TIMEOUT_MS)
+	public static PingReply Ping(string hostOrIP, int? ms = null)
 	{
 		var ping = new Ping();
 
-		var task = ping.SendPingAsync(hostOrIP, ms);
+		var task = ping.SendPingAsync(hostOrIP, ms ?? Timeout);
 		task.Wait();
 
 		PingReply r = task.Result;
@@ -141,7 +96,7 @@ public static class HttpUtilities
 
 			try {
 
-				var resp = GetHttpResponse(url, TIMEOUT_MS, HttpMethod.Head);
+				var resp = GetHttpResponse(url, method: HttpMethod.Head);
 
 				switch (resp.StatusCode) {
 					case HttpStatusCode.OK:
@@ -288,16 +243,16 @@ public static class HttpUtilities
 		return h.DownloadString(url);
 	}
 
-	public static string DownloadString(this HttpClient client, string url)
+	public static Stream GetStream(this HttpClient client, string url)
 	{
-		var task = client.GetStringAsync(url);
+		var task = client.GetStreamAsync(url);
 		task.Wait();
 		return task.Result;
 	}
 
-	public static Stream GetStream(this HttpClient client, string url)
+	public static string DownloadString(this HttpClient client, string url)
 	{
-		var task = client.GetStreamAsync(url);
+		var task = client.GetStringAsync(url);
 		task.Wait();
 		return task.Result;
 	}
@@ -325,4 +280,69 @@ public static class HttpUtilities
 
 		return output;
 	}
+
+	[CanBeNull]
+	[MustUseReturnValue]
+	public static async Task<HttpResponseMessage> GetHttpResponseAsync(string url, int? ms = null,
+	                                                                   [CanBeNull] HttpMethod method = null,
+	                                                                   bool allowAutoRedirect = true,
+	                                                                   int? maxAutoRedirects = null,
+	                                                                   CancellationToken? token = null)
+	{
+
+		using var request = new HttpRequestMessage
+		{
+			RequestUri = new Uri(url),
+			Method     = method ?? HttpMethod.Get
+		};
+
+		using var clientHandler = new HttpClientHandler
+		{
+			AllowAutoRedirect        = allowAutoRedirect,
+			MaxAutomaticRedirections = maxAutoRedirects ?? MaxAutoRedirects
+		};
+
+		using var client = new HttpClient(clientHandler)
+		{
+			Timeout = TimeSpan.FromMilliseconds(ms ?? Timeout)
+		};
+
+		try {
+			var c = token ?? CancellationToken.None;
+
+			var response = await client.SendAsync(request, c);
+
+			return response;
+		}
+		catch (Exception x) {
+			// Debug.WriteLine($"{x}");
+			return null;
+		}
+
+	}
+
+	[CanBeNull]
+	[MustUseReturnValue]
+	public static HttpResponseMessage GetHttpResponse(string url, int? ms = null,
+	                                                  [CanBeNull] HttpMethod method = null,
+	                                                  bool allowAutoRedirect = true,
+	                                                  int? maxAutoRedirects = null,
+	                                                  CancellationToken? token = null)
+	{
+
+		var c = CancellationToken.None;
+		var v = GetHttpResponseAsync(url, ms, method, allowAutoRedirect, maxAutoRedirects, c);
+		// v.Wait(c.Token);
+
+		if (v is { }) {
+			v.Wait(c);
+			return v.Result;
+
+		}
+
+		return null;
+	}
+
+	
 }
+
