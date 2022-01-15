@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
+using JetBrains.Annotations;
 using Kantan.Diagnostics;
+
+// ReSharper disable NonReadonlyMemberInGetHashCode
+
+// ReSharper disable InconsistentNaming
 
 namespace Kantan.Net;
 
@@ -31,7 +33,8 @@ public static class BinaryResourceSniffer
 	///     Scans for binary resources within a webpage.
 	/// </summary>
 	/// <param name="url">Url to search</param>
-	/// <param name="count">Number of direct images to return</param>
+	/// <param name="b"></param>
+	/// <param name="count">Number of binary resources to return</param>
 	/// <param name="timeoutMS"></param>
 	/// <param name="token"></param>
 	public static List<BinaryResource> Scan(string url, IBinaryResourceFilter b, int count = 10,
@@ -55,7 +58,7 @@ public static class BinaryResourceSniffer
 			document = parser.ParseDocument(result);
 			client.Dispose();
 		}
-		catch (Exception e) {
+		catch (Exception) {
 			goto _Return;
 		}
 
@@ -91,19 +94,20 @@ public static class BinaryResourceSniffer
 
 			const int timeout = -1;
 
-			if (IsBinaryResource(s, b, out var di, timeout: timeout /*timeout: (int) timeoutMS*/, c)) {
-				if (di is { } && count > 0) {
-					images.Add(di);
+			if (BinaryResource.FromUrl(s, b, out var bi, timeout: timeout, c)) {
+				if (bi is { } && count > 0) {
+					bi.Url = new Uri(bi.Url.ToString().Split(' ')[0].Trim());
+					images.Add(bi);
 					count--;
 					pls.Break();
 
 				}
 				else {
-					di?.Dispose();
+					bi?.Dispose();
 				}
 			}
 			else {
-				di?.Dispose();
+				bi?.Dispose();
 			}
 		});
 
@@ -114,114 +118,16 @@ public static class BinaryResourceSniffer
 		return images;
 	}
 
-	public static bool IsBinaryResource(string url, IBinaryResourceFilter filter, out BinaryResource bu,
-	                                    int timeout = -1, CancellationToken? token = null)
-	{
-		/*const string svg_xml    = "image/svg+xml";
-		const string image      = "image";
-		const int    min_size_b = 50_000;*/
-
-		bu = new();
-
-		if (!UriUtilities.IsUri(url, out Uri u)) {
-			return false;
-		}
-
-		using var client = new HttpClient() { };
-
-		var t = HttpUtilities.GetHttpResponse(url, ms: timeout, token: token,
-		                                      method: HttpMethod.Get);
-
-		if (t is not { }) {
-			return false;
-		}
-
-		if (!t.IsSuccessStatusCode) {
-			t.Dispose();
-			return false;
-		}
-
-
-		bu.Url      = new Uri(url);
-		bu.Response = t;
-
-		/* Check content-type */
-
-		// The content-type returned from the response may not be the actual content-type, so
-		// we'll resolve it using binary data instead to be sure
-
-		var length = t.Content.Headers.ContentLength;
-		bu.Response = t;
-
-		string mediaType;
-
-		try {
-			// var task = t.Content.ReadAsByteArrayAsync();
-			// task.Wait();
-			// mediaType = ResolveMimeType(task.Result);
-			mediaType = ResolveMimeType(t);
-
-		}
-		catch (Exception) {
-
-
-			mediaType = t.Content.Headers is { ContentType.MediaType: { } }
-				            ? t.Content.Headers.ContentType.MediaType
-				            : null;
-		}
-
-
-		bool size, type;
-
-		const int UNLIMITED_SIZE = -1;
-
-		size = length is UNLIMITED_SIZE;
-
-		if (filter.MinimumSize.HasValue) {
-			size = size || length >= filter.MinimumSize.Value;
-		}
-
-
-		if (filter.RootType != null) {
-			if (mediaType != null) {
-				type = mediaType.StartsWith(filter.RootType) && !filter.BlacklistedTypes.Contains(mediaType);
-
-			}
-			else {
-				type = false; //?
-			}
-		}
-
-		else {
-			type = true;
-		}
-
-
-		return type && size;
-	}
-
 	[DllImport("urlmon.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = false)]
 	private static extern int FindMimeFromData(IntPtr pBC, [MarshalAs(UnmanagedType.LPWStr)] string pwzUrl,
 	                                           [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.I1,
 	                                                      SizeParamIndex = 3)]
 	                                           byte[] pBuffer, int cbSize,
 	                                           [MarshalAs(UnmanagedType.LPWStr)] string pwzMimeProposed,
-	                                           MimeFlags dwMimeFlags, out IntPtr ppwzMimeOut, int dwReserved);
+	                                           MimeFromDataFlags dwMimeFlags, out IntPtr ppwzMimeOut, int dwReserved);
 
 
-	/*private static Regex s_imageRegex = new Regex(@"<img\s[^>]*?>",
-	                                              RegexOptions.Singleline | RegexOptions.IgnoreCase | RegexOptions.Compiled);*/
-
-
-	public static string ResolveMimeType(HttpResponseMessage message, string mimeProposed = null)
-	{
-		var task = message.Content.ReadAsByteArrayAsync();
-		task.Wait();
-		var rg = task.Result;
-		return ResolveMimeType(rg, mimeProposed);
-	}
-
-	public static string ResolveMimeType(byte[] dataBytes, string mimeProposed = null)
+	public static string ResolveMediaType(byte[] dataBytes, string mimeProposed = null)
 	{
 		//https://stackoverflow.com/questions/2826808/how-to-identify-the-extension-type-of-the-file-using-c/2826884#2826884
 		//https://stackoverflow.com/questions/18358548/urlmon-dll-findmimefromdata-works-perfectly-on-64bit-desktop-console-but-gener
@@ -238,8 +144,9 @@ public static class BinaryResourceSniffer
 		}
 
 
-		const MimeFlags flags = MimeFlags.ENABLE_MIME_SNIFFING | MimeFlags.RETURN_UPDATED_IMG_MIMES |
-		                        MimeFlags.IGNORE_MIME_TEXT_PLAIN;
+		const MimeFromDataFlags flags = MimeFromDataFlags.ENABLE_MIME_SNIFFING |
+		                                  MimeFromDataFlags.RETURN_UPDATED_IMG_MIMES |
+		                                  MimeFromDataFlags.IGNORE_MIME_TEXT_PLAIN;
 
 		int ret = FindMimeFromData(IntPtr.Zero, null, dataBytes, dataBytes.Length,
 		                           mimeProposed, flags, out IntPtr outPtr, 0);
@@ -255,26 +162,191 @@ public static class BinaryResourceSniffer
 		return mimeRet;
 	}
 
+	public static string GetMediaTypeFromData(this HttpResponseMessage message)
+	{
+		var task = message.Content.ReadAsByteArrayAsync();
+		task.Wait();
+		var rg = task.Result;
+		return ResolveMediaType(rg);
+	}
 
-	public static readonly BinaryImageFilter ImageFilter = new();
+	public static (string Type, string Subtype) ToTuple(this MediaTypeHeaderValue header)
+	{
+		if (header.MediaType == null) {
+			return (null, null);
+		}
+
+		var split = header.MediaType.Split('/');
+
+		var s1 = split[0];
+
+		var s2 = split[^1];
+
+		if (s2.Contains(';') /*||h.Parameters.Any()*/) {
+			s2 = s2.Split(';')[0];
+		}
+
+
+		return (s1, s2);
+
+	}
+
+
+}
+
+public class BinaryResource : IDisposable
+{
+	public Uri Url { get; set; }
+
+	public HttpResponseMessage Response { get; set; }
+
+	public IBinaryResourceFilter Filter { get; set; }
+
+	public BinaryResource() { }
+
+	public bool Equals(BinaryResource other)
+	{
+		return Url == other?.Url && Equals(Response, other?.Response);
+	}
+
+	public override int GetHashCode()
+	{
+		return HashCode.Combine(Url, Response, Filter);
+	}
+
+
+	public void Dispose()
+	{
+		Response?.Dispose();
+		GC.SuppressFinalize(this);
+
+	}
+
+	/*public static BinaryResource FromUrl(string url, IBinaryResourceFilter filter, int timeout = -1,
+	                                     CancellationToken? c = null)
+	{
+		return TryFromUrl(url, filter, out var v, timeout, c) ? v : null;
+	}*/
+
+	public static bool FromUrl(string url, IBinaryResourceFilter filter, out BinaryResource br,
+	                           int timeout = -1, CancellationToken? token = null)
+	{
+		/*const string svg_xml    = "image/svg+xml";
+		const string image      = "image";
+		const int    min_size_b = 50_000;*/
+
+		br = new();
+
+		if (!UriUtilities.IsUri(url, out Uri u)) {
+			return false;
+		}
+
+		using var client = new HttpClient();
+
+		var message = HttpUtilities.GetHttpResponse(url, ms: timeout, token: token,
+		                                            method: HttpMethod.Get);
+
+		if (message is not { }) {
+			return false;
+		}
+
+		if (!message.IsSuccessStatusCode) {
+			message.Dispose();
+			return false;
+		}
+
+
+		br.Url      = new Uri(url);
+		br.Response = message;
+
+		/* Check content-type */
+
+		// The content-type returned from the response may not be the actual content-type, so
+		// we'll resolve it using binary data instead to be sure
+
+		var length = message.Content.Headers.ContentLength;
+		br.Response = message;
+
+		string mediaType;
+
+		try {
+			// var task = t.Content.ReadAsByteArrayAsync();
+			// task.Wait();
+			// mediaType = ResolveMimeType(task.Result);
+			mediaType = BinaryResourceSniffer.GetMediaTypeFromData(message);
+
+		}
+		catch (Exception) {
+			mediaType = message.Content.Headers is { ContentType.MediaType: { } }
+				            ? message.Content.Headers.ContentType.MediaType
+				            : null;
+		}
+
+
+		bool size, type;
+
+		const int UNLIMITED_SIZE = -1;
+
+		size = length is UNLIMITED_SIZE;
+
+		if (filter.MinimumSize.HasValue) {
+			size = size || length >= filter.MinimumSize.Value;
+		}
+
+
+		if (filter.DiscreteType != default /*|| filter.DiscreteType!= DiscreteMimeType.Other*/) {
+			if (mediaType != null) {
+				type = mediaType.StartsWith(filter.DiscreteType, StringComparison.InvariantCultureIgnoreCase)
+				       && !filter.TypeBlacklist.Contains(mediaType);
+			}
+			else {
+				type = false; //?
+			}
+		}
+
+		else {
+			type = true;
+		}
+
+
+		return type && size;
+	}
+}
+
+/// <see cref="IBinaryResourceFilter.DiscreteType"/>
+public static class DiscreteMediaTypes
+{
+	public const string Image       = "image";
+	public const string Text        = "text";
+	public const string Application = "application";
+	public const string Video       = "video";
+	public const string Audio       = "audio";
+	public const string Model       = "model";
+
+	// todo
+	// ...
 }
 
 public sealed class BinaryImageFilter : IBinaryResourceFilter
 {
+	public static readonly BinaryImageFilter Default = new();
+
+
 	public int? MinimumSize => 50_000;
 
-	public string RootType => "image";
+	public string DiscreteType => DiscreteMediaTypes.Image;
 
-	public List<string> GetUrls(IHtmlDocument d)
+	public List<string> GetUrls(IHtmlDocument document)
 	{
-		var rg = d.QuerySelectorAll("img").Select(element => element.GetAttribute("src"))
-		          .Union(d.QuerySelectorAll("a").Select(element => element.GetAttribute("href")))
-		          .ToList();
+		var rg = document.QuerySelectorAttributes("img", "src")
+		                 .Union(document.QuerySelectorAttributes("a", "href"))
+		                 .ToList();
 
 		return rg;
 	}
 
-	public Dictionary<string, Func<string, string>> HostUrlFilter => new()
+	public Dictionary<string, Func<string, string>> HostUrlFilter
+		=> new()
 		{
 			/*string hostComponent = UriUtilities.GetHostComponent(new Uri(url));
 	
@@ -291,79 +363,33 @@ public sealed class BinaryImageFilter : IBinaryResourceFilter
 			}*/
 		};
 
-	public List<string> BlacklistedTypes => new() { "image/svg+xml" };
+	public List<string> TypeBlacklist => new() { "image/svg+xml" };
 }
 
 public interface IBinaryResourceFilter
 {
 	public int? MinimumSize { get; }
 
-	public string RootType { get; }
+	[VP(nameof(DiscreteMediaTypes))]
+	public string DiscreteType { get; }
 
-	public List<string>                             BlacklistedTypes { get; }
-	public Dictionary<string, Func<string, string>> HostUrlFilter            { get; }
+	[VP(nameof(DiscreteMediaTypes))]
+	public List<string> TypeBlacklist { get; }
 
-	public List<string> GetUrls(IHtmlDocument d);
+	public Dictionary<string, Func<string, string>> HostUrlFilter { get; }
+
+	public List<string> GetUrls(IHtmlDocument document);
 }
 
-public class BinaryResource : IDisposable
-{
-	public Uri Url { get; set; }
-
-	public HttpResponseMessage Response { get; set; }
-
-	public bool Equals(BinaryResource other)
-	{
-		return Url == other?.Url && Equals(Response, other?.Response);
-	}
-
-	public override bool Equals(object obj)
-	{
-		return obj is BinaryResource other && Equals(other);
-	}
-
-	public override int GetHashCode()
-	{
-		return HashCode.Combine(Response, Url);
-	}
-
-	public static bool operator ==(BinaryResource left, BinaryResource right)
-	{
-		return left is not null && left.Equals(right);
-	}
-
-	public static bool operator !=(BinaryResource left, BinaryResource right)
-	{
-		return left is not null && !left.Equals(right);
-	}
-
-	public void Dispose()
-	{
-		Response?.Dispose();
-		GC.SuppressFinalize(this);
-
-	}
-
-	public override string ToString()
-	{
-		return $"{Url}";
-	}
-}
-
+/// <see cref="BinaryResourceSniffer.FindMimeFromData"/>
 [Flags]
-public enum MimeFlags : int
+public enum MimeFromDataFlags
 {
-	DEFAULT = 0x00000000,
-
-	URL_AS_FILENAME = 0x00000001,
-
-	ENABLE_MIME_SNIFFING = 0x00000002,
-
-	IGNORE_MIME_TEXT_PLAIN = 0x00000004,
-
-	SERVER_MIME = 0x00000008,
-
-	RESPECT_TEXT_PLAIN = 0x00000010,
-
+	DEFAULT                  = 0x00000000,
+	URL_AS_FILENAME          = 0x00000001,
+	ENABLE_MIME_SNIFFING     = 0x00000002,
+	IGNORE_MIME_TEXT_PLAIN   = 0x00000004,
+	SERVER_MIME              = 0x00000008,
+	RESPECT_TEXT_PLAIN       = 0x00000010,
 	RETURN_UPDATED_IMG_MIMES = 0x00000020,
 }

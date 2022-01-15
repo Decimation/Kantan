@@ -7,6 +7,7 @@
 #pragma warning disable IDE0051, IDE0005
 
 #region Aliases
+global using VP = JetBrains.Annotations.ValueProviderAttribute;
 
 global using CAE = System.Runtime.CompilerServices.CallerArgumentExpressionAttribute;
 global using ACT = JetBrains.Annotations.AssertionConditionType;

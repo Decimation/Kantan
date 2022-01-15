@@ -373,7 +373,7 @@ public class NetworkTests
 
 		var message = HttpUtilities.GetHttpResponse(jpg);
 		Assert.True(UriUtilities.IsUri(jpg, out var u));
-		Assert.True(BinaryResourceSniffer.ResolveMimeType(message).Contains("jpe"));
+		Assert.True(BinaryResourceSniffer.GetMediaTypeFromData(message).Contains("jpe"));
 
 
 	}
@@ -393,7 +393,7 @@ public class NetworkTests
 
 		string type = r.Content.Headers.ContentType.MediaType;
 
-		var type2 = BinaryResourceSniffer.ResolveMimeType(b.Result);
+		var type2 = BinaryResourceSniffer.ResolveMediaType(b.Result);
 
 
 		Assert.AreEqual(type2, "image/png");

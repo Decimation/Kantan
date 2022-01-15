@@ -1,4 +1,6 @@
-﻿using System;
+﻿global using VP = JetBrains.Annotations.ValueProviderAttribute;
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;

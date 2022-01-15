@@ -3,9 +3,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using AngleSharp;
+using AngleSharp.Dom;
+using AngleSharp.Io;
+using AngleSharp.Io.Network;
+using Flurl.Util;
 using Kantan.Cli;
 using Kantan.Cli.Controls;
 using Kantan.Collections;
@@ -31,14 +37,18 @@ public static class Program
 {
 	private static async Task Main(string[] args)
 	{
-		/*var u= @"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png";
-		var r = HttpUtilities.GetHttpResponse(u);
+		MediaTypeHeaderValue p = MediaTypeHeaderValue.Parse("image/svg+xml");
+		Console.WriteLine(p.MediaType);
+		Console.WriteLine(p.ToKeyValuePairs().Select(kv=> new KeyValuePair<string,object>(kv.Key, kv.Value)).QuickJoin());
 
-		var b = r.Content.ReadAsByteArrayAsync();
+		Console.WriteLine(p.GetType());
+		var u = @"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png";
+		var r = HttpUtilities.GetHttpResponse(u, ms: -1);
+
+		var                  b = r.Content.ReadAsByteArrayAsync();
 		b.Wait();
-		Console.WriteLine(r.Content.Headers.ContentType.MediaType);
-		Console.WriteLine(MediaTypes.ResolveFromData(b.Result));*/
-
+		Console.WriteLine(r.Content.Headers.ContentType.Parameters.QuickJoin());
+		Console.WriteLine(BinaryResourceSniffer.ResolveMediaType(b.Result));
 
 		/*var task = Task.Run(() =>
 		{
@@ -68,13 +78,10 @@ public static class Program
 			Console.WriteLine(v.Url);
 		}*/
 
-		var u = "https://www.zerochan.net/2750747";
+		var u2 = "https://tineye.com/search/7e2b4efe7772ce5b31d09dac4bea2a91f723af26?sort=score&order=desc&page=1";
 
-		var v =BinaryResourceSniffer.Scan(u, BinaryResourceSniffer.ImageFilter);
 
-		foreach (object o in v) {
-			Console.WriteLine(o);
-		}
+
 	}
 
 	private static void ConsoleTest4()

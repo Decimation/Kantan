@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿
+using System.Threading;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -209,12 +210,13 @@ public static class HttpUtilities
 		var document = parser.ParseDocument(html);
 		return document;
 	}*/
-
+	
 	public static IHtmlDocument GetHtmlDocument(this HttpResponseMessage r)
 	{
 		Task<string> task = r.Content.ReadAsStringAsync();
 		task.Wait();
 		string html              = task.Result;
+		
 		var    parser            = new HtmlParser();
 
 		var document = parser.ParseDocument(html);
