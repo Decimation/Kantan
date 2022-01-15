@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Kantan.Text;
 using static Kantan.Internal.Common;
 using Map = System.Collections.Generic.Dictionary<object, object>;
 
@@ -88,6 +89,23 @@ public static class EnumerableHelper
 			yield return minIndex;
 			minIndex = callback(search, minIndex + inc);
 		}
+	}
+
+	public static Dictionary<string, string> ReadCsv(string ss)
+	{
+
+		var dic = new Dictionary<string, string>();
+
+
+		foreach (var v in ss.Split('\n')) {
+			string[] split = v.Split(',');
+
+
+			dic.Add(Strings.RemoveNewLines(split[0]), Strings.RemoveNewLines(split[1]));
+
+		}
+
+		return dic;
 	}
 
 	public static IEnumerable<int> AllIndexesOf<T>(this List<T> list, T search)

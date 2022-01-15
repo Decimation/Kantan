@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -63,10 +64,17 @@ public static class Program
 		Console.WriteLine(task.RunSync());*/
 
 
-		foreach (var v in BinarySniffer.Scan("https://www.zerochan.net/2750747", b: new BinaryImageFilter())) {
+		/*foreach (var v in BinaryResourceSniffer.Scan("https://www.zerochan.net/2750747", b: new BinaryImageFilter())) {
 			Console.WriteLine(v.Url);
+		}*/
+
+		var u = "https://www.zerochan.net/2750747";
+
+		var v =BinaryResourceSniffer.Scan(u, BinaryResourceSniffer.ImageFilter);
+
+		foreach (object o in v) {
+			Console.WriteLine(o);
 		}
-		
 	}
 
 	private static void ConsoleTest4()

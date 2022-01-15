@@ -270,9 +270,9 @@ public class ConsoleDialog
 		}
 
 
-		InputRecord ir = ConsoleManager.ReadInput();
-		ConsoleKeyInfo             cki;
-		MouseEventRecord           me = ir.MouseEvent;
+		InputRecord      ir = ConsoleManager.ReadInput();
+		ConsoleKeyInfo   cki;
+		MouseEventRecord me = ir.MouseEvent;
 
 		switch (ir.EventType) {
 
@@ -522,6 +522,46 @@ public class ConsoleDialog
 		ExchangeStatus(ConsoleStatus.Refresh);
 	}
 
+	
+
+	private void EnsureDescription()
+	{
+		if (Description is not { }) {
+			Description = string.Empty;
+		}
+
+		if (!Description.EndsWith('\n')) {
+			Description += '\n';
+		}
+
+	}
+
+	public ConsoleDialog AddDescriptions(params string[] s)
+	{
+		foreach (string s1 in s) {
+			AddDescription(s1);
+		}
+
+		return this;
+	}
+
+	public ConsoleDialog AddDescription(string s, Color? c = null)
+	{
+		EnsureDescription();
+
+		if (c.HasValue) {
+			s = s.AddColor(c.Value);
+		}
+		Description += s;
+		return this;
+
+	}
+
+	public ConsoleDialog AddDescription(Dictionary<string,string> s, Color? c = null)
+	{
+		return AddDescription(Strings.GetMapString(s, c));
+
+	}
 	public override int GetHashCode()
 	{
 		var hashCode = new HashCode();

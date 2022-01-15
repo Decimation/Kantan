@@ -5,15 +5,17 @@ using System.Linq;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Kantan.Diagnostics;
 
 namespace Kantan.Net;
 
-public static class BinarySniffer
+public static class BinaryResourceSniffer
 {
 	/*
 	 * type/subtype
@@ -26,15 +28,15 @@ public static class BinarySniffer
 
 
 	/// <summary>
-	///     Scans for direct images within a webpage.
+	///     Scans for binary resources within a webpage.
 	/// </summary>
 	/// <param name="url">Url to search</param>
 	/// <param name="count">Number of direct images to return</param>
 	/// <param name="timeoutMS"></param>
 	/// <param name="token"></param>
 	public static List<BinaryResource> Scan(string url, IBinaryResourceFilter b, int count = 10,
-	                                   long? timeoutMS = null,
-	                                   CancellationToken? token = null)
+	                                        long? timeoutMS = null,
+	                                        CancellationToken? token = null)
 	{
 		var images = new List<BinaryResource>();
 		timeoutMS ??= HttpUtilities.Timeout;
@@ -60,8 +62,10 @@ public static class BinarySniffer
 
 		var urls = new List<string>();
 
-		urls.AddRange(document.QuerySelectorAttributes("a", "href"));
-		urls.AddRange(document.QuerySelectorAttributes("img", "src"));
+		// urls.AddRange(document.QuerySelectorAttributes("a", "href"));
+		// urls.AddRange(document.QuerySelectorAttributes("img", "src"));
+
+		urls = b.GetUrls(document);
 
 		/*
 		* Normalize urls
@@ -80,20 +84,6 @@ public static class BinarySniffer
 		* Filter urls if the host is known
 		*/
 
-		string hostComponent = UriUtilities.GetHostComponent(new Uri(url));
-
-		switch (hostComponent) {
-			case "www.deviantart.com":
-				//https://images-wixmp-
-				urls = urls.Where(x => x.Contains("images-wixmp"))
-				           .ToList();
-				break;
-			case "twitter.com":
-				urls = urls.Where(x => !x.Contains("profile_banners"))
-				           .ToList();
-				break;
-		}
-
 
 		var pr = Parallel.For(0, urls.Count, (i, pls) =>
 		{
@@ -101,7 +91,7 @@ public static class BinarySniffer
 
 			const int timeout = -1;
 
-			if (IsBinaryResource(s, b, out var di, timeout: timeout, c)) {
+			if (IsBinaryResource(s, b, out var di, timeout: timeout /*timeout: (int) timeoutMS*/, c)) {
 				if (di is { } && count > 0) {
 					images.Add(di);
 					count--;
@@ -125,8 +115,7 @@ public static class BinarySniffer
 	}
 
 	public static bool IsBinaryResource(string url, IBinaryResourceFilter filter, out BinaryResource bu,
-	                               int timeout = -1,
-	                               CancellationToken? token = null)
+	                                    int timeout = -1, CancellationToken? token = null)
 	{
 		/*const string svg_xml    = "image/svg+xml";
 		const string image      = "image";
@@ -174,7 +163,7 @@ public static class BinarySniffer
 
 		}
 		catch (Exception) {
-			
+
 
 			mediaType = t.Content.Headers is { ContentType.MediaType: { } }
 				            ? t.Content.Headers.ContentType.MediaType
@@ -192,10 +181,6 @@ public static class BinarySniffer
 			size = size || length >= filter.MinimumSize.Value;
 		}
 
-		/*else {
-		size = length is i or >= min_size_b;
-		}*/
-
 
 		if (filter.RootType != null) {
 			if (mediaType != null) {
@@ -211,7 +196,6 @@ public static class BinarySniffer
 			type = true;
 		}
 
-		Debug.WriteLine($">>>  {url}");
 
 		return type && size;
 	}
@@ -224,15 +208,20 @@ public static class BinarySniffer
 	                                           [MarshalAs(UnmanagedType.LPWStr)] string pwzMimeProposed,
 	                                           MimeFlags dwMimeFlags, out IntPtr ppwzMimeOut, int dwReserved);
 
-	public static string ResolveMimeType(HttpResponseMessage message, string url = null, string mimeProposed = null)
+
+	/*private static Regex s_imageRegex = new Regex(@"<img\s[^>]*?>",
+	                                              RegexOptions.Singleline | RegexOptions.IgnoreCase | RegexOptions.Compiled);*/
+
+
+	public static string ResolveMimeType(HttpResponseMessage message, string mimeProposed = null)
 	{
 		var task = message.Content.ReadAsByteArrayAsync();
 		task.Wait();
 		var rg = task.Result;
-		return ResolveMimeType(rg, url, mimeProposed);
+		return ResolveMimeType(rg, mimeProposed);
 	}
 
-	public static string ResolveMimeType(byte[] dataBytes, string url = null, string mimeProposed = null)
+	public static string ResolveMimeType(byte[] dataBytes, string mimeProposed = null)
 	{
 		//https://stackoverflow.com/questions/2826808/how-to-identify-the-extension-type-of-the-file-using-c/2826884#2826884
 		//https://stackoverflow.com/questions/18358548/urlmon-dll-findmimefromdata-works-perfectly-on-64bit-desktop-console-but-gener
@@ -252,7 +241,7 @@ public static class BinarySniffer
 		const MimeFlags flags = MimeFlags.ENABLE_MIME_SNIFFING | MimeFlags.RETURN_UPDATED_IMG_MIMES |
 		                        MimeFlags.IGNORE_MIME_TEXT_PLAIN;
 
-		int ret = FindMimeFromData(IntPtr.Zero, url, dataBytes, dataBytes.Length,
+		int ret = FindMimeFromData(IntPtr.Zero, null, dataBytes, dataBytes.Length,
 		                           mimeProposed, flags, out IntPtr outPtr, 0);
 
 		if (ret == 0 && outPtr != IntPtr.Zero) {
@@ -265,6 +254,9 @@ public static class BinarySniffer
 
 		return mimeRet;
 	}
+
+
+	public static readonly BinaryImageFilter ImageFilter = new();
 }
 
 public sealed class BinaryImageFilter : IBinaryResourceFilter
@@ -272,6 +264,32 @@ public sealed class BinaryImageFilter : IBinaryResourceFilter
 	public int? MinimumSize => 50_000;
 
 	public string RootType => "image";
+
+	public List<string> GetUrls(IHtmlDocument d)
+	{
+		var rg = d.QuerySelectorAll("img").Select(element => element.GetAttribute("src"))
+		          .Union(d.QuerySelectorAll("a").Select(element => element.GetAttribute("href")))
+		          .ToList();
+
+		return rg;
+	}
+
+	public Dictionary<string, Func<string, string>> HostUrlFilter => new()
+		{
+			/*string hostComponent = UriUtilities.GetHostComponent(new Uri(url));
+	
+			switch (hostComponent) {
+				case "www.deviantart.com":
+					//https://images-wixmp-
+					urls = urls.Where(x => x.Contains("images-wixmp"))
+					           .ToList();
+					break;
+				case "twitter.com":
+					urls = urls.Where(x => !x.Contains("profile_banners"))
+					           .ToList();
+					break;
+			}*/
+		};
 
 	public List<string> BlacklistedTypes => new() { "image/svg+xml" };
 }
@@ -282,14 +300,17 @@ public interface IBinaryResourceFilter
 
 	public string RootType { get; }
 
-	public List<string> BlacklistedTypes { get; }
+	public List<string>                             BlacklistedTypes { get; }
+	public Dictionary<string, Func<string, string>> HostUrlFilter            { get; }
+
+	public List<string> GetUrls(IHtmlDocument d);
 }
 
 public class BinaryResource : IDisposable
 {
-	public Uri Url { get; internal set; }
+	public Uri Url { get; set; }
 
-	public HttpResponseMessage Response { get; internal set; }
+	public HttpResponseMessage Response { get; set; }
 
 	public bool Equals(BinaryResource other)
 	{

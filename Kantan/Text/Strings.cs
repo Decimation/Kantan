@@ -39,6 +39,13 @@ namespace Kantan.Text;
 /// <seealso cref="UnicodeRanges"/>
 public static partial class Strings
 {
+	public static string RemoveNewLines(this string s) => s.Remove(LineControlCharacters);
+
+	public static string Remove(this String s, string[] rg)
+	{
+		return rg.Aggregate(s, (current, t) => current.Replace(t, string.Empty));
+	}
+
 	public static string SelectOnlyDigits(this string s) => s.SelectOnly(Char.IsDigit);
 
 	public static string StripControl(this string s) => s.SelectOnly(c => !Char.IsControl(c));
@@ -199,14 +206,14 @@ public static partial class Strings
 		// Step 7
 		return d[n, m];
 	}
+
 	public static string GetMapString(Dictionary<string, string> map, Color? c = null)
 	{
 		return map.Select(kv =>
 		{
 			var key = kv.Key;
 
-			if (c.HasValue)
-			{
+			if (c.HasValue) {
 				key = key.AddColor(c.Value);
 			}
 
@@ -414,6 +421,8 @@ public static partial class Strings
 
 	private static readonly Encoding EncodingOEM =
 		CodePagesEncodingProvider.Instance.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
+
+	private static readonly string[] LineControlCharacters = new[] { "\n", "\r", Environment.NewLine };
 
 	public static string EncodingConvert(Encoding src, Encoding dest, string str)
 		=> dest.GetString(Encoding.Convert(src, dest, src.GetBytes(str)));

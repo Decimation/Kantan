@@ -201,10 +201,21 @@ public static class HttpUtilities
 		return ub.Uri;
 	}
 
-	public static IHtmlDocument GetHtmlDocument(string url)
+	/*public static IHtmlDocument GetHtmlDocument(string url)
 	{
 		string html   = GetString(url);
 		var    parser = new HtmlParser();
+
+		var document = parser.ParseDocument(html);
+		return document;
+	}*/
+
+	public static IHtmlDocument GetHtmlDocument(this HttpResponseMessage r)
+	{
+		Task<string> task = r.Content.ReadAsStringAsync();
+		task.Wait();
+		string html              = task.Result;
+		var    parser            = new HtmlParser();
 
 		var document = parser.ParseDocument(html);
 		return document;
@@ -224,7 +235,7 @@ public static class HttpUtilities
 	}
 
 
-	public static Stream GetStream(string url)
+	/*public static Stream GetStream(string url)
 	{
 		var stream = url.GetStreamAsync();
 		var r      = stream.GetAwaiter().GetResult();
@@ -241,7 +252,7 @@ public static class HttpUtilities
 	{
 		using var h = new HttpClient();
 		return h.DownloadString(url);
-	}
+	}*/
 
 	public static Stream GetStream(this HttpClient client, string url)
 	{
