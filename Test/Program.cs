@@ -20,6 +20,8 @@ using Kantan.Net;
 using Kantan.Text;
 using Kantan.Utilities;
 using Microsoft.VisualBasic.CompilerServices;
+using HttpMethod = System.Net.Http.HttpMethod;
+
 // ReSharper disable InconsistentNaming
 
 
@@ -28,7 +30,7 @@ using Microsoft.VisualBasic.CompilerServices;
 // ReSharper disable UnusedMember.Local
 
 // ReSharper disable UnusedParameter.Local
-#pragma warning disable IDE0060, CS1998, IDE0051,CS0169,4014,CS0649
+#pragma warning disable IDE0060, CS1998, IDE0051,CS0169,4014,CS0649,IDE0044
 
 
 namespace Test;
@@ -39,13 +41,15 @@ public static class Program
 	{
 		MediaTypeHeaderValue p = MediaTypeHeaderValue.Parse("image/svg+xml");
 		Console.WriteLine(p.MediaType);
-		Console.WriteLine(p.ToKeyValuePairs().Select(kv=> new KeyValuePair<string,object>(kv.Key, kv.Value)).QuickJoin());
+
+		Console.WriteLine(p.ToKeyValuePairs().Select(kv => new KeyValuePair<string, object>(kv.Key, kv.Value))
+		                   .QuickJoin());
 
 		Console.WriteLine(p.GetType());
 		var u = @"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png";
 		var r = HttpUtilities.GetHttpResponse(u, ms: -1);
 
-		var                  b = r.Content.ReadAsByteArrayAsync();
+		var b = r.Content.ReadAsByteArrayAsync();
 		b.Wait();
 		Console.WriteLine(r.Content.Headers.ContentType.Parameters.QuickJoin());
 		Console.WriteLine(BinaryResourceSniffer.ResolveMediaType(b.Result));
@@ -80,7 +84,16 @@ public static class Program
 
 		var u2 = "https://tineye.com/search/7e2b4efe7772ce5b31d09dac4bea2a91f723af26?sort=score&order=desc&page=1";
 
-
+		var uri = new Uri(u2);
+		Console.WriteLine(UriUtilities.GetHostUri(uri));
+		Console.WriteLine(uri.Host);
+		var message = new HttpRequestMessage(method: HttpMethod.Get, "https://www.zerochan.net/2750747");
+		var client  = new HttpClient();
+		client.Send(message);
+		Console.WriteLine(message.IsSent());
+		message.ResetStatus();
+		Console.WriteLine(message.IsSent());
+		client.Send(message);
 
 	}
 
@@ -103,7 +116,7 @@ public static class Program
 	private static ConsoleDialog _dialog;
 
 
-	private class MyClass : IConsoleOption
+	private class ConsoleOption1 : IConsoleOption
 	{
 		public string a;
 		public int    x;
@@ -138,7 +151,7 @@ public static class Program
 			//SelectMultiple = true,
 			Options = ConsoleOption.FromArray(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 }).ToList()
 		};
-		var myClass = new MyClass();
+		var myClass = new ConsoleOption1();
 		dialog.Options[0].Data = myClass.Data;
 
 		for (int i = 0; i < dialog.Options.Count; i++) {
@@ -179,7 +192,7 @@ public static class Program
 	}
 
 	[Flags]
-	enum MyEnum
+	enum MyEnum1
 	{
 		a = 1 << 0,
 		b = 1 << 1,
@@ -201,7 +214,7 @@ public static class Program
 			},
 			Status         = "hi1",
 			SelectMultiple = true,
-			Options        = ConsoleOption.FromEnum<MyEnum>().ToList()
+			Options        = ConsoleOption.FromEnum<MyEnum1>().ToList()
 		};
 
 
@@ -226,7 +239,7 @@ public static class Program
 			},
 			Status         = "hi1",
 			SelectMultiple = true,
-			Options        = ConsoleOption.FromEnum<MyEnum>().ToList()
+			Options        = ConsoleOption.FromEnum<MyEnum1>().ToList()
 		};
 
 

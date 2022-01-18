@@ -25,6 +25,8 @@ public static class UriUtilities
 	 */
 
 
+	public static Uri Normalize(this Uri u) => new(NormalizeUrl(u));
+
 	/// <summary>
 	/// Determines whether <paramref name="url1"/> is equal to <paramref name="url2"/>
 	/// when both are normalized.
@@ -68,13 +70,7 @@ public static class UriUtilities
 		return url1.Equals(url2);
 	}
 
-	public static string RemoveUrlQueries(string url)
-	{
-		var uri = new Uri(url);
-		return uri.GetLeftPart(UriPartial.Path);
-	}
-
-	public static string[] DefaultDirectoryIndexes =
+	public static readonly List<string> DefaultDirectoryIndexes =new()
 	{
 		"default.asp",
 		"default.aspx",
@@ -82,6 +78,12 @@ public static class UriUtilities
 		"index.html",
 		"index.php"
 	};
+
+	public static string RemoveUrlQueries(string url)
+	{
+		var uri = new Uri(url);
+		return uri.GetLeftPart(UriPartial.Path);
+	}
 
 	public static string NormalizeUrl(Uri uri)
 	{
@@ -183,17 +185,17 @@ public static class UriUtilities
 		return filename;
 	}
 
-	public static Uri GetHostUri(Uri u)
+	public static Uri GetHostUri(this Uri u)
 	{
 		return new UriBuilder(u.Host).Uri;
 	}
 
-	public static string GetHostComponent(Uri u)
+	public static string GetHostComponent(this Uri u)
 	{
 		return u.GetComponents(UriComponents.NormalizedHost, UriFormat.Unescaped);
 	}
 
-	public static string StripScheme(Uri uri)
+	public static string StripScheme(this Uri uri)
 	{
 		return uri.Host + uri.PathAndQuery + uri.Fragment;
 	}

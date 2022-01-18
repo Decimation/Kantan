@@ -76,7 +76,7 @@ public static class Guard
 
 	#endregion
 
-	public static bool print(object o, [CallerArgumentExpression("o")] string? call = null)
+	public static bool QWrite(object o, [CallerArgumentExpression("o")] string? call = null)
 	{
 		//todo
 		string? s;

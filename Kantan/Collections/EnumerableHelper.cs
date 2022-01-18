@@ -76,7 +76,6 @@ public static class EnumerableHelper
 		r.CopyTo(rg, 0);
 		return rg;*/
 		return r.Cast<object>().ToArray();
-
 	}
 
 	public delegate int IndexOfCallback<in T>(T search, int start);
@@ -91,18 +90,14 @@ public static class EnumerableHelper
 		}
 	}
 
-	public static Dictionary<string, string> ReadCsv(string ss)
+	public static Dictionary<string, string> ReadCsv(string s)
 	{
-
 		var dic = new Dictionary<string, string>();
 
+		foreach (string s1 in s.Split('\n')) {
+			string[] split = s1.Split(',');
 
-		foreach (var v in ss.Split('\n')) {
-			string[] split = v.Split(',');
-
-
-			dic.Add(Strings.RemoveNewLines(split[0]), Strings.RemoveNewLines(split[1]));
-
+			dic.Add(split[0].RemoveNewLines(), split[1].RemoveNewLines());
 		}
 
 		return dic;
@@ -210,22 +205,10 @@ public static class EnumerableHelper
 		// var keys = dic.Keys.Cast<TKey>();
 		var keys = dic.Keys.Cast<object>();
 
-		return keys.ToDictionary(k => keySelector(k), v => valueSelector(dic[v]));
+		return keys.ToDictionary(keySelector, v => valueSelector(dic[v]));
 
 	}
-
-	/*public static Dictionary<T, T2> CastDictionary<T, T2>(this IDictionary iDic)
-	{
-		var dic        = new Dictionary<T, T2>();
-		var enumerator = iDic.GetEnumerator();
-
-		while (enumerator.MoveNext()) {
-			dic[(T) enumerator.Key] = (T2) (enumerator.Value);
-		}
-
-		return dic;
-	}*/
-
+	
 	public static bool TryCastDictionary<T>(T obj, out Map buf) where T : IDictionary
 	{
 		bool condition = obj.GetType().GetInterface(nameof(IDictionary)) != null;
@@ -251,15 +234,6 @@ public static class EnumerableHelper
 
 	public static List<T> CopyToList<T>(this IEnumerable value)
 	{
-		/*var e  = value.GetEnumerator();
-		var rg = new List<T>();
-
-		while (e.MoveNext()) {
-			var item = e.Current;
-			rg.Add((T) item);
-		}
-
-		return rg;*/
 		return value.Cast<T>().ToList();
 	}
 

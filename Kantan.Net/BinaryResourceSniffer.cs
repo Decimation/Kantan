@@ -10,11 +10,12 @@ using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using JetBrains.Annotations;
 using Kantan.Diagnostics;
+// ReSharper disable UnusedVariable
 
 // ReSharper disable NonReadonlyMemberInGetHashCode
 
 // ReSharper disable InconsistentNaming
-
+#pragma warning disable IDE0059,IDE0060
 namespace Kantan.Net;
 
 public static class BinaryResourceSniffer
@@ -32,11 +33,6 @@ public static class BinaryResourceSniffer
 	/// <summary>
 	///     Scans for binary resources within a webpage.
 	/// </summary>
-	/// <param name="url">Url to search</param>
-	/// <param name="b"></param>
-	/// <param name="count">Number of binary resources to return</param>
-	/// <param name="timeoutMS"></param>
-	/// <param name="token"></param>
 	public static List<BinaryResource> Scan(string url, IBinaryResourceFilter b, int count = 10,
 	                                        long? timeoutMS = null,
 	                                        CancellationToken? token = null)
@@ -63,12 +59,10 @@ public static class BinaryResourceSniffer
 		}
 
 
-		var urls = new List<string>();
-
 		// urls.AddRange(document.QuerySelectorAttributes("a", "href"));
 		// urls.AddRange(document.QuerySelectorAttributes("img", "src"));
 
-		urls = b.GetUrls(document);
+		List<string> urls = b.GetUrls(document);
 
 		/*
 		* Normalize urls
@@ -88,7 +82,7 @@ public static class BinaryResourceSniffer
 		*/
 
 
-		var pr = Parallel.For(0, urls.Count, (i, pls) =>
+		var plr = Parallel.For(0, urls.Count, (i, pls) =>
 		{
 			string s = urls[i];
 
@@ -110,8 +104,7 @@ public static class BinaryResourceSniffer
 				bi?.Dispose();
 			}
 		});
-
-		// Debug.WriteLine($"{nameof(ScanForImages)}: {pr}");
+		
 
 		_Return:
 		document?.Dispose();
@@ -162,9 +155,9 @@ public static class BinaryResourceSniffer
 		return mimeRet;
 	}
 
-	public static string GetMediaTypeFromData(this HttpResponseMessage message)
+	public static string GetMediaTypeFromData(this HttpContent message)
 	{
-		var task = message.Content.ReadAsByteArrayAsync();
+		var task = message.ReadAsByteArrayAsync();
 		task.Wait();
 		var rg = task.Result;
 		return ResolveMediaType(rg);
@@ -179,13 +172,11 @@ public static class BinaryResourceSniffer
 		var split = header.MediaType.Split('/');
 
 		var s1 = split[0];
-
 		var s2 = split[^1];
 
 		if (s2.Contains(';') /*||h.Parameters.Any()*/) {
 			s2 = s2.Split(';')[0];
 		}
-
 
 		return (s1, s2);
 
@@ -214,7 +205,6 @@ public class BinaryResource : IDisposable
 		return HashCode.Combine(Url, Response, Filter);
 	}
 
-
 	public void Dispose()
 	{
 		Response?.Dispose();
@@ -222,19 +212,9 @@ public class BinaryResource : IDisposable
 
 	}
 
-	/*public static BinaryResource FromUrl(string url, IBinaryResourceFilter filter, int timeout = -1,
-	                                     CancellationToken? c = null)
-	{
-		return TryFromUrl(url, filter, out var v, timeout, c) ? v : null;
-	}*/
-
 	public static bool FromUrl(string url, IBinaryResourceFilter filter, out BinaryResource br,
 	                           int timeout = -1, CancellationToken? token = null)
 	{
-		/*const string svg_xml    = "image/svg+xml";
-		const string image      = "image";
-		const int    min_size_b = 50_000;*/
-
 		br = new();
 
 		if (!UriUtilities.IsUri(url, out Uri u)) {
@@ -255,7 +235,6 @@ public class BinaryResource : IDisposable
 			return false;
 		}
 
-
 		br.Url      = new Uri(url);
 		br.Response = message;
 
@@ -270,10 +249,7 @@ public class BinaryResource : IDisposable
 		string mediaType;
 
 		try {
-			// var task = t.Content.ReadAsByteArrayAsync();
-			// task.Wait();
-			// mediaType = ResolveMimeType(task.Result);
-			mediaType = BinaryResourceSniffer.GetMediaTypeFromData(message);
+			mediaType = message.Content.GetMediaTypeFromData();
 
 		}
 		catch (Exception) {
@@ -283,11 +259,9 @@ public class BinaryResource : IDisposable
 		}
 
 
-		bool size, type;
-
 		const int UNLIMITED_SIZE = -1;
-
-		size = length is UNLIMITED_SIZE;
+		
+		bool type, size = length is UNLIMITED_SIZE;
 
 		if (filter.MinimumSize.HasValue) {
 			size = size || length >= filter.MinimumSize.Value;
@@ -330,7 +304,6 @@ public static class DiscreteMediaTypes
 public sealed class BinaryImageFilter : IBinaryResourceFilter
 {
 	public static readonly BinaryImageFilter Default = new();
-
 
 	public int? MinimumSize => 50_000;
 

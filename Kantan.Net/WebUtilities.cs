@@ -1,5 +1,4 @@
 ﻿#nullable disable
-#pragma warning disable SYSLIB0014 // Type or member is obsolete
 
 using System;
 using System.Collections.Generic;
@@ -15,11 +14,9 @@ using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using static Kantan.Diagnostics.LogCategories;
 
-#pragma warning disable CS0618
 
 // ReSharper disable LoopCanBeConvertedToQuery
 
-#pragma warning disable 8602
 
 // ReSharper disable UnusedMember.Global
 

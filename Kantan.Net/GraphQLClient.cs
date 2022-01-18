@@ -34,30 +34,26 @@ public class GraphQLClient : IDisposable
 	 */
 
 
-	private HttpClient m_client;
+	public HttpClient Client { get; }
 
-	private readonly string m_apiUrl;
+	public string Endpoint { get; }
 
-	public GraphQLClient(string apiUrl)
+	public GraphQLClient(string endpoint)
 	{
-		m_apiUrl = apiUrl;
+		Endpoint = endpoint;
 
-		ServicePointManager.SecurityProtocol =
-			SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+		Client = new HttpClient()
+		{
+			BaseAddress = new Uri(Endpoint),
+		};
+
 	}
 
 	public dynamic Execute(string query, object variables = null,
 	                       Dictionary<string, string> additionalHeaders = null,
-	                       int timeout = 0)
+	                       int timeout = -1)
 	{
-		//todo
-
-		m_client = new HttpClient()
-		{
-			BaseAddress = new Uri(m_apiUrl),
-		};
-
-		m_client.Timeout = timeout == 0 ? Timeout.InfiniteTimeSpan : TimeSpan.FromMilliseconds(timeout);
+		Client.Timeout = timeout == -1 ? Timeout.InfiniteTimeSpan : TimeSpan.FromMilliseconds(timeout);
 
 		var request = new HttpRequestMessage(HttpMethod.Post, "/")
 			{ };
@@ -78,23 +74,17 @@ public class GraphQLClient : IDisposable
 		request.Content = new StringContent(JsonConvert.SerializeObject(obj), Encoding.UTF8,
 		                                    "application/json");
 
-		// var clone = ReflectionHelper.Clone(m_client);
 
-		var response = m_client.Send(request);
+		var response = Client.Send(request);
 		var task     = response.Content.ReadAsStringAsync();
-		task.Wait(m_client.Timeout);
-
-		/*request.ResetStatus();
-		_client.ResetStatus();*/
-
-		// m_client = clone;
+		task.Wait(Client.Timeout);
 
 		return JObject.Parse(task.Result);
 	}
 
 	public void Dispose()
 	{
-		m_client.Dispose();
+		Client.Dispose();
 		GC.SuppressFinalize(this);
 	}
 }

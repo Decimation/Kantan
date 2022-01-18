@@ -323,6 +323,19 @@ public class Tests
 	}
 
 	[Test]
+	[TestCase("https://www.zerochan.net/2750747")]
+	public void ResetRequestTest(string s)
+	{
+		var message = new HttpRequestMessage(method: HttpMethod.Get,s);
+		var client  = new HttpClient();
+		client.Send(message);
+		Assert.True(message.IsSent());
+		message.ResetStatus();
+		Assert.False(message.IsSent());
+		var r=client.Send(message);
+		Assert.True(r.IsSuccessStatusCode);
+	}
+	[Test]
 	public void StringTest()
 	{
 		Assert.Null(Strings.NormalizeNull("    "));
@@ -373,7 +386,7 @@ public class NetworkTests
 
 		var message = HttpUtilities.GetHttpResponse(jpg);
 		Assert.True(UriUtilities.IsUri(jpg, out var u));
-		Assert.True(BinaryResourceSniffer.GetMediaTypeFromData(message).Contains("jpe"));
+		Assert.True(message.Content.GetMediaTypeFromData().Contains("jpeg"));
 
 
 	}
