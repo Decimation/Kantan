@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using Kantan.Collections;
+using Kantan.Net;
 using Kantan.Numeric;
 using Kantan.Utilities;
 
 namespace Benchmark;
+
 
 public class Benchmarks1
 {

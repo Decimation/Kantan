@@ -1,4 +1,6 @@
-﻿using System.Threading;
+﻿global using CBN = JetBrains.Annotations.CanBeNullAttribute;
+global using MURV = JetBrains.Annotations.MustUseReturnValueAttribute;
+using System.Threading;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -18,6 +20,7 @@ using System.Web;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Flurl.Http;
+using Flurl.Http.Configuration;
 using JetBrains.Annotations;
 using Kantan.Diagnostics;
 using Kantan.Model;
@@ -84,7 +87,7 @@ public static class HttpUtilities
 	public static int GetStatus(this HttpRequestMessage m)
 	{
 		var value = RequestStatusField.GetValue(m);
-		Guard.AssertNotNull(value);
+		Require.NotNull(value);
 		return (int) value;
 	}
 
@@ -286,16 +289,36 @@ public static class HttpUtilities
 		return output;
 	}
 
-	[CanBeNull]
-	[MustUseReturnValue]
+	[CBN]
+	[MURV]
 	public static async Task<HttpResponseMessage> GetHttpResponseAsync(string url, int? ms = null,
-	                                                                   [CanBeNull] HttpMethod method = null,
+	                                                                   [CBN] HttpMethod method = null,
 	                                                                   bool allowAutoRedirect = true,
 	                                                                   int? maxAutoRedirects = null,
 	                                                                   CancellationToken? token = null)
 	{
 
-		using var request = new HttpRequestMessage
+		method ??= HttpMethod.Get;
+		token  ??= CancellationToken.None;
+
+		var f = new FlurlRequest(url)
+		{
+			Settings =
+			{
+				Timeout = TimeSpan.FromMilliseconds(ms ?? Timeout),
+				Redirects =
+				{
+					MaxAutoRedirects = maxAutoRedirects ?? MaxAutoRedirects,
+					Enabled          = true,
+				},
+
+
+			},
+			Verb = method
+		};
+		f = f.AllowAnyHttpStatus().WithAutoRedirect(true);
+
+		/*using var request = new HttpRequestMessage
 		{
 			RequestUri = new Uri(url),
 			Method     = method ?? HttpMethod.Get
@@ -310,37 +333,37 @@ public static class HttpUtilities
 		using var client = new HttpClient(clientHandler)
 		{
 			Timeout = TimeSpan.FromMilliseconds(ms ?? Timeout)
-		};
+		};*/
 
 		try {
-			var c = token ?? CancellationToken.None;
-
-			var response = await client.SendAsync(request, c);
-
-			return response;
+			// var response = await client.SendAsync(request, c);
+			var response = await f.SendAsync(method, cancellationToken: token.Value);
+			return response.ResponseMessage;
 		}
 		catch (Exception x) {
-			// Debug.WriteLine($"{x}");
+			Debug.WriteLine($"{nameof(GetHttpResponseAsync)}: {x}", LogCategories.C_VERBOSE);
+
 			return null;
 		}
 
+
 	}
 
-	[CanBeNull]
-	[MustUseReturnValue]
+	[CBN]
+	[MURV]
 	public static HttpResponseMessage GetHttpResponse(string url, int? ms = null,
-	                                                  [CanBeNull] HttpMethod method = null,
+	                                                  [CBN] HttpMethod method = null,
 	                                                  bool allowAutoRedirect = true,
 	                                                  int? maxAutoRedirects = null,
 	                                                  CancellationToken? token = null)
 	{
 
-		var c = CancellationToken.None;
-		var v = GetHttpResponseAsync(url, ms, method, allowAutoRedirect, maxAutoRedirects, c);
+
+		var v = GetHttpResponseAsync(url, ms, method, allowAutoRedirect, maxAutoRedirects, token);
 		// v.Wait(c.Token);
 
 		if (v is { }) {
-			v.Wait(c);
+			v.Wait(cancellationToken: CancellationToken.None);
 			return v.Result;
 
 		}

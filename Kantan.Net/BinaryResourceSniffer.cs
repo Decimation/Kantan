@@ -1,15 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
+using Flurl.Http;
 using JetBrains.Annotations;
 using Kantan.Diagnostics;
+
 // ReSharper disable UnusedVariable
 
 // ReSharper disable NonReadonlyMemberInGetHashCode
@@ -18,6 +22,9 @@ using Kantan.Diagnostics;
 #pragma warning disable IDE0059,IDE0060
 namespace Kantan.Net;
 
+/// <summary>
+/// Binary data and Mime type sniffing
+/// </summary>
 public static class BinaryResourceSniffer
 {
 	/*
@@ -29,6 +36,7 @@ public static class BinaryResourceSniffer
 	 * https://github.com/khellang/MimeTypes/blob/master/src/MimeTypes/MimeTypeFunctions.ttinclude
 	 */
 
+	static BinaryResourceSniffer() { }
 
 	/// <summary>
 	///     Scans for binary resources within a webpage.
@@ -104,11 +112,24 @@ public static class BinaryResourceSniffer
 				bi?.Dispose();
 			}
 		});
-		
+
 
 		_Return:
 		document?.Dispose();
 		return images;
+	}
+
+	/// <see cref="BinaryResourceSniffer.FindMimeFromData"/>
+	[Flags]
+	private enum MimeFromDataFlags
+	{
+		DEFAULT                  = 0x00000000,
+		URL_AS_FILENAME          = 0x00000001,
+		ENABLE_MIME_SNIFFING     = 0x00000002,
+		IGNORE_MIME_TEXT_PLAIN   = 0x00000004,
+		SERVER_MIME              = 0x00000008,
+		RESPECT_TEXT_PLAIN       = 0x00000010,
+		RETURN_UPDATED_IMG_MIMES = 0x00000020,
 	}
 
 	[DllImport("urlmon.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = false)]
@@ -127,7 +148,7 @@ public static class BinaryResourceSniffer
 		//https://stackoverflow.com/questions/11547654/determine-the-file-type-using-c-sharp
 		//https://github.com/GetoXs/MimeDetect/blob/master/src/Winista.MimeDetect/URLMONMimeDetect/urlmonMimeDetect.cs
 
-		Guard.AssertArgumentNotNull(dataBytes, nameof(dataBytes));
+		Require.ArgumentNotNull(dataBytes, nameof(dataBytes));
 
 		string mimeRet = String.Empty;
 
@@ -138,8 +159,8 @@ public static class BinaryResourceSniffer
 
 
 		const MimeFromDataFlags flags = MimeFromDataFlags.ENABLE_MIME_SNIFFING |
-		                                  MimeFromDataFlags.RETURN_UPDATED_IMG_MIMES |
-		                                  MimeFromDataFlags.IGNORE_MIME_TEXT_PLAIN;
+		                                MimeFromDataFlags.RETURN_UPDATED_IMG_MIMES |
+		                                MimeFromDataFlags.IGNORE_MIME_TEXT_PLAIN;
 
 		int ret = FindMimeFromData(IntPtr.Zero, null, dataBytes, dataBytes.Length,
 		                           mimeProposed, flags, out IntPtr outPtr, 0);
@@ -157,19 +178,26 @@ public static class BinaryResourceSniffer
 
 	public static string GetMediaTypeFromData(this HttpContent message)
 	{
-		var task = message.ReadAsByteArrayAsync();
-		task.Wait();
-		var rg = task.Result;
-		return ResolveMediaType(rg);
+		var stream = message.ReadAsStream();
+		var ms     = (MemoryStream) stream;
+
+		ms.Position = 0;
+
+		const int i = 256;
+
+		var buffer = new byte[i];
+		int read   = ms.Read(buffer);
+
+		string mediaType = ResolveMediaType(buffer);
+
+		ms.Position = 0;
+
+		return mediaType;
 	}
 
-	public static (string Type, string Subtype) ToTuple(this MediaTypeHeaderValue header)
+	public static (string Type, string Subtype) ParseMediaType(string s)
 	{
-		if (header.MediaType == null) {
-			return (null, null);
-		}
-
-		var split = header.MediaType.Split('/');
+		var split = s.Split('/');
 
 		var s1 = split[0];
 		var s2 = split[^1];
@@ -179,10 +207,20 @@ public static class BinaryResourceSniffer
 		}
 
 		return (s1, s2);
-
 	}
 
+	public static (string Type, string Subtype) ParseMediaType(this MediaTypeHeaderValue header)
+	{
+		var s = header.MediaType;
 
+		if (s == null) {
+			return (null, null);
+		}
+
+
+		return ParseMediaType(s);
+
+	}
 }
 
 public class BinaryResource : IDisposable
@@ -223,15 +261,15 @@ public class BinaryResource : IDisposable
 
 		using var client = new HttpClient();
 
-		var message = HttpUtilities.GetHttpResponse(url, ms: timeout, token: token,
+		var message = HttpUtilities.GetHttpResponse(url, timeout, token: token,
 		                                            method: HttpMethod.Get);
 
-		if (message is not { }) {
+		/*if (message is not { }) {
 			return false;
-		}
-
-		if (!message.IsSuccessStatusCode) {
-			message.Dispose();
+		}*/
+		
+		if ( message is not { IsSuccessStatusCode: true }) {
+			message?.Dispose();
 			return false;
 		}
 
@@ -245,22 +283,27 @@ public class BinaryResource : IDisposable
 
 		var length = message.Content.Headers.ContentLength;
 		br.Response = message;
-
+		
 		string mediaType;
 
 		try {
+			/*
+			 * #1
+			 */
 			mediaType = message.Content.GetMediaTypeFromData();
 
 		}
 		catch (Exception) {
+			/*
+			 * #2
+			 */
 			mediaType = message.Content.Headers is { ContentType.MediaType: { } }
 				            ? message.Content.Headers.ContentType.MediaType
 				            : null;
 		}
 
-
 		const int UNLIMITED_SIZE = -1;
-		
+
 		bool type, size = length is UNLIMITED_SIZE;
 
 		if (filter.MinimumSize.HasValue) {
@@ -285,6 +328,8 @@ public class BinaryResource : IDisposable
 
 		return type && size;
 	}
+
+	
 }
 
 /// <see cref="IBinaryResourceFilter.DiscreteType"/>
@@ -352,17 +397,4 @@ public interface IBinaryResourceFilter
 	public Dictionary<string, Func<string, string>> HostUrlFilter { get; }
 
 	public List<string> GetUrls(IHtmlDocument document);
-}
-
-/// <see cref="BinaryResourceSniffer.FindMimeFromData"/>
-[Flags]
-public enum MimeFromDataFlags
-{
-	DEFAULT                  = 0x00000000,
-	URL_AS_FILENAME          = 0x00000001,
-	ENABLE_MIME_SNIFFING     = 0x00000002,
-	IGNORE_MIME_TEXT_PLAIN   = 0x00000004,
-	SERVER_MIME              = 0x00000008,
-	RESPECT_TEXT_PLAIN       = 0x00000010,
-	RETURN_UPDATED_IMG_MIMES = 0x00000020,
 }

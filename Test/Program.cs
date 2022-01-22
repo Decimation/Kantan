@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,6 +15,8 @@ using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Io;
 using AngleSharp.Io.Network;
+using Flurl.Http;
+using Flurl.Http.Configuration;
 using Flurl.Util;
 using Kantan.Cli;
 using Kantan.Cli.Controls;
@@ -35,65 +41,45 @@ using HttpMethod = System.Net.Http.HttpMethod;
 
 namespace Test;
 
+using System;
+
 public static class Program
 {
 	private static async Task Main(string[] args)
 	{
-		MediaTypeHeaderValue p = MediaTypeHeaderValue.Parse("image/svg+xml");
-		Console.WriteLine(p.MediaType);
 
-		Console.WriteLine(p.ToKeyValuePairs().Select(kv => new KeyValuePair<string, object>(kv.Key, kv.Value))
-		                   .QuickJoin());
 
-		Console.WriteLine(p.GetType());
-		var u = @"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png";
-		var r = HttpUtilities.GetHttpResponse(u, ms: -1);
+		/*var client = new HttpClient();
+		var message = await client.GetAsync(@"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png");
+		var sw = new Stopwatch();
+		sw.Start();
+		string b = message.Content.GetMediaTypeFromData();
+		sw.Stop();
+		Console.WriteLine(b);
+		Console.WriteLine(message.Content.Headers.ContentType);
+		Console.WriteLine(sw.Elapsed.TotalMilliseconds);*/
 
-		var b = r.Content.ReadAsByteArrayAsync();
-		b.Wait();
-		Console.WriteLine(r.Content.Headers.ContentType.Parameters.QuickJoin());
-		Console.WriteLine(BinaryResourceSniffer.ResolveMediaType(b.Result));
+		// var url = @"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png";
+		var url = @"https://i.imgur.com/QtCausw.png";
 
-		/*var task = Task.Run(() =>
+
+		var x = Stopwatch.StartNew();
+
+		using var request = new HttpRequestMessage
 		{
-			Thread.Sleep(1000);
-			return 1;
-
-		});
-		var xc = task.RunSync();
-		Console.WriteLine(xc);
-		task = Task.Run(() =>
-		{
-			Thread.Sleep(1000);
-			return 1;
-
-		});
-		Console.WriteLine(task.Result);
-		task = Task.Run(() =>
-		{
-			Thread.Sleep(1000);
-			return 1;
-
-		});
-		Console.WriteLine(task.RunSync());*/
-
-
-		/*foreach (var v in BinaryResourceSniffer.Scan("https://www.zerochan.net/2750747", b: new BinaryImageFilter())) {
-			Console.WriteLine(v.Url);
-		}*/
-
-		var u2 = "https://tineye.com/search/7e2b4efe7772ce5b31d09dac4bea2a91f723af26?sort=score&order=desc&page=1";
-
-		var uri = new Uri(u2);
-		Console.WriteLine(UriUtilities.GetHostUri(uri));
-		Console.WriteLine(uri.Host);
-		var message = new HttpRequestMessage(method: HttpMethod.Get, "https://www.zerochan.net/2750747");
-		var client  = new HttpClient();
-		client.Send(message);
-		Console.WriteLine(message.IsSent());
-		message.ResetStatus();
-		Console.WriteLine(message.IsSent());
-		client.Send(message);
+			RequestUri = new Uri(url),
+			Method     = HttpMethod.Get
+		};
+		var message = new HttpClient().Send(request);
+		Console.WriteLine(message);
+		x.Stop();
+		Console.WriteLine(x.Elapsed.TotalMilliseconds);
+		x.Restart();
+		var n2 = await url.SendAsync(verb: HttpMethod.Get);
+		x.Stop();
+		Console.WriteLine(x.Elapsed.TotalMilliseconds);
+		Console.WriteLine(n2);
+		Console.WriteLine(await IPUtilities.GetIPInformationAsync());
 
 	}
 

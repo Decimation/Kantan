@@ -48,5 +48,4 @@ internal static class Common
 		}
 	}*/
 
-	public const string OS_WINDOWS = "windows";
 }

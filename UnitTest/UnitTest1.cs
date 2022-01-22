@@ -270,42 +270,42 @@ public class Tests
 	{
 		Assert.Throws<Exception>(() =>
 		{
-			Guard.Assert(false);
+			Require.Assert(false);
 
 		});
 
 		Assert.Throws<NullReferenceException>(() =>
 		{
-			Guard.AssertNotNull(null);
+			Require.NotNull(null);
 
 		});
 
 		Assert.Throws<ArgumentNullException>(() =>
 		{
-			Guard.AssertArgumentNotNull(null);
+			Require.ArgumentNotNull(null);
 
 		});
 
 		Assert.Throws<Exception>(() =>
 		{
-			Guard.AssertEqual("a", "b");
+			Require.Equal("a", "b");
 
 		});
 
 		Assert.DoesNotThrow(() =>
 		{
-			Guard.AssertEqual("a", "a");
+			Require.Equal("a", "a");
 
 		});
 
 		Assert.Throws<ArgumentException>(() =>
 		{
-			Guard.AssertArgument(false, "g");
+			Require.Argument(false, "g");
 		});
 
 		Assert.Throws<Exception>(() =>
 		{
-			Guard.Fail();
+			Require.Fail();
 		});
 	}
 

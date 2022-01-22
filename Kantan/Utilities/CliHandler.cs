@@ -68,7 +68,7 @@ public record CliParameter
 	internal void Handle(IEnumerator<string> argEnum)
 	{
 
-		Guard.AssertNonNegative(ArgumentCount);
+		Require.NonNegative(ArgumentCount);
 
 		if (ArgumentCount == 0) {
 			// switch

@@ -8,7 +8,6 @@
 
 #region Aliases
 global using VP = JetBrains.Annotations.ValueProviderAttribute;
-
 global using CAE = System.Runtime.CompilerServices.CallerArgumentExpressionAttribute;
 global using ACT = JetBrains.Annotations.AssertionConditionType;
 global using AC = JetBrains.Annotations.AssertionConditionAttribute;
@@ -57,7 +56,7 @@ namespace Kantan.Diagnostics;
 /// <seealso cref="Debug"/>
 /// <seealso cref="Trace"/>
 /// <seealso cref="Debugger"/>
-public static class Guard
+public static class Require
 {
 	/*
 	 * https://www.jetbrains.com/help/resharper/Contract_Annotations.html
@@ -126,7 +125,7 @@ public static class Guard
 		throw exception;
 	}
 
-	private static bool Throws<TException>(Action f) where TException : Exception
+	private static bool ActionThrows<TException>(Action f) where TException : Exception
 	{
 		bool throws = false;
 
@@ -162,50 +161,50 @@ public static class Guard
 
 	[DH, AM]
 	[CA(COND_FALSE_HALT)]
-	public static void AssertArgument([AC(ACT_TRUE), DNRI(false)] bool condition,
+	public static void Argument([AC(ACT_TRUE), DNRI(false)] bool condition,
 	                                  string? name = null)
 		=> Assert<ArgumentException>(condition, name);
 
 	[DH, AM]
 	[CA(VALUE_NULL_HALT)]
-	public static void AssertArgumentNotNull([NN, AC(ACT_NOT_NULL)] object? value,
+	public static void ArgumentNotNull([NN, AC(ACT_NOT_NULL)] object? value,
 	                                         string? name = null)
 		=> Assert<ArgumentNullException>(value != null, name);
 
 	[DH, AM]
 	[CA(VALUE_NULL_HALT)]
-	public static void AssertNotNull([NN, AC(ACT_NOT_NULL)] object? value, string? name = null)
+	public static void NotNull([NN, AC(ACT_NOT_NULL)] object? value, string? name = null)
 		=> Assert<NullReferenceException>(value != null, name);
 
 	[DH, AM]
 	[CA(VALUE_NULL_HALT)]
-	public static void AssertNotNullOrWhiteSpace([NN, AC(ACT_NOT_NULL)] string? value, string? name = null)
+	public static void NotNullOrWhiteSpace([NN, AC(ACT_NOT_NULL)] string? value, string? name = null)
 		=> Assert<NullReferenceException>(!String.IsNullOrWhiteSpace(value), name);
 
 	[DH, AM]
-	public static void AssertEqual(object a, object b) => Assert(a.Equals(b));
+	public static void Equal(object a, object b) => Assert(a.Equals(b));
 
 	[DH, AM]
-	public static void AssertEqual<T>(T a, T b) where T : IEquatable<T> => Assert(a.Equals(b));
+	public static void Equal<T>(T a, T b) where T : IEquatable<T> => Assert(a.Equals(b));
 
 	[DH, AM]
-	public static void AssertContains<T>(IEnumerable<T> enumerable, T value) => Assert(enumerable.Contains(value));
+	public static void Contains<T>(IEnumerable<T> enumerable, T value) => Assert(enumerable.Contains(value));
 
 	[DH, AM]
-	public static void AssertNonNegative([NNV] long value, string? name = null) => Assert(value is > 0 or 0, name);
+	public static void NonNegative([NNV] long value, string? name = null) => Assert(value is > 0 or 0, name);
 
 	[DH, AM]
-	public static void AssertPositive([NNV] long value, string? name = null) => Assert(value > 0, name);
+	public static void Positive([NNV] long value, string? name = null) => Assert(value > 0, name);
 
 	[DH, AM]
-	public static void AssertFileExists(string value, string? name = null)
+	public static void FileExists(string value, string? name = null)
 		=> Assert<FileNotFoundException>(File.Exists(value), name);
 
 	[DH, AM]
-	public static void AssertThrows<TException>(Action f) where TException : Exception => Assert(Throws<TException>(f));
+	public static void Throws<TException>(Action f) where TException : Exception => Assert(ActionThrows<TException>(f));
 
 	[DH, AM]
-	public static void AssertAll([AC(ACT_TRUE), DNRI(false)] params bool[] conditions)
+	public static void ForAll([AC(ACT_TRUE), DNRI(false)] params bool[] conditions)
 	{
 		foreach (bool condition in conditions) {
 			Assert(condition);
@@ -213,9 +212,9 @@ public static class Guard
 	}
 }
 
-public sealed class GuardException : Exception
+public sealed class RequireException : Exception
 {
-	public GuardException() { }
+	public RequireException() { }
 
-	public GuardException(string? message) : base(message) { }
+	public RequireException(string? message) : base(message) { }
 }

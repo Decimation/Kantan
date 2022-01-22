@@ -34,7 +34,7 @@ public class GraphQLClient : IDisposable
 	 */
 
 
-	public HttpClient Client { get; }
+	public HttpClient Client { get; private set; }
 
 	public string Endpoint { get; }
 
@@ -53,6 +53,10 @@ public class GraphQLClient : IDisposable
 	                       Dictionary<string, string> additionalHeaders = null,
 	                       int timeout = -1)
 	{
+		Client = new HttpClient()
+		{
+			BaseAddress = new Uri(Endpoint),
+		};
 		Client.Timeout = timeout == -1 ? Timeout.InfiniteTimeSpan : TimeSpan.FromMilliseconds(timeout);
 
 		var request = new HttpRequestMessage(HttpMethod.Post, "/")
@@ -78,6 +82,7 @@ public class GraphQLClient : IDisposable
 		var response = Client.Send(request);
 		var task     = response.Content.ReadAsStringAsync();
 		task.Wait(Client.Timeout);
+
 
 		return JObject.Parse(task.Result);
 	}

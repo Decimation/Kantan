@@ -12,6 +12,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
+using PuppeteerExtraSharp;
+using PuppeteerExtraSharp.Plugins.ExtraStealth;
+using PuppeteerSharp;
 using static Kantan.Diagnostics.LogCategories;
 
 
@@ -21,6 +24,7 @@ using static Kantan.Diagnostics.LogCategories;
 // ReSharper disable UnusedMember.Global
 
 namespace Kantan.Net;
+
 
 public static class WebUtilities
 {

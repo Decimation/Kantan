@@ -24,7 +24,7 @@ namespace Kantan.Net;
 
 public static class IPUtilities
 {
-	public static IPGeolocation GetIPInformation()
+	public static Task<IPGeolocation> GetIPInformationAsync()
 	{
 		var task = (Resources.IFConfigUrl).WithHeaders(new
 		{
@@ -32,8 +32,7 @@ public static class IPUtilities
 			User_Agent = HttpUtilities.UserAgent
 		}).GetJsonAsync<IPGeolocation>();
 
-		task.Wait();
-		return task.Result;
+		return task;
 	}
 
 
@@ -48,7 +47,7 @@ public static class IPUtilities
 		}
 
 		if (UriUtilities.IsUri(hostOrIP, out Uri ux)) {
-			s = UriUtilities.GetHostComponent(ux);
+			s = ux.GetHostComponent();
 		}
 
 		return GetHostAddress(s).ToString();
