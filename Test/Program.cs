@@ -61,25 +61,15 @@ public static class Program
 
 		// var url = @"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png";
 		var url = @"https://i.imgur.com/QtCausw.png";
-
-
-		var x = Stopwatch.StartNew();
-
-		using var request = new HttpRequestMessage
-		{
-			RequestUri = new Uri(url),
-			Method     = HttpMethod.Get
-		};
-		var message = new HttpClient().Send(request);
-		Console.WriteLine(message);
-		x.Stop();
-		Console.WriteLine(x.Elapsed.TotalMilliseconds);
-		x.Restart();
-		var n2 = await url.SendAsync(verb: HttpMethod.Get);
-		x.Stop();
-		Console.WriteLine(x.Elapsed.TotalMilliseconds);
-		Console.WriteLine(n2);
-		Console.WriteLine(await IPUtilities.GetIPInformationAsync());
+		RuntimeHelpers.RunClassConstructor(typeof(BinaryResourceSniffer).TypeHandle);
+		var sw = Stopwatch.StartNew();
+		Console.WriteLine(BinaryResourceSniffer.ResolveMediaType(url));
+		sw.Stop();
+		Console.WriteLine(sw.Elapsed.TotalSeconds);
+		sw.Restart();
+		Console.WriteLine(BinaryResourceSniffer.ResolveMediaType2(url));
+		sw.Stop();
+		Console.WriteLine(sw.Elapsed.TotalSeconds);
 
 	}
 

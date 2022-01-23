@@ -301,7 +301,7 @@ public static class HttpUtilities
 		method ??= HttpMethod.Get;
 		token  ??= CancellationToken.None;
 
-		var f = new FlurlRequest(url)
+		var c = new FlurlClient()
 		{
 			Settings =
 			{
@@ -309,14 +309,20 @@ public static class HttpUtilities
 				Redirects =
 				{
 					MaxAutoRedirects = maxAutoRedirects ?? MaxAutoRedirects,
-					Enabled          = true,
-				},
+					Enabled          = allowAutoRedirect,
+				}
+			}
+		};
 
-
-			},
+		var f = new FlurlRequest(url)
+		{
+			Client = c,
+			Settings =
+				{ },
 			Verb = method
 		};
-		f = f.AllowAnyHttpStatus().WithAutoRedirect(true);
+		
+		f = f.AllowAnyHttpStatus();
 
 		/*using var request = new HttpRequestMessage
 		{
@@ -358,12 +364,12 @@ public static class HttpUtilities
 	                                                  CancellationToken? token = null)
 	{
 
-
+		token ??= CancellationToken.None;
 		var v = GetHttpResponseAsync(url, ms, method, allowAutoRedirect, maxAutoRedirects, token);
 		// v.Wait(c.Token);
 
 		if (v is { }) {
-			v.Wait(cancellationToken: CancellationToken.None);
+			v.Wait(cancellationToken: token.Value);
 			return v.Result;
 
 		}

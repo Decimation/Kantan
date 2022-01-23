@@ -386,7 +386,7 @@ public class NetworkTests
 
 		var message = HttpUtilities.GetHttpResponse(jpg);
 		Assert.True(UriUtilities.IsUri(jpg, out var u));
-		Assert.True(message.Content.GetMediaTypeFromData().Contains("jpeg"));
+		Assert.True(message.Content.ResolveMediaType().Contains("jpeg"));
 
 
 	}
