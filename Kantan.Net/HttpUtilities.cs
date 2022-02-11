@@ -42,8 +42,7 @@ using Newtonsoft.Json;
 
 // ReSharper disable UnusedMember.Global
 #nullable disable
-using MA = System.Runtime.InteropServices.MarshalAsAttribute;
-using UT = System.Runtime.InteropServices.UnmanagedType;
+
 
 namespace Kantan.Net;
 
@@ -300,12 +299,13 @@ public static class HttpUtilities
 
 		method ??= HttpMethod.Get;
 		token  ??= CancellationToken.None;
+		ms     ??= Timeout;
 
 		var c = new FlurlClient()
 		{
 			Settings =
 			{
-				Timeout = TimeSpan.FromMilliseconds(ms ?? Timeout),
+				Timeout = TimeSpan.FromMilliseconds(ms.Value),
 				Redirects =
 				{
 					MaxAutoRedirects = maxAutoRedirects ?? MaxAutoRedirects,

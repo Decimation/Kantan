@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -94,6 +95,24 @@ public class ConsoleDialog
 
 	[CanBeNull]
 	public string Subtitle { get; set; }
+
+
+	public ConsoleOption this[string s]
+	{
+		get => GetOption(s);
+	}
+
+	[CanBeNull]
+	public ConsoleOption GetOption(string name)
+	{
+		return Options.FirstOrDefault(x => x.Name == name);
+	}
+
+	public void Insert(int i, ConsoleOption option) => Options.Insert(i, option);
+
+	public void Insert(ConsoleOption x, ConsoleOption option) => Insert(Options.IndexOf(x), option);
+
+	public void Insert(string name, ConsoleOption option) => Insert(this[name], option);
 
 	/// <summary>
 	///     <c>F*</c> keys
@@ -522,12 +541,11 @@ public class ConsoleDialog
 		ExchangeStatus(ConsoleStatus.Refresh);
 	}
 
-	
 
 	private void EnsureDescription()
 	{
 		if (Description is not { }) {
-			Description = string.Empty;
+			Description = String.Empty;
 		}
 
 		if (!Description.EndsWith('\n')) {
@@ -536,10 +554,10 @@ public class ConsoleDialog
 
 	}
 
-	public ConsoleDialog AddDescriptions(params string[] s)
+	public ConsoleDialog AddDescriptions(params string[] strings)
 	{
-		foreach (string s1 in s) {
-			AddDescription(s1);
+		foreach (string s in strings) {
+			AddDescription(s);
 		}
 
 		return this;
@@ -552,16 +570,18 @@ public class ConsoleDialog
 		if (c.HasValue) {
 			s = s.AddColor(c.Value);
 		}
+
 		Description += s;
 		return this;
 
 	}
 
-	public ConsoleDialog AddDescription(Dictionary<string,string> s, Color? c = null)
+	public ConsoleDialog AddDescription(Dictionary<string, string> s, Color? c = null)
 	{
 		return AddDescription(Strings.GetMapString(s, c));
 
 	}
+
 	public override int GetHashCode()
 	{
 		var hashCode = new HashCode();

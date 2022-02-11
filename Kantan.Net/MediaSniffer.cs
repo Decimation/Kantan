@@ -1,4 +1,6 @@
-﻿using System;
+﻿global using MA = System.Runtime.InteropServices.MarshalAsAttribute;
+global using UT = System.Runtime.InteropServices.UnmanagedType;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -23,9 +25,9 @@ using Kantan.Diagnostics;
 namespace Kantan.Net;
 
 /// <summary>
-/// Binary data and Mime type sniffing
+/// Binary data and Mime (Media) type sniffing
 /// </summary>
-public static class BinaryResourceSniffer
+public static class MediaSniffer
 {
 	/*
 	 * type/subtype
@@ -36,35 +38,21 @@ public static class BinaryResourceSniffer
 	 * https://github.com/khellang/MimeTypes/blob/master/src/MimeTypes/MimeTypeFunctions.ttinclude
 	 */
 
-	private const MagicOpenFlags MagicMimeFlags =
-		MagicOpenFlags.MAGIC_ERROR |
-		MagicOpenFlags.MAGIC_MIME_TYPE |
-		MagicOpenFlags.MAGIC_NO_CHECK_COMPRESS |
-		MagicOpenFlags.MAGIC_NO_CHECK_ELF |
-		MagicOpenFlags.MAGIC_NO_CHECK_APPTYPE;
-
-	private static readonly IntPtr s_magic;
-
-	static BinaryResourceSniffer()
-	{
-		s_magic = MagicNative.magic_open(MagicMimeFlags);
-		var rd = MagicNative.magic_load(s_magic, @"C:\Library\magic.mgc");
-
-	}
+	static MediaSniffer() { }
 
 	/// <summary>
 	///     Scans for binary resources within a webpage.
 	/// </summary>
-	public static List<BinaryResource> Scan(string url, IBinaryResourceFilter b, int count = 10,
-	                                        long? timeoutMS = null,
-	                                        CancellationToken? token = null)
+	public static List<MediaResource> Scan(string url, IMediaResourceFilter b, int count = 10,
+	                                       long? timeoutMS = null,
+	                                       CancellationToken? token = null)
 	{
-		var images = new List<BinaryResource>();
+		var images = new List<MediaResource>();
 		timeoutMS ??= HttpUtilities.Timeout;
 
 		IHtmlDocument document = null;
 
-		var c = token ?? CancellationToken.None;
+		token ??= CancellationToken.None;
 
 		try {
 			var client = new HttpClient();
@@ -108,9 +96,8 @@ public static class BinaryResourceSniffer
 		{
 			string s = urls[i];
 
-			const int timeout = -1;
 
-			if (BinaryResource.FromUrl(s, b, out var bi, timeout: timeout, c)) {
+			if (MediaResource.FromUrl(s, b, out var bi, timeout: (int) timeoutMS, token)) {
 				if (bi is { } && count > 0) {
 					bi.Url = new Uri(bi.Url.ToString().Split(' ')[0].Trim());
 					images.Add(bi);
@@ -133,52 +120,67 @@ public static class BinaryResourceSniffer
 		return images;
 	}
 
-	/// <see cref="BinaryResourceSniffer.FindMimeFromData"/>
-	[Flags]
-	private enum MimeFromDataFlags
-	{
-		DEFAULT                  = 0x00000000,
-		URL_AS_FILENAME          = 0x00000001,
-		ENABLE_MIME_SNIFFING     = 0x00000002,
-		IGNORE_MIME_TEXT_PLAIN   = 0x00000004,
-		SERVER_MIME              = 0x00000008,
-		RESPECT_TEXT_PLAIN       = 0x00000010,
-		RETURN_UPDATED_IMG_MIMES = 0x00000020,
-	}
 
-	[DllImport("urlmon.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = false)]
-	private static extern int FindMimeFromData(IntPtr pBC, [MarshalAs(UnmanagedType.LPWStr)] string pwzUrl,
-	                                           [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.I1,
-	                                                      SizeParamIndex = 3)]
-	                                           byte[] pBuffer, int cbSize,
-	                                           [MarshalAs(UnmanagedType.LPWStr)] string pwzMimeProposed,
-	                                           MimeFromDataFlags dwMimeFlags, out IntPtr ppwzMimeOut, int dwReserved);
+	public static IMediaTypeResolver DefaultResolver { get; set; } = new UrlmonResolver();
+
+	public static string Resolve(string u) => Resolve(u, DefaultResolver);
+	
+	public static string Resolve(this HttpContent u) => Resolve(u, DefaultResolver);
 
 
-	public static string ResolveMediaType(string u)
+	public static string Resolve(string u, IMediaTypeResolver z)
 	{
 		var task = u.GetStreamAsync();
 		task.Wait();
-
-		var buf = (task.Result).MemoryStream();
-		var sz  = MagicNative.magic_buffer(s_magic, buf, buf.Length);
-
-		return Marshal.PtrToStringAnsi(sz);
+		return z.Resolve(task.Result);
 	}
 
-	public static string ResolveMediaType2(string u)
+
+	public static string Resolve(this HttpContent message, IMediaTypeResolver z)
 	{
-		var task = u.GetStreamAsync();
-		task.Wait();
-
-		var buf = (task.Result).MemoryStream();
-
-		var sz = ResolveMediaType(buf);
-
-		return sz;
+		var stream = message.ReadAsStream();
+		return z.Resolve(stream);
 	}
 
-	public static string ResolveMediaType(byte[] dataBytes, string mimeProposed = null)
+	internal static byte[] GetHeaderBlock(this Stream stream)
+	{
+		var ms = (MemoryStream) stream;
+
+		ms.Position = 0;
+
+		const int i = 256;
+
+		var buffer = new byte[i];
+		int read   = ms.Read(buffer);
+		return buffer;
+	}
+
+	public static (string Type, string Subtype) GetMediaTypeTuple(string s)
+	{
+		string[] split = s.Split('/');
+
+		string s1 = split[0];
+		string s2 = split[^1];
+
+		if (s2.Contains(';') /*||h.Parameters.Any()*/) {
+			s2 = s2.Split(';')[0];
+		}
+
+		return (s1, s2);
+	}
+}
+
+public sealed class UrlmonResolver : IMediaTypeResolver
+{
+	public string Resolve(Stream stream)
+	{
+		var buf = (stream).GetHeaderBlock();
+		return ResolveFromData(buf);
+	}
+
+	public static UrlmonResolver Instance { get; } = new UrlmonResolver();
+
+	private static string ResolveFromData(byte[] dataBytes, string mimeProposed = null)
 	{
 		//https://stackoverflow.com/questions/2826808/how-to-identify-the-extension-type-of-the-file-using-c/2826884#2826884
 		//https://stackoverflow.com/questions/18358548/urlmon-dll-findmimefromdata-works-perfectly-on-64bit-desktop-console-but-gener
@@ -213,168 +215,61 @@ public static class BinaryResourceSniffer
 		return mimeRet;
 	}
 
-
-	public static string ResolveMediaType(this HttpContent message)
+	/// <see cref="FindMimeFromData"/>
+	[Flags]
+	private enum MimeFromDataFlags
 	{
-		var    stream = message.ReadAsStream();
-		byte[] buffer = stream.MemoryStream();
-
-		string mediaType = ResolveMediaType(buffer);
-
-		return mediaType;
+		DEFAULT                  = 0x00000000,
+		URL_AS_FILENAME          = 0x00000001,
+		ENABLE_MIME_SNIFFING     = 0x00000002,
+		IGNORE_MIME_TEXT_PLAIN   = 0x00000004,
+		SERVER_MIME              = 0x00000008,
+		RESPECT_TEXT_PLAIN       = 0x00000010,
+		RETURN_UPDATED_IMG_MIMES = 0x00000020,
 	}
 
-	private static byte[] MemoryStream(this Stream stream)
-	{
-		var ms = (MemoryStream) stream;
-
-		ms.Position = 0;
-
-		const int i = 256;
-
-		var buffer = new byte[i];
-		int read   = ms.Read(buffer);
-		return buffer;
-	}
-
-	public static (string Type, string Subtype) ToMediaTypeTuple(string s)
-	{
-		var split = s.Split('/');
-
-		var s1 = split[0];
-		var s2 = split[^1];
-
-		if (s2.Contains(';') /*||h.Parameters.Any()*/) {
-			s2 = s2.Split(';')[0];
-		}
-
-		return (s1, s2);
-	}
-
-	public static (string Type, string Subtype) ToMediaTypeTuple(this MediaTypeHeaderValue header)
-	{
-		var s = header.MediaType;
-
-		if (s == null) {
-			return (null, null);
-		}
-
-
-		return ToMediaTypeTuple(s);
-
-	}
+	[DllImport("urlmon.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = false)]
+	private static extern int FindMimeFromData(IntPtr pBC, [MA(UT.LPWStr)] string pwzUrl,
+	                                           [MA(UT.LPArray, ArraySubType = UT.I1, SizeParamIndex = 3)]
+	                                           byte[] pBuffer, int cbSize,
+	                                           [MA(UT.LPWStr)] string pwzMimeProposed,
+	                                           MimeFromDataFlags dwMimeFlags, out IntPtr ppwzMimeOut,
+	                                           int dwReserved);
 }
 
-public class BinaryResource : IDisposable
+public sealed class MagicResolver : IMediaTypeResolver
 {
-	public Uri Url { get; set; }
-
-	public HttpResponseMessage Response { get; set; }
-
-	public IBinaryResourceFilter Filter { get; set; }
-
-	public BinaryResource() { }
-
-	public bool Equals(BinaryResource other)
+	public MagicResolver()
 	{
-		return Url == other?.Url && Equals(Response, other?.Response);
+		Magic = MagicNative.magic_open(MagicResolver.MagicMimeFlags);
+		var rd = MagicNative.magic_load(Magic, @"C:\Library\magic.mgc");
 	}
 
-	public override int GetHashCode()
+	public static MagicResolver Instance { get; } = new MagicResolver();
+
+	public string Resolve(Stream stream)
 	{
-		return HashCode.Combine(Url, Response, Filter);
+		var buf = (stream).GetHeaderBlock();
+		var sz  = MagicNative.magic_buffer(Magic, buf, buf.Length);
+		return Marshal.PtrToStringAnsi(sz);
 	}
 
-	public void Dispose()
-	{
-		Response?.Dispose();
-		GC.SuppressFinalize(this);
+	public const MagicOpenFlags MagicMimeFlags =
+		MagicOpenFlags.MAGIC_ERROR |
+		MagicOpenFlags.MAGIC_MIME_TYPE |
+		MagicOpenFlags.MAGIC_NO_CHECK_COMPRESS |
+		MagicOpenFlags.MAGIC_NO_CHECK_ELF |
+		MagicOpenFlags.MAGIC_NO_CHECK_APPTYPE;
 
-	}
-
-
-	public static bool FromUrl(string url, IBinaryResourceFilter filter, out BinaryResource br,
-	                           int timeout = -1, CancellationToken? token = null)
-	{
-
-		br = new();
-
-		if (!UriUtilities.IsUri(url, out Uri u)) {
-			return false;
-		}
-
-		using var client = new HttpClient();
-
-		var message = HttpUtilities.GetHttpResponse(url, timeout, token: token,
-		                                            method: HttpMethod.Get);
-
-		/*if (message is not { }) {
-			return false;
-		}*/
-
-		if (message is not { IsSuccessStatusCode: true }) {
-			message?.Dispose();
-			return false;
-		}
-
-		br.Url      = new Uri(url);
-		br.Response = message;
-
-		/* Check content-type */
-
-		// The content-type returned from the response may not be the actual content-type, so
-		// we'll resolve it using binary data instead to be sure
-
-		var length = message.Content.Headers.ContentLength;
-		br.Response = message;
-
-		string mediaType;
-
-		try {
-			/*
-			 * #1
-			 */
-			mediaType = message.Content.ResolveMediaType();
-
-		}
-		catch (Exception) {
-			/*
-			 * #2
-			 */
-			mediaType = message.Content.Headers is { ContentType.MediaType: { } }
-				            ? message.Content.Headers.ContentType.MediaType
-				            : null;
-		}
-
-		const int UNLIMITED_SIZE = -1;
-
-		bool type, size = length is UNLIMITED_SIZE;
-
-		if (filter.MinimumSize.HasValue) {
-			size = size || length >= filter.MinimumSize.Value;
-		}
-
-
-		if (filter.DiscreteType != default /*|| filter.DiscreteType!= DiscreteMimeType.Other*/) {
-			if (mediaType != null) {
-				type = mediaType.StartsWith(filter.DiscreteType, StringComparison.InvariantCultureIgnoreCase)
-				       && !filter.TypeBlacklist.Contains(mediaType);
-			}
-			else {
-				type = false; //?
-			}
-		}
-
-		else {
-			type = true;
-		}
-
-
-		return type && size;
-	}
+	public IntPtr Magic { get; }
 }
 
-/// <see cref="IBinaryResourceFilter.DiscreteType"/>
+public interface IMediaTypeResolver
+{
+	string Resolve(Stream m);
+}
+
+/// <see cref="IMediaResourceFilter.DiscreteType"/>
 public static class DiscreteMediaTypes
 {
 	public const string Image       = "image";
@@ -386,59 +281,6 @@ public static class DiscreteMediaTypes
 
 	// todo
 	// ...
-}
-
-public sealed class BinaryImageFilter : IBinaryResourceFilter
-{
-	public static readonly BinaryImageFilter Default = new();
-
-	public int? MinimumSize => 50_000;
-
-	public string DiscreteType => DiscreteMediaTypes.Image;
-
-	public List<string> GetUrls(IHtmlDocument document)
-	{
-		var rg = document.QuerySelectorAttributes("img", "src")
-		                 .Union(document.QuerySelectorAttributes("a", "href"))
-		                 .ToList();
-
-		return rg;
-	}
-
-	public Dictionary<string, Func<string, string>> HostUrlFilter
-		=> new()
-		{
-			/*string hostComponent = UriUtilities.GetHostComponent(new Uri(url));
-	
-			switch (hostComponent) {
-				case "www.deviantart.com":
-					//https://images-wixmp-
-					urls = urls.Where(x => x.Contains("images-wixmp"))
-					           .ToList();
-					break;
-				case "twitter.com":
-					urls = urls.Where(x => !x.Contains("profile_banners"))
-					           .ToList();
-					break;
-			}*/
-		};
-
-	public List<string> TypeBlacklist => new() { "image/svg+xml" };
-}
-
-public interface IBinaryResourceFilter
-{
-	public int? MinimumSize { get; }
-
-	[VP(nameof(DiscreteMediaTypes))]
-	public string DiscreteType { get; }
-
-	[VP(nameof(DiscreteMediaTypes))]
-	public List<string> TypeBlacklist { get; }
-
-	public Dictionary<string, Func<string, string>> HostUrlFilter { get; }
-
-	public List<string> GetUrls(IHtmlDocument document);
 }
 
 /*

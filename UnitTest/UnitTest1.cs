@@ -35,7 +35,7 @@ public class MimeTypeTests
 
 	public void Test1(string u, string s)
 	{
-		var binaryUris = BinaryResourceSniffer.Scan(u, new BinaryImageFilter());
+		var binaryUris = MediaSniffer.Scan(u, new MediaImageFilter());
 		Assert.True(binaryUris.Select(x=>x.Url.ToString()).ToList().Contains(s));
 	}
 }
@@ -386,7 +386,7 @@ public class NetworkTests
 
 		var message = HttpUtilities.GetHttpResponse(jpg);
 		Assert.True(UriUtilities.IsUri(jpg, out var u));
-		Assert.True(message.Content.ResolveMediaType().Contains("jpeg"));
+		Assert.True(message.Content.Resolve().Contains("jpeg"));
 
 
 	}
@@ -400,13 +400,11 @@ public class NetworkTests
 		if (r == null) {
 			Assert.Inconclusive();
 		}
-
-		var b = r.Content.ReadAsByteArrayAsync();
-		b.Wait();
+		
 
 		string type = r.Content.Headers.ContentType.MediaType;
 
-		var type2 = BinaryResourceSniffer.ResolveMediaType(b.Result);
+		var type2 = MediaSniffer.Resolve(r.Content);
 
 
 		Assert.AreEqual(type2, "image/png");

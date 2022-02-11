@@ -61,16 +61,24 @@ public static class Program
 
 		// var url = @"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png";
 		var url = @"https://i.imgur.com/QtCausw.png";
-		RuntimeHelpers.RunClassConstructor(typeof(BinaryResourceSniffer).TypeHandle);
+		RuntimeHelpers.RunClassConstructor(typeof(MediaSniffer).TypeHandle);
 		var sw = Stopwatch.StartNew();
-		Console.WriteLine(BinaryResourceSniffer.ResolveMediaType(url));
+		Console.WriteLine(MediaSniffer.Resolve(url));
 		sw.Stop();
 		Console.WriteLine(sw.Elapsed.TotalSeconds);
 		sw.Restart();
-		Console.WriteLine(BinaryResourceSniffer.ResolveMediaType2(url));
+		Console.WriteLine(MediaSniffer.Resolve(url));
 		sw.Stop();
 		Console.WriteLine(sw.Elapsed.TotalSeconds);
 
+		var u=HttpUtilities.GetHttpResponse(
+			"https://scontent-ord1-1.xx.fbcdn.net/t31.0-8/14715634_1300559193310808_8524406991247613051_o.jpg");
+		Console.WriteLine(u);
+		Console.WriteLine(MediaResource.FromUrl(
+			                  "https://scontent-ord1-1.xx.fbcdn.net/t31.0-8/14715634_1300559193310808_8524406991247613051_o.jpg",
+			                  MediaImageFilter.Default, out var br));
+
+		
 	}
 
 	private static void ConsoleTest4()
