@@ -49,14 +49,14 @@ public class GraphQLClient : IDisposable
 
 	}
 
-	public dynamic Execute(string query, object variables = null,
-	                       Dictionary<string, string> additionalHeaders = null,
+	public dynamic Execute(string query, object variables = null, Dictionary<string, string> additionalHeaders = null,
 	                       int timeout = -1)
 	{
 		Client = new HttpClient()
 		{
 			BaseAddress = new Uri(Endpoint),
 		};
+
 		Client.Timeout = timeout == -1 ? Timeout.InfiniteTimeSpan : TimeSpan.FromMilliseconds(timeout);
 
 		var request = new HttpRequestMessage(HttpMethod.Post, "/")

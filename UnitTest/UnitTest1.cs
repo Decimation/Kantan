@@ -9,6 +9,8 @@ using Kantan.Collections;
 using Kantan.Diagnostics;
 using Kantan.Model;
 using Kantan.Net;
+using Kantan.Net.Media;
+using Kantan.Net.Media.Filters;
 using Kantan.Numeric;
 using Kantan.Text;
 using Kantan.Utilities;
@@ -386,7 +388,7 @@ public class NetworkTests
 
 		var message = HttpUtilities.GetHttpResponse(jpg);
 		Assert.True(UriUtilities.IsUri(jpg, out var u));
-		Assert.True(message.Content.Resolve().Contains("jpeg"));
+		Assert.True(message.ResponseMessage.Content.Resolve().Contains("jpeg"));
 
 
 	}
@@ -402,9 +404,9 @@ public class NetworkTests
 		}
 		
 
-		string type = r.Content.Headers.ContentType.MediaType;
+		string type = r.ResponseMessage.Content.Headers.ContentType.MediaType;
 
-		var type2 = MediaSniffer.Resolve(r.Content);
+		var type2 = MediaSniffer.Resolve(r.ResponseMessage.Content);
 
 
 		Assert.AreEqual(type2, "image/png");

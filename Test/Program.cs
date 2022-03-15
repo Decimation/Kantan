@@ -21,8 +21,12 @@ using Flurl.Util;
 using Kantan.Cli;
 using Kantan.Cli.Controls;
 using Kantan.Collections;
+using Kantan.Internal;
 using Kantan.Model;
 using Kantan.Net;
+using Kantan.Net.Media;
+using Kantan.Net.Media.Filters;
+using Kantan.Net.Media.Resolvers;
 using Kantan.Text;
 using Kantan.Utilities;
 using Microsoft.VisualBasic.CompilerServices;
@@ -60,7 +64,7 @@ public static class Program
 		Console.WriteLine(sw.Elapsed.TotalMilliseconds);*/
 
 		// var url = @"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png";
-		var url = @"https://i.imgur.com/QtCausw.png";
+		/*var url = @"https://i.imgur.com/QtCausw.png";
 		RuntimeHelpers.RunClassConstructor(typeof(MediaSniffer).TypeHandle);
 		var sw = Stopwatch.StartNew();
 		Console.WriteLine(MediaSniffer.Resolve(url));
@@ -70,15 +74,47 @@ public static class Program
 		Console.WriteLine(MediaSniffer.Resolve(url));
 		sw.Stop();
 		Console.WriteLine(sw.Elapsed.TotalSeconds);
-
+		
 		var u=HttpUtilities.GetHttpResponse(
 			"https://scontent-ord1-1.xx.fbcdn.net/t31.0-8/14715634_1300559193310808_8524406991247613051_o.jpg");
 		Console.WriteLine(u);
 		Console.WriteLine(MediaResource.FromUrl(
 			                  "https://scontent-ord1-1.xx.fbcdn.net/t31.0-8/14715634_1300559193310808_8524406991247613051_o.jpg",
 			                  MediaImageFilter.Default, out var br));
+			                  */
+		// await ConsoleTest();
 
-		
+
+		var r = new[]{ 1 };
+		r=r.Add(new[] { 2 });
+		Console.WriteLine(r.QuickJoin());
+	}
+
+	private static void Test1()
+	{
+		var url = @"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png";
+
+		var rg = new[]
+		{
+			"https://www.zerochan.net/2750747", "http://s1.zerochan.net/atago.(azur.lane).600.2750747.jpg",
+			"https://twitter.com/mircosciamart/status/1186775807655587841"
+		};
+
+		var binaryUris = MediaSniffer.Scan(rg[^1], new MediaImageFilter())
+		                             .Union(MediaSniffer.Scan(rg[1], new MediaImageFilter()));
+
+		foreach (var v1 in rg) {
+			var v2 = MediaSniffer.Scan(v1, MediaImageFilter.Default);
+
+			foreach (MediaResource v in v2) {
+				Console.WriteLine(v.Url);
+
+			}
+		}
+
+
+		_ = new Url(rg[0]).Host;
+		_ = new Uri(rg[0]).Host;
 	}
 
 	private static void ConsoleTest4()

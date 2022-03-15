@@ -70,6 +70,16 @@ namespace Kantan.Net.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] magic {
+            get {
+                object obj = ResourceManager.GetObject("magic", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to https://cdn.jsdelivr.net/gh/jshttp/mime-db@master/db.json.
         /// </summary>
         internal static string MimeDatabaseUrl {

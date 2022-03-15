@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 
 // ReSharper disable InconsistentNaming
 
@@ -14,30 +16,37 @@ public static partial class ConsoleManager
 	{
 		get
 		{
-			var b = Win32.GetNumberOfConsoleInputEvents(StdIn, out var n);
+			unsafe {
+				var b = Win32.GetNumberOfConsoleInputEvents(StdIn, out var n);
 
-			var buffer = new InputRecord[1];
+				// var buffer = new InputRecord[1];
 
-			if (n == 0) {
+				// var buffer = ArrayPool<InputRecord>.Shared.Rent(1);
+				const int i = 1;
+				var buffer  = stackalloc InputRecord[i];
+
+				if (n == 0) {
+					return false;
+				}
+
+				Win32.PeekConsoleInput(StdIn, buffer, i, out var lpNumber);
+
+				var ir = buffer[0];
+
+				if (!ir.IsMouseEvent && (!ir.IsKeyDownEvent || ir.IsModKey)) {
+
+					Win32.ReadConsoleInput(StdIn, buffer, (uint) i,
+					                       out var numEventsRead);
+
+				}
+				else {
+					return true;
+				}
+
+				// return lp != 0;
 				return false;
 			}
 
-			Win32.PeekConsoleInput(StdIn, buffer, 1, out var lpNumber);
-
-			var ir = buffer[0];
-
-			if (!ir.IsMouseEvent && (!ir.IsKeyDownEvent || ir.IsModKey)) {
-
-				Win32.ReadConsoleInput(StdIn, buffer, (uint) buffer.Length,
-				                                      out var numEventsRead);
-
-			}
-			else {
-				return true;
-			}
-
-			// return lp != 0;
-			return false;
 		}
 	}
 
@@ -264,16 +273,22 @@ public static partial class ConsoleManager
 
 	public static InputRecord ReadInput()
 	{
-		var record = new InputRecord[1];
+		unsafe {
+			// var record = new InputRecord[1];
+			// var record=ArrayPool<InputRecord>.Shared.Rent(1);
 
-		if (!Win32.ReadConsoleInput(StdIn, record, (uint) record.Length, out uint n)) {
-			throw new Win32Exception();
+			const int i      = 1;
+			var record = stackalloc InputRecord[i];
+
+			if (!Win32.ReadConsoleInput(StdIn, record, (uint) i, out uint n)) {
+				throw new Win32Exception();
+			}
+
+			var read = record[0];
+			History.Push(read);
+
+			return read;
 		}
-
-		var read = record[0];
-		History.Push(read);
-
-		return read;
 	}
 
 	public static void Close()

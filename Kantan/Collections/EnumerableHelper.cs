@@ -23,6 +23,17 @@ namespace Kantan.Collections;
 /// </summary>
 public static class EnumerableHelper
 {
+
+	public static T MoveAndGet<T>(this IEnumerator<T> t)
+	{
+		if (t.MoveNext()) {
+			return t.Current;
+		}
+
+		return default;
+		// throw new Exception();
+	}
+
 	/// <summary>
 	/// Determines whether <paramref name="list"/> ends with <paramref name="sequence"/>.
 	/// </summary>

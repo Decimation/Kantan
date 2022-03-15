@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using JetBrains.Annotations;
 using Kantan.Internal;
@@ -24,11 +25,10 @@ namespace Kantan.Cli.Controls;
 [CanBeNull]
 public delegate object ConsoleOptionFunction();
 
-
 /// <summary>
 ///     Represents an interactive console/shell option
 /// </summary>
-public class ConsoleOption:IMap
+public class ConsoleOption : IMap
 {
 	public ConsoleOption()
 	{
@@ -50,8 +50,6 @@ public class ConsoleOption:IMap
 		set => Functions[NC_FN_MAIN] = value;
 	}
 
-	
-
 
 	public virtual Color? Color { get; set; }
 
@@ -64,17 +62,25 @@ public class ConsoleOption:IMap
 		//[0] = () => { return null; },
 
 	};
-	
+
+
+	public Dictionary<string, object> Data { get; set; }
+
+	[MaybeNull]
+	public Func<ConsoleOption,string> UpdateOption { get; set; }
+
+	public void Update()
+	{
+		Name = UpdateOption(this);
+	}
 
 	[Pure]
 	public string GetDataString()
 	{
 		var sb = new StringBuilder();
 
-		foreach (var (key, value) in Data)
-		{
-			switch (value)
-			{
+		foreach (var (key, value) in Data) {
+			switch (value) {
 				case null:
 					continue;
 				case ConsoleOption option:
@@ -179,9 +185,11 @@ public class ConsoleOption:IMap
 
 			rg[i] = new ConsoleOption
 			{
-				Name     = name,
-				Function = () => option
+				Name         = name,
+				Function     = () => option,
+				UpdateOption = (t) => t.Name = getName(option)
 			};
+
 		}
 
 		return rg;
@@ -196,10 +204,4 @@ public class ConsoleOption:IMap
 	}
 
 	#endregion
-
-	public Dictionary<string, object> Data
-	{
-		get ;
-		set;
-	}
 }

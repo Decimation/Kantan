@@ -10,9 +10,9 @@ using Kantan.Collections;
 using Kantan.Net;
 using Kantan.Numeric;
 using Kantan.Utilities;
+using Array = System.Array;
 
 namespace Benchmark;
-
 
 public class Benchmarks1
 {
@@ -99,11 +99,52 @@ public class Benchmarks3
 	}
 }
 
+public class Benchmarks5
+{
+	public int[] x;
+
+	[IterationSetup]
+	public void Setup()
+	{
+		x = new int[] { 1 };
+
+	}
+	[Benchmark]
+	public int[] a()
+	{
+		return x.Add(2);
+	}
+	/*[Benchmark]
+	public int[] b()
+	{
+		Array.Resize(ref x, x.Length+1);
+		x[^1] = 2;
+		return x;
+	}
+	[Benchmark]
+	public int[] c()
+	{
+		var x2=new int[x.Length + 1];
+		x.CopyTo(x2,0);
+
+		x2[^1] = 2;
+		x      = x2;
+
+		return x;
+	}*/
+
+	[Benchmark]
+	public int[] d()
+	{
+		return x.Add(new[] { 2 });
+	}
+}
+
 public static class Program
 {
 	public static void Main(string[] args)
 	{
-		BenchmarkRunner.Run<Benchmarks4>();
+		BenchmarkRunner.Run<Benchmarks5>();
 
 	}
 }

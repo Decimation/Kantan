@@ -108,7 +108,7 @@ public class ConsoleDialog
 		return Options.FirstOrDefault(x => x.Name == name);
 	}
 
-	public void Insert(int i, ConsoleOption option) => Options.Insert(i, option);
+	public void Insert(Index i, ConsoleOption option) => Options.Insert(i.Value, option);
 
 	public void Insert(ConsoleOption x, ConsoleOption option) => Insert(Options.IndexOf(x), option);
 

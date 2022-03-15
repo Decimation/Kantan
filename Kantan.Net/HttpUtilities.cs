@@ -76,33 +76,6 @@ public static class HttpUtilities
 
 	}
 
-	#region Message
-
-	public static bool IsSent(this HttpRequestMessage m)
-	{
-		return m.GetStatus() == ALREADY_SENT;
-	}
-
-	public static int GetStatus(this HttpRequestMessage m)
-	{
-		var value = RequestStatusField.GetValue(m);
-		Require.NotNull(value);
-		return (int) value;
-	}
-
-	public static void ResetStatus(this HttpRequestMessage m)
-	{
-		RequestStatusField.SetValue(m, NOT_YET_SENT);
-	}
-
-	private static FieldInfo RequestStatusField { get; }
-
-	private const int NOT_YET_SENT = 0;
-	private const int ALREADY_SENT = 1;
-	private const int IS_REDIRECT  = 2;
-
-	#endregion
-
 	[CanBeNull]
 	public static string GetFinalRedirect(string url)
 	{
@@ -122,8 +95,8 @@ public static class HttpUtilities
 
 			try {
 
-				var resp = GetHttpResponse(url, method: HttpMethod.Head);
-
+				var resp1 = GetHttpResponse(url, method: HttpMethod.Head);
+				var resp  = resp1.ResponseMessage;
 				switch (resp.StatusCode) {
 					case HttpStatusCode.OK:
 						return newUrl;
@@ -290,7 +263,7 @@ public static class HttpUtilities
 
 	[CBN]
 	[MURV]
-	public static async Task<HttpResponseMessage> GetHttpResponseAsync(string url, int? ms = null,
+	public static async Task<IFlurlResponse> GetHttpResponseAsync(string url, int? ms = null,
 	                                                                   [CBN] HttpMethod method = null,
 	                                                                   bool allowAutoRedirect = true,
 	                                                                   int? maxAutoRedirects = null,
@@ -344,7 +317,7 @@ public static class HttpUtilities
 		try {
 			// var response = await client.SendAsync(request, c);
 			var response = await f.SendAsync(method, cancellationToken: token.Value);
-			return response.ResponseMessage;
+			return response;
 		}
 		catch (Exception x) {
 			Debug.WriteLine($"{nameof(GetHttpResponseAsync)}: {x}", LogCategories.C_VERBOSE);
@@ -357,7 +330,7 @@ public static class HttpUtilities
 
 	[CBN]
 	[MURV]
-	public static HttpResponseMessage GetHttpResponse(string url, int? ms = null,
+	public static IFlurlResponse GetHttpResponse(string url, int? ms = null,
 	                                                  [CBN] HttpMethod method = null,
 	                                                  bool allowAutoRedirect = true,
 	                                                  int? maxAutoRedirects = null,
@@ -390,4 +363,55 @@ public static class HttpUtilities
 
 		return r;
 	}
+
+	public static void OpenUrl(string url)
+	{
+		// https://stackoverflow.com/questions/4580263/how-to-open-in-default-browser-in-c-sharp
+		// url must start with a protocol i.e. http://
+
+		try {
+			Process.Start(url);
+		}
+		catch {
+			// hack because of this: https://github.com/dotnet/corefx/issues/10361
+			if (OperatingSystem.IsWindows()) {
+				url = url.Replace("&", "^&");
+
+				Process.Start(new ProcessStartInfo("cmd", $"/c start {url}")
+				{
+					CreateNoWindow = true
+				});
+			}
+			else {
+				throw;
+			}
+		}
+	}
+
+	#region Message
+
+	public static bool IsSent(this HttpRequestMessage m)
+	{
+		return m.GetStatus() == ALREADY_SENT;
+	}
+
+	public static int GetStatus(this HttpRequestMessage m)
+	{
+		var value = RequestStatusField.GetValue(m);
+		Require.NotNull(value);
+		return (int) value;
+	}
+
+	public static void ResetStatus(this HttpRequestMessage m)
+	{
+		RequestStatusField.SetValue(m, NOT_YET_SENT);
+	}
+
+	private static FieldInfo RequestStatusField { get; }
+
+	private const int NOT_YET_SENT = 0;
+	private const int ALREADY_SENT = 1;
+	private const int IS_REDIRECT  = 2;
+
+	#endregion
 }

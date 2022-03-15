@@ -59,7 +59,10 @@ public static partial class ConsoleManager
 		internal static extern BOOL PeekConsoleInput(IntPtr hConsoleInput,
 		                                             [MA(UT.LPArray), Out] InputRecord[] lpBuffer,
 		                                             uint nLength, out uint lpNumberOfEventsRead);
-
+		[DllImport(KERNEL32_DLL, EntryPoint = "PeekConsoleInputW", CharSet = CharSet.Unicode, SetLastError = true)]
+		internal static extern unsafe BOOL PeekConsoleInput(IntPtr hConsoleInput,
+		                                                  [Out]  InputRecord* lpBuffer,
+		                                                    uint nLength, out uint lpNumberOfEventsRead);
 
 		[DllImport(KERNEL32_DLL, SetLastError = true)]
 		internal static extern bool FlushConsoleInputBuffer(IntPtr hConsoleInput);
@@ -84,7 +87,10 @@ public static partial class ConsoleManager
 		[return: MA(UT.Bool)]
 		internal static extern bool ReadConsoleInput(IntPtr hConsoleInput, [Out] InputRecord[] lpBuffer,
 		                                             uint nLength, out uint lpNumberOfEventsRead);
-
+		[DllImport(KERNEL32_DLL, CharSet = CharSet.Unicode)]
+		[return: MA(UT.Bool)]
+		internal static unsafe extern bool ReadConsoleInput(IntPtr hConsoleInput, [Out] InputRecord* lpBuffer,
+		                                             uint nLength, out uint lpNumberOfEventsRead);
 		[DllImport(KERNEL32_DLL, SetLastError = true)]
 		[return: MA(UT.Bool)]
 		internal static extern bool SetConsoleMode(IntPtr hConsoleHandle, ConsoleModes dwMode);

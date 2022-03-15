@@ -20,19 +20,19 @@ public static class ColorHelper
 
 	public static Color Invert(this Color c)
 	{
-		return Color.FromArgb(0xFF - c.R, 0xFF - c.G, 0xFF - c.B);
+		return Color.FromArgb(byte.MaxValue - c.R, byte.MaxValue - c.G, byte.MaxValue - c.B);
 	}
 
 	/// <summary>
 	/// Creates color with corrected brightness.
 	/// </summary>
 	/// <param name="color">Color to correct.</param>
-	/// <param name="correctionFactor">The brightness correction factor. Must be between -1 and 1. 
+	/// <param name="factor">The brightness correction factor. Must be between -1 and 1. 
 	/// Negative values produce darker colors.</param>
 	/// <returns>
 	/// Corrected <see cref="Color"/> structure.
 	/// </returns>
-	public static Color ChangeBrightness(this Color color, float correctionFactor)
+	public static Color ChangeBrightness(this Color color, float factor)
 	{
 		// Adapted from https://gist.github.com/zihotki/09fc41d52981fb6f93a81ebf20b35cd5
 
@@ -40,17 +40,17 @@ public static class ColorHelper
 		float green = color.G;
 		float blue  = color.B;
 
-		if (correctionFactor < 0) {
-			correctionFactor = 1 + correctionFactor;
+		if (factor < 0) {
+			factor = 1 + factor;
 
-			red   *= correctionFactor;
-			green *= correctionFactor;
-			blue  *= correctionFactor;
+			red   *= factor;
+			green *= factor;
+			blue  *= factor;
 		}
 		else {
-			red   = (Byte.MaxValue - red) * correctionFactor + red;
-			green = (Byte.MaxValue - green) * correctionFactor + green;
-			blue  = (Byte.MaxValue - blue) * correctionFactor + blue;
+			red   = (Byte.MaxValue - red) * factor + red;
+			green = (Byte.MaxValue - green) * factor + green;
+			blue  = (Byte.MaxValue - blue) * factor + blue;
 		}
 
 		return Color.FromArgb(color.A, (int) red, (int) green, (int) blue);
@@ -58,12 +58,12 @@ public static class ColorHelper
 
 	public static Color ToColor(this ConsoleColor c)
 	{
-		int cInt = (int) c;
+		var i = (int) c;
 
-		int brightnessCoefficient = ((cInt & 8) > 0) ? 2 : 1;
-		int r                     = ((cInt & 4) > 0) ? 64 * brightnessCoefficient : 0;
-		int g                     = ((cInt & 2) > 0) ? 64 * brightnessCoefficient : 0;
-		int b                     = ((cInt & 1) > 0) ? 64 * brightnessCoefficient : 0;
+		int a = ((i & 8) > 0) ? 2 : 1;
+		int r = ((i & 4) > 0) ? 64 * a : 0;
+		int g = ((i & 2) > 0) ? 64 * a : 0;
+		int b = ((i & 1) > 0) ? 64 * a : 0;
 
 		return Color.FromArgb(r, g, b);
 	}
