@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <LangVersion>latest</LangVersion>
+    <EnablePreviewFeatures>true</EnablePreviewFeatures>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>JETBRAINS_ANNOTATIONS;TRACE</DefineConstants>
     <LangVersion>latest</LangVersion>
@@ -66,7 +67,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-
 
   </ItemGroup>
 </Project>

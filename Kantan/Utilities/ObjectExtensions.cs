@@ -11,15 +11,25 @@ namespace Kantan.Utilities;
 
 public static class ObjectExtensions
 {
+	private static readonly Dictionary<Type, MethodInfo> TypeCloneMap = new();
+
 	public static T Clone<T>(this T t)
 	{
 		const string name = "MemberwiseClone";
 
-		var method = t.GetType().GetTypeInfo().GetMethod(name, BindingFlags.NonPublic | BindingFlags.Public |
-		                                                       BindingFlags.Instance);
-		Debug.Assert(method != null);
+		var type = t.GetType().GetTypeInfo();
 
-		var value = method.Invoke(t, null);
+		if (TypeCloneMap.TryGetValue(type, out var mi)) {
+			mi = type.GetMethod(name, BindingFlags.NonPublic | BindingFlags.Public |
+			                          BindingFlags.Instance);
+		}
+		else {
+			TypeCloneMap[type] = mi;
+		}
+
+		Debug.Assert(mi != null);
+
+		var value = mi.Invoke(t, null);
 		return Unsafe.As<object, T>(ref value);
 	}
 }

@@ -30,7 +30,7 @@ public class MediaResource : IDisposable
 	{
 		Response?.Dispose();
 		GC.SuppressFinalize(this);
-
+		
 	}
 
 	public static bool FromUrl(string url, IMediaResourceFilter filter, out MediaResource mr,

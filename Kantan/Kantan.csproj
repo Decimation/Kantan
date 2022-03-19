@@ -9,7 +9,7 @@
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>
     <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
-
+    <EnablePreviewFeatures>true</EnablePreviewFeatures>
     <NoWarn>
       HAA0601
       HAA0601,

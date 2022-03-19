@@ -62,8 +62,16 @@ public static class HttpUtilities
 	public static string UserAgent { get; set; } = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
 	                                               "(KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36";
 
+	public static           FlurlClient Client { get; internal set; }
+
 	static HttpUtilities()
 	{
+		Client = new()
+		{
+			Settings =
+				{ }
+		};
+
 		ServicePointManager.SecurityProtocol =
 			SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
 
@@ -260,12 +268,6 @@ public static class HttpUtilities
 		return output;
 	}
 
-	private static readonly FlurlClient Client = new()
-	{
-		Settings =
-			{ }
-	};
-
 	[CBN]
 	[MURV]
 	public static async Task<IFlurlResponse> GetHttpResponseAsync(string url, int? ms = null,
@@ -289,7 +291,7 @@ public static class HttpUtilities
 				{
 					MaxAutoRedirects = maxAutoRedirects ?? MaxAutoRedirects,
 					Enabled          = allowAutoRedirect
-				} 
+				}
 			},
 			Verb = method
 		};
@@ -340,9 +342,8 @@ public static class HttpUtilities
 		// v.Wait(c.Token);
 
 		if (v is { }) {
-			v.Wait(cancellationToken: token.Value);
+			v.Wait(token.Value);
 			return v.Result;
-
 		}
 
 		return null;
@@ -405,7 +406,7 @@ public static class HttpUtilities
 		RequestStatusField.SetValue(m, NOT_YET_SENT);
 	}
 
-	private static FieldInfo RequestStatusField { get; }
+	private static readonly FieldInfo RequestStatusField;
 
 	private const int NOT_YET_SENT = 0;
 	private const int ALREADY_SENT = 1;

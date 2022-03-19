@@ -9,6 +9,7 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 using AngleSharp;
@@ -81,6 +82,12 @@ public static class Program
 			                  */
 		await ConsoleTest();
 
+	}
+
+	[RequiresPreviewFeatures]
+	interface IInterface
+	{
+		static abstract IInterface get<T>(T t);
 	}
 
 	private static void Test1()
