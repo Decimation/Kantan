@@ -34,14 +34,12 @@ using HttpMethod = System.Net.Http.HttpMethod;
 
 // ReSharper disable InconsistentNaming
 
-
 // ReSharper disable MethodHasAsyncOverload
 
 // ReSharper disable UnusedMember.Local
 
 // ReSharper disable UnusedParameter.Local
 #pragma warning disable IDE0060, CS1998, IDE0051,CS0169,4014,CS0649,IDE0044
-
 
 namespace Test;
 
@@ -51,7 +49,6 @@ public static class Program
 {
 	private static async Task Main(string[] args)
 	{
-
 
 		/*var client = new HttpClient();
 		var message = await client.GetAsync(@"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png");
@@ -82,12 +79,8 @@ public static class Program
 			                  "https://scontent-ord1-1.xx.fbcdn.net/t31.0-8/14715634_1300559193310808_8524406991247613051_o.jpg",
 			                  MediaImageFilter.Default, out var br));
 			                  */
-		// await ConsoleTest();
+		await ConsoleTest();
 
-
-		var r = new[]{ 1 };
-		r=r.Add(new[] { 2 });
-		Console.WriteLine(r.QuickJoin());
 	}
 
 	private static void Test1()
@@ -112,7 +105,6 @@ public static class Program
 			}
 		}
 
-
 		_ = new Url(rg[0]).Host;
 		_ = new Uri(rg[0]).Host;
 	}
@@ -134,7 +126,6 @@ public static class Program
 	}
 
 	private static ConsoleDialog _dialog;
-
 
 	private class ConsoleOption1 : IConsoleOption
 	{
@@ -198,7 +189,6 @@ public static class Program
 
 		var r = dialog.ReadInputAsync();
 
-
 		Task.Factory.StartNew(() =>
 		{
 			Thread.Sleep(1000);
@@ -219,7 +209,6 @@ public static class Program
 		c = 1 << 2
 	}
 
-
 	private static async Task ConsoleTest3(CancellationToken c)
 	{
 		var dialog = new ConsoleDialog()
@@ -236,7 +225,6 @@ public static class Program
 			SelectMultiple = true,
 			Options        = ConsoleOption.FromEnum<MyEnum1>().ToList()
 		};
-
 
 		var r = dialog.ReadInputAsync(c);
 		await r;
@@ -261,7 +249,6 @@ public static class Program
 			SelectMultiple = true,
 			Options        = ConsoleOption.FromEnum<MyEnum1>().ToList()
 		};
-
 
 		var r = dialog.ReadInputAsync();
 		await r;

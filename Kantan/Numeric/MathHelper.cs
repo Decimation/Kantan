@@ -44,6 +44,11 @@ public static class MathHelper
 		}
 	}*/
 
+	public static int Wrap(int i, int n)
+	{
+		return ((i % n) + n) % n;
+	}
+
 	public static bool ToleranceEqual(double a, double b, double epsilon = double.Epsilon)
 	{
 		//https://stackoverflow.com/questions/4787125/evaluate-if-two-doubles-are-equal-based-on-a-given-precision-not-within-a-certa
@@ -183,11 +188,9 @@ public static class MathHelper
 		return scaled.ToString(format) + prefix;
 	}
 
-
 	public static string GetByteUnit(double len)
 	{
 		//https://stackoverflow.com/questions/281640/how-do-i-get-a-human-readable-file-size-in-bytes-abbreviation-using-net
-
 
 		int order = 0;
 
@@ -199,7 +202,6 @@ public static class MathHelper
 		// Adjust the format string to your preferences. For example "{0:0.#}{1}" would
 		// show a single decimal place, and no space.
 		string result = $"{len:0.##} {BytePrefixes[order]}";
-
 
 		return result;
 	}
@@ -245,7 +247,6 @@ public static class MathHelper
 		internal static readonly Func<T, T, T> Sub;
 		internal static readonly Func<T, T, T> Mul;
 		internal static readonly Func<T, T, T> Div;
-
 
 		static MathImplementation()
 		{

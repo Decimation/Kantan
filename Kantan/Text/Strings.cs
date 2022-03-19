@@ -19,13 +19,11 @@ using static Kantan.Internal.Common;
 
 // ReSharper disable InconsistentNaming
 
-
 // ReSharper disable UnusedMember.Local
 
 // ReSharper disable StringIndexOfIsCultureSpecific.1
 
 // ReSharper disable UnusedMember.Global
-
 
 namespace Kantan.Text;
 
@@ -41,7 +39,7 @@ public static partial class Strings
 {
 	public static string RemoveNewLines(this string s) => s.Remove(LineControlCharacters);
 
-	public static string Remove(this String s, string[] rg)
+	public static string Remove(this string s, string[] rg)
 	{
 		return rg.Aggregate(s, (current, t) => current.Replace(t, string.Empty));
 	}
@@ -71,8 +69,8 @@ public static partial class Strings
 		return value.Length <= maxLength ? value : value[..maxLength];
 	}
 
-	[CanBeNull]
-	public static string NormalizeNull([CanBeNull] string str) => String.IsNullOrWhiteSpace(str) ? null : str;
+	[CBN]
+	public static string NormalizeNull([CBN] string str) => String.IsNullOrWhiteSpace(str) ? null : str;
 
 	public static int MeasureRows(string s)
 	{
@@ -98,7 +96,6 @@ public static partial class Strings
 
 		// var nc2 = Regex.Matches(s, Environment.NewLine).Count;
 		// var nc2x = s.Split(Environment.NewLine).Length;
-
 
 		var length = s.Length - nc;
 
@@ -202,7 +199,6 @@ public static partial class Strings
 			}
 		}
 
-
 		// Step 7
 		return d[n, m];
 	}
@@ -255,7 +251,6 @@ public static partial class Strings
 		return s.JSubstring(i.Value);
 	}
 
-
 	/// <summary>
 	///     <returns>String value after [last] <paramref name="a" /></returns>
 	/// </summary>
@@ -304,7 +299,6 @@ public static partial class Strings
 	{
 		//https://stackoverflow.com/questions/48621267/is-there-a-way-to-center-text-in-powershell
 
-
 		var count = (int) (Math.Max(0, width / 2) - Math.Floor((double) str.Length / 2));
 
 		return $"{new string(' ', count)}{str}";
@@ -350,7 +344,6 @@ public static partial class Strings
 
 			var sb = new StringBuilder();
 
-
 			switch (fmt) {
 				case FMT_P:
 					sb.Append(HEX_PREFIX);
@@ -381,13 +374,11 @@ public static partial class Strings
 
 	#endregion
 
-
 	#region Join
 
 	public static string FormatJoin<T>(this IEnumerable<T> values, string format, IFormatProvider provider = null,
 	                                   string delim = Constants.JOIN_COMMA) where T : IFormattable
 	{
-
 		return values.Select(v => v.ToString(format, provider)).QuickJoin(delim);
 	}
 
@@ -419,18 +410,20 @@ public static partial class Strings
 
 	#endregion
 
+	private static readonly string[] LineControlCharacters = new[] { "\n", "\r", Environment.NewLine };
+
 	private static readonly Encoding EncodingOEM =
 		CodePagesEncodingProvider.Instance.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
-
-	private static readonly string[] LineControlCharacters = new[] { "\n", "\r", Environment.NewLine };
 
 	public static string EncodingConvert(Encoding src, Encoding dest, string str)
 		=> dest.GetString(Encoding.Convert(src, dest, src.GetBytes(str)));
 
 	public static string EncodingConvert(Encoding src, string str) => EncodingConvert(src, EncodingOEM, str);
 
-	public static bool IsCharInRange(short c, UnicodeRange r) => IsCharInRange((char) c, r);
+	public static bool IsCharInRange(ushort c, UnicodeRange r)
+	{
+		return c < r.FirstCodePoint + r.Length && c >= r.FirstCodePoint;
+	}
 
-	public static bool IsCharInRange(char c, UnicodeRange r)
-		=> c < r.FirstCodePoint + r.Length && c >= r.FirstCodePoint;
+	public static bool IsCharInRange(short c, UnicodeRange r) => IsCharInRange(c: unchecked((ushort) c), r);
 }

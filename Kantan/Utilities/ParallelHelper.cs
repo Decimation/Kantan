@@ -45,18 +45,17 @@ public static class ParallelHelper
 		}
 	}
 
-	public static void While(ParallelOptions parallelOptions, Func<bool> condition,
-	                         Action<ParallelLoopState> body)
+	public static ParallelLoopResult While(ParallelOptions parallelOptions, Func<bool> condition,
+	                                       Action<ParallelLoopState> body)
 	{
-		Parallel.ForEach(new InfinitePartitioner(), parallelOptions,
-		                 (ignored, loopState) =>
-		                 {
-			                 if (condition()) {
-				                 body(loopState);
-			                 }
-			                 else {
-				                 loopState.Stop();
-			                 }
-		                 });
+		return Parallel.ForEach(new InfinitePartitioner(), parallelOptions, (ignored, loopState) =>
+		{
+			if (condition()) {
+				body(loopState);
+			}
+			else {
+				loopState.Stop();
+			}
+		});
 	}
 }

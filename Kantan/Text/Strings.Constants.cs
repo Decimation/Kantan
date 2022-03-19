@@ -12,6 +12,7 @@ public static partial class Strings
 		///     Scope resolution operator
 		/// </summary>
 		public const string JOIN_SCOPE = "::";
+
 		public const string JOIN_SPACE = " ";
 		public const string JOIN_COMMA = ", ";
 
@@ -75,7 +76,10 @@ public static partial class Strings
 
 		#endregion
 
-		public static string Separator   { get; set; } = new('-', 20);
+		public static string ClearLine => new('\r', System.Console.BufferWidth);
+
+		public static string Separator { get; set; } = new('-', 20);
+
 		public static string Indentation { get; set; } = new(' ', 5);
 	}
 }

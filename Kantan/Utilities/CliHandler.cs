@@ -7,6 +7,7 @@ using Kantan.Collections;
 using Kantan.Diagnostics;
 using Kantan.Text;
 using static Kantan.Diagnostics.LogCategories;
+
 // ReSharper disable EmptyConstructor
 
 // ReSharper disable UnusedMember.Global
@@ -21,7 +22,6 @@ public class CliHandler
 
 	[CanBeNull]
 	public CliParameter Default { get; set; }
-
 
 	public void Run() => Run(Environment.GetCommandLineArgs());
 
@@ -50,10 +50,8 @@ public class CliHandler
 
 		}
 
-
 	}
 }
-
 
 public record CliParameter
 {
@@ -64,7 +62,6 @@ public record CliParameter
 	/// <remarks><c>0</c> for switch parameter</remarks>
 	public int ArgumentCount { get; init; }
 
-
 	internal void Handle(IEnumerator<string> argEnum)
 	{
 
@@ -72,7 +69,7 @@ public record CliParameter
 
 		if (ArgumentCount == 0) {
 			// switch
-			Function(new[] {true.ToString()});
+			Function(new[] { true.ToString() });
 			return;
 		}
 

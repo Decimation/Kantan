@@ -44,9 +44,12 @@ public class MediaResource : IDisposable
 			return false;
 		}
 
-		using var client = new HttpClient();
+		// using var client = new HttpClient();
 
 		var flurlResponse = HttpUtilities.GetHttpResponse(url, timeout, token: token, method: HttpMethod.Get);
+
+		// var t = url.WithTimeout(TimeSpan.FromMilliseconds(timeout ?? HttpUtilities.Timeout)).GetAsync();
+		// t.Wait();
 
 		mr.Response = flurlResponse.ResponseMessage;
 
@@ -59,8 +62,7 @@ public class MediaResource : IDisposable
 			return false;
 		}
 
-		mr.Url      = new Uri(url);
-		
+		mr.Url = new Uri(url);
 
 		/* Check content-type */
 
@@ -95,7 +97,6 @@ public class MediaResource : IDisposable
 			size = size || length >= filter.MinimumSize.Value;
 		}
 
-
 		if (filter.DiscreteType != default /*|| filter.DiscreteType!= DiscreteMimeType.Other*/) {
 			if (mediaType != null) {
 				type = mediaType.StartsWith(filter.DiscreteType, StringComparison.InvariantCultureIgnoreCase)
@@ -109,7 +110,6 @@ public class MediaResource : IDisposable
 		else {
 			type = true;
 		}
-
 
 		return type && size;
 	}

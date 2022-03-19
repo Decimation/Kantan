@@ -11,39 +11,39 @@ namespace Kantan.Text;
 
 public static class StringBuilderHelper
 {
-	public static StringBuilder Append(this StringBuilder sb, string name, object? val, string? valStr = null,
-	                                   bool newLine = true, Color? nameColor = null)
+	public static StringBuilder Append(this StringBuilder sb, string name, object? val,
+	                                   string? valStr = null, bool newLine = true, Color? nameColor = null)
 	{
-		if (val != null) {
-
-			// Patterns are so epic
-
-			switch (val) {
-				case IList { Count: 0 }:
-				case string s when String.IsNullOrWhiteSpace(s):
-					return sb;
-
-				default:
-				{
-					valStr ??= val.ToString();
-
-					if (nameColor.HasValue) {
-						name = name.AddColor(nameColor.Value);
-					}
-
-					string fs = $"{name}: {valStr}".Truncate();
-
-					if (newLine) {
-						fs += "\n";
-					}
-
-					sb.Append(fs);
-					break;
-				}
-			}
-
+		if (val == null) {
+			goto ret;
 		}
 
+		// Patterns are so epic
+
+		switch (val) {
+			case IList { Count: 0 }:
+			case string s when String.IsNullOrWhiteSpace(s):
+				return sb;
+
+			default:
+			{
+				valStr ??= val.ToString();
+
+				if (nameColor.HasValue) {
+					name = name.AddColor(nameColor.Value);
+				}
+
+				string fs = $"{name}: {valStr}".Truncate();
+
+				if (newLine) {
+					fs += "\n";
+				}
+
+				sb.Append(fs);
+				break;
+			}
+		}
+		ret:
 		return sb;
 	}
 }

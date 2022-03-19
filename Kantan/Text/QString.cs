@@ -8,7 +8,7 @@ namespace Kantan.Text;
 /// <summary>
 /// Mutable extended string type.
 /// </summary>
-public class QString
+public readonly struct QString
 {
 	private readonly StringBuilder m_value;
 
@@ -72,15 +72,9 @@ public class QString
 		Remove(r.Start.Value, (r.End.Value - r.Start.Value));
 	}*/
 
-	public void Append(string value)
-	{
-		m_value.Append(value);
-	}
+	public void Append(string value) => m_value.Append(value);
 
-	public void Append(QString value)
-	{
-		m_value.Append(value);
-	}
+	public void Append(QString value) => m_value.Append(value);
 
 	public static QString operator +(QString a, QString b)
 	{
@@ -94,8 +88,5 @@ public class QString
 
 	public QString Copy() => new(m_value);
 
-	public override string ToString()
-	{
-		return Value;
-	}
+	public override string ToString() => Value;
 }

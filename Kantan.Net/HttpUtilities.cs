@@ -26,6 +26,7 @@ using Kantan.Diagnostics;
 using Kantan.Model;
 using Kantan.Net.Properties;
 using Newtonsoft.Json;
+
 #pragma warning disable CS0168, IDE0051
 #pragma warning disable IDE0060
 
@@ -42,7 +43,6 @@ using Newtonsoft.Json;
 
 // ReSharper disable UnusedMember.Global
 #nullable disable
-
 
 namespace Kantan.Net;
 
@@ -66,7 +66,6 @@ public static class HttpUtilities
 	{
 		ServicePointManager.SecurityProtocol =
 			SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
-
 
 		const string fieldName = "_sendStatus";
 
@@ -97,6 +96,7 @@ public static class HttpUtilities
 
 				var resp1 = GetHttpResponse(url, method: HttpMethod.Head);
 				var resp  = resp1.ResponseMessage;
+
 				switch (resp.StatusCode) {
 					case HttpStatusCode.OK:
 						return newUrl;
@@ -222,7 +222,6 @@ public static class HttpUtilities
 		return dir;
 	}
 
-
 	public static Stream GetStream(this HttpClient client, string url)
 	{
 		var task = client.GetStreamAsync(url);
@@ -261,40 +260,40 @@ public static class HttpUtilities
 		return output;
 	}
 
+	private static readonly FlurlClient Client = new()
+	{
+		Settings =
+			{ }
+	};
+
 	[CBN]
 	[MURV]
 	public static async Task<IFlurlResponse> GetHttpResponseAsync(string url, int? ms = null,
-	                                                                   [CBN] HttpMethod method = null,
-	                                                                   bool allowAutoRedirect = true,
-	                                                                   int? maxAutoRedirects = null,
-	                                                                   CancellationToken? token = null)
+	                                                              [CBN] HttpMethod method = null,
+	                                                              bool allowAutoRedirect = true,
+	                                                              int? maxAutoRedirects = null,
+	                                                              CancellationToken? token = null)
 	{
 
 		method ??= HttpMethod.Get;
 		token  ??= CancellationToken.None;
 		ms     ??= Timeout;
 
-		var c = new FlurlClient()
+		var f = new FlurlRequest(url)
 		{
+			Client = Client,
 			Settings =
 			{
 				Timeout = TimeSpan.FromMilliseconds(ms.Value),
 				Redirects =
 				{
 					MaxAutoRedirects = maxAutoRedirects ?? MaxAutoRedirects,
-					Enabled          = allowAutoRedirect,
-				}
-			}
-		};
-
-		var f = new FlurlRequest(url)
-		{
-			Client = c,
-			Settings =
-				{ },
+					Enabled          = allowAutoRedirect
+				} 
+			},
 			Verb = method
 		};
-		
+
 		f = f.AllowAnyHttpStatus();
 
 		/*using var request = new HttpRequestMessage
@@ -325,16 +324,15 @@ public static class HttpUtilities
 			return null;
 		}
 
-
 	}
 
 	[CBN]
 	[MURV]
 	public static IFlurlResponse GetHttpResponse(string url, int? ms = null,
-	                                                  [CBN] HttpMethod method = null,
-	                                                  bool allowAutoRedirect = true,
-	                                                  int? maxAutoRedirects = null,
-	                                                  CancellationToken? token = null)
+	                                             [CBN] HttpMethod method = null,
+	                                             bool allowAutoRedirect = true,
+	                                             int? maxAutoRedirects = null,
+	                                             CancellationToken? token = null)
 	{
 
 		token ??= CancellationToken.None;
