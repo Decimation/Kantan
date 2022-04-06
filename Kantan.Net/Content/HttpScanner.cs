@@ -13,13 +13,9 @@ namespace Kantan.Net.Content;
 /// <summary>
 /// <a href="https://mimesniff.spec.whatwg.org/">See</a>
 /// </summary>
-public static class MScanner
+public static class HttpScanner
 {
 	private const int RSRC_HEADER_LEN = 1445;
-
-	private const string MT_TEXT_PLAIN = "text/plain";
-
-	private const string MT_APPLICATION_OCTET_STREAM = "application/octet-stream";
 
 	/// <remarks><a href="https://mimesniff.spec.whatwg.org/#sniffing-a-mislabeled-binary-resource">7.2</a></remarks>
 	public static string IsBinaryResource(byte[] input)
@@ -32,29 +28,20 @@ public static class MScanner
 
 		switch (l) {
 			case >= 2 when (input.SequenceEqual(seq1a) || input.SequenceEqual(seq1b)):
-				return MT_TEXT_PLAIN;
+				return HttpTypes.MT_TEXT_PLAIN;
 			case >= 3 when (input.SequenceEqual(seq2)):
-				return MT_TEXT_PLAIN;
+				return HttpTypes.MT_TEXT_PLAIN;
 
 		}
 
 		if (!input.Any(IsBinaryDataByte)) {
-			return MT_TEXT_PLAIN;
+			return HttpTypes.MT_TEXT_PLAIN;
 		}
 
-		return MT_APPLICATION_OCTET_STREAM;
+		return HttpTypes.MT_APPLICATION_OCTET_STREAM;
 	}
 
-	public static IEnumerable<MTypeSignature> Check(MBinaryResource r)
-	{
-		foreach (MTypeSignature s in MTypeSignature.All) {
-			if (CheckPattern(r.Header, s)) {
-				yield return s;
-			}
-		}
-	}
-
-	public static bool CheckPattern(byte[] input, MTypeSignature s, ISet<byte> ignored = null)
+	public static bool CheckPattern(byte[] input, HttpTypes s, ISet<byte> ignored = null)
 		=> CheckPattern(input, s.Pattern, s.Mask, ignored);
 
 	/// <remarks><a href="https://mimesniff.spec.whatwg.org/#matching-a-mime-type-pattern">6</a></remarks>

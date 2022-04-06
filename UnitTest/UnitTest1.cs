@@ -38,9 +38,9 @@ public class MimeTests2
 		var png1 =
 			"https://kemono.party/data/45/a0/45a04a55cdc142ee78f6f00452886bc4b336d9f35d3d851f5044852a7e26b5da.png";
 
-		var png = await MBinaryResource.GetResourceAsync(png1);
+		var png = await HttpResource.GetAsync(png1);
 
-		Assert.True(MScanner.Check(png).Contains(MTypeSignature.png));
+		Assert.True(png.Resolve().Contains(HttpTypes.png));
 	}
 }
 

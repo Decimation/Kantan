@@ -5,13 +5,13 @@ using AngleSharp.Html.Dom;
 
 namespace Kantan.Net.Media.Filters;
 
-public sealed class MediaImageFilter : IMediaResourceFilter
+public sealed class MediaImageFilter : MediaResourceFilter
 {
 	public static readonly MediaImageFilter Default = new();
 
-	public int? MinimumSize => 50_000;
+	public override int? MinimumSize => 50_000;
 
-	public bool UrlFilter(string url)
+	public override bool UrlFilter(string url)
 	{
 		if (url.Contains("www.deviantart.com")) {
 			//https://images-wixmp-
@@ -33,9 +33,9 @@ public sealed class MediaImageFilter : IMediaResourceFilter
 		return true;
 	}
 
-	public string DiscreteType => DiscreteMediaTypes.Image;
+	public override string DiscreteType => DiscreteMediaTypes.Image;
 
-	public List<string> GetUrls(IHtmlDocument document)
+	public override List<string> GetUrls(IHtmlDocument document)
 	{
 		var rg = document.QuerySelectorAttributes("img", "src")
 		                 .Union(document.QuerySelectorAttributes("a", "href"))
@@ -44,5 +44,5 @@ public sealed class MediaImageFilter : IMediaResourceFilter
 		return rg;
 	}
 
-	public List<string> TypeBlacklist => new() { "image/svg+xml" };
+	public override List<string> TypeBlacklist => new() { "image/svg+xml" };
 }

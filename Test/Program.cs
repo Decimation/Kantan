@@ -15,6 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AngleSharp;
 using AngleSharp.Dom;
+using AngleSharp.Html.Parser;
 using AngleSharp.Io;
 using AngleSharp.Io.Network;
 using Flurl.Http;
@@ -79,12 +80,19 @@ public static class Program
 	private static async Task Main(string[] args)
 	{
 
-		var rg = new[]
+		var rg1 = new[]
 		{
 			@"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png",
 			@"https://i.imgur.com/QtCausw.png",
+			@"https://en.wikipedia.org/wiki/Lambda_calculus",
+			@"http://www.zerochan.net/2750747",
 			"https://scontent-ord1-1.xx.fbcdn.net/t31.0-8/14715634_1300559193310808_8524406991247613051_o.jpg",
 			"https://kemono.party/data/45/a0/45a04a55cdc142ee78f6f00452886bc4b336d9f35d3d851f5044852a7e26b5da.png"
+		};
+
+		var rg = new[]
+		{
+			@"http://www.zerochan.net/2750747",
 		};
 
 		foreach (string s in rg) {
@@ -97,17 +105,50 @@ public static class Program
 			catch (Exception e) {
 				Console.WriteLine($"Failed 1");
 			}*/
+			var sw = Stopwatch.StartNew();
 
-			var r = await MBinaryResource.GetResourceAsync(s);
+			MediaResourceFilter filter = new MediaImageFilter();
 
-			if (r== null) {
-				Console.WriteLine("Failed 2");
+			string r = await s.GetStringAsync();
+
+			if (r == null) {
+				continue;
+
 			}
 			else {
-				var c = MScanner.Check(r);
-				Console.WriteLine(c.QuickJoin());
+				var urls = filter.GetUrls(
+					new HtmlParser().ParseDocument(r));
+				urls = filter.Refine(urls);
+
+				Parallel.ForEach(urls, (s1, state) =>
+				{
+					var c1 = HttpResource.GetAsync(s1);
+					c1.Wait();
+					var c = c1.Result;
+
+					if (c != null) {
+						var rr = c.Resolve();
+						Console.WriteLine(rr.QuickJoin());
+
+					}
+				});
+
+				sw.Stop();
+				Console.WriteLine($"{sw.Elapsed.TotalSeconds}");
 
 			}
+
+			sw.Restart();
+
+			Test1(s, filter);
+			sw.Stop();
+			Console.WriteLine($"{sw.Elapsed.TotalSeconds}");
 		}
+	}
+
+	private static void Test1(string s, MediaResourceFilter filter)
+	{
+		var u2 = MediaSniffer.Scan(s, filter);
+		Console.WriteLine(u2.QuickJoin());
 	}
 }
