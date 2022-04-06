@@ -26,6 +26,7 @@ using Kantan.Collections;
 using Kantan.Internal;
 using Kantan.Model;
 using Kantan.Net;
+using Kantan.Net.Content;
 using Kantan.Net.Media;
 using Kantan.Net.Media.Filters;
 using Kantan.Net.Media.Resolvers;
@@ -82,17 +83,9 @@ public static class Program
 			                  MediaImageFilter.Default, out var br));
 			                  */
 		var u = "https://kemono.party/data/45/a0/45a04a55cdc142ee78f6f00452886bc4b336d9f35d3d851f5044852a7e26b5da.png";
-		var h = await u.GetAsync();
-		var r = await QScanner.ReadResourceHeader(await h.GetStreamAsync());
-		Console.WriteLine(r.Length);
-		Console.WriteLine(QScanner.Resolve(r));
-
-		var s  = "89 50 4E 47 0D 0A 1A 0A".Split(' ');
-		var pp = s.Select(x => Byte.Parse(x, NumberStyles.HexNumber)).ToArray();
-		Console.WriteLine(pp.FormatJoin("X"));
-
-		Console.WriteLine(QScanner.Pattern(r, QScanner.png_pattern, QScanner.png_mask, QScanner.EmptyIgnored));
-		Console.WriteLine(QScanner.Pattern(r, QScanner.jpg_pattern, QScanner.jpg_mask, QScanner.EmptyIgnored));
+		var r = await MBinaryResource.GetResourceAsync(u);
+		var c = MScanner.Check(r);
+		Console.WriteLine(c.QuickJoin());
 	}
 
 	readonly struct MyStruct2 { }
@@ -147,7 +140,7 @@ public static class Program
 		}, 1, out _);
 	}
 
-	private static          ConsoleDialog _dialog;
+	private static ConsoleDialog _dialog;
 
 	private class ConsoleOption1 : IConsoleOption
 	{

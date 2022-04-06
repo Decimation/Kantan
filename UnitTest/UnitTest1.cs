@@ -4,11 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Unicode;
+using System.Threading.Tasks;
 using Kantan.Cli;
 using Kantan.Collections;
 using Kantan.Diagnostics;
 using Kantan.Model;
 using Kantan.Net;
+using Kantan.Net.Content;
 using Kantan.Net.Media;
 using Kantan.Net.Media.Filters;
 using Kantan.Numeric;
@@ -27,6 +29,20 @@ using NUnit.Framework;
 
 namespace UnitTest;
 
+[TestFixture]
+public class MimeTests2
+{
+	[Test]
+	public async Task Test1()
+	{
+		var png1 =
+			"https://kemono.party/data/45/a0/45a04a55cdc142ee78f6f00452886bc4b336d9f35d3d851f5044852a7e26b5da.png";
+
+		var png = await MBinaryResource.GetResourceAsync(png1);
+
+		Assert.True(MScanner.Check(png).Contains(MTypeSignature.png));
+	}
+}
 
 [TestFixture]
 public class MimeTypeTests
@@ -34,11 +50,10 @@ public class MimeTypeTests
 	[Test]
 	[TestCase("https://www.zerochan.net/2750747", "http://s1.zerochan.net/atago.(azur.lane).600.2750747.jpg")]
 	[TestCase("https://www.zerochan.net/2750747", "http://static.zerochan.net/atago.(azur.lane).full.2750747.png")]
-
 	public void Test1(string u, string s)
 	{
 		var binaryUris = MediaSniffer.Scan(u, new MediaImageFilter());
-		Assert.True(binaryUris.Select(x=>x.Url.ToString()).ToList().Contains(s));
+		Assert.True(binaryUris.Select(x => x.Url.ToString()).ToList().Contains(s));
 	}
 }
 
@@ -115,7 +130,6 @@ public class EnumerableTests
 			4, 5, 6, 3, 2, 1, 5, 6, 4, 5, 6, 5, 5, 5, 4, 5, 6
 		}));
 	}
-
 
 	[Test]
 	public void ReplaceAllSequencesTest()
@@ -328,15 +342,16 @@ public class Tests
 	[TestCase("https://www.zerochan.net/2750747")]
 	public void ResetRequestTest(string s)
 	{
-		var message = new HttpRequestMessage(method: HttpMethod.Get,s);
+		var message = new HttpRequestMessage(method: HttpMethod.Get, s);
 		var client  = new HttpClient();
 		client.Send(message);
 		Assert.True(message.IsSent());
 		message.ResetStatus();
 		Assert.False(message.IsSent());
-		var r=client.Send(message);
+		var r = client.Send(message);
 		Assert.True(r.IsSuccessStatusCode);
 	}
+
 	[Test]
 	public void StringTest()
 	{
@@ -390,7 +405,6 @@ public class NetworkTests
 		Assert.True(UriUtilities.IsUri(jpg, out var u));
 		Assert.True(message.ResponseMessage.Content.Resolve().Contains("jpeg"));
 
-
 	}
 
 	[Test]
@@ -402,12 +416,10 @@ public class NetworkTests
 		if (r == null) {
 			Assert.Inconclusive();
 		}
-		
 
 		string type = r.ResponseMessage.Content.Headers.ContentType.MediaType;
 
 		var type2 = MediaSniffer.Resolve(r.ResponseMessage.Content);
-
 
 		Assert.AreEqual(type2, "image/png");
 	}
