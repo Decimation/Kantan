@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -80,9 +81,23 @@ public static class Program
 			                  "https://scontent-ord1-1.xx.fbcdn.net/t31.0-8/14715634_1300559193310808_8524406991247613051_o.jpg",
 			                  MediaImageFilter.Default, out var br));
 			                  */
-		await ConsoleTest();
+		var u = "https://kemono.party/data/45/a0/45a04a55cdc142ee78f6f00452886bc4b336d9f35d3d851f5044852a7e26b5da.png";
+		var h = await u.GetAsync();
+		var r = await QScanner.ReadResourceHeader(await h.GetStreamAsync());
+		Console.WriteLine(r.Length);
+		Console.WriteLine(QScanner.Resolve(r));
 
+		var s  = "89 50 4E 47 0D 0A 1A 0A".Split(' ');
+		var pp = s.Select(x => Byte.Parse(x, NumberStyles.HexNumber)).ToArray();
+		Console.WriteLine(pp.FormatJoin("X"));
+
+		Console.WriteLine(QScanner.Pattern(r, QScanner.png_pattern, QScanner.png_mask, QScanner.EmptyIgnored));
+		Console.WriteLine(QScanner.Pattern(r, QScanner.jpg_pattern, QScanner.jpg_mask, QScanner.EmptyIgnored));
 	}
+
+	readonly struct MyStruct2 { }
+
+	struct MyStruct { }
 
 	[RequiresPreviewFeatures]
 	interface IInterface
@@ -132,7 +147,7 @@ public static class Program
 		}, 1, out _);
 	}
 
-	private static ConsoleDialog _dialog;
+	private static          ConsoleDialog _dialog;
 
 	private class ConsoleOption1 : IConsoleOption
 	{
