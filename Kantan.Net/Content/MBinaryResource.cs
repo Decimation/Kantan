@@ -24,8 +24,14 @@ public sealed class MBinaryResource : IDisposable
 
 	public static async Task<MBinaryResource> GetResourceAsync(string u)
 	{
-		var response = await u.GetAsync();
-		var stream   = await response.GetStreamAsync();
+		//todo: error handling
+		var response = await u.AllowHttpStatus("400-404,6xx").AllowAnyHttpStatus().GetAsync();
+
+		if (response is not { ResponseMessage: { IsSuccessStatusCode: true } }) {
+			return null;
+		}
+
+		var stream = await response.GetStreamAsync();
 
 		var resource = new MBinaryResource()
 		{

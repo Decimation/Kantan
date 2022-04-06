@@ -79,17 +79,35 @@ public static class Program
 	private static async Task Main(string[] args)
 	{
 
-		const string u2 = @"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png";
-		const string u3 = @"https://i.imgur.com/QtCausw.png";
+		var rg = new[]
+		{
+			@"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png",
+			@"https://i.imgur.com/QtCausw.png",
+			"https://scontent-ord1-1.xx.fbcdn.net/t31.0-8/14715634_1300559193310808_8524406991247613051_o.jpg",
+			"https://kemono.party/data/45/a0/45a04a55cdc142ee78f6f00452886bc4b336d9f35d3d851f5044852a7e26b5da.png"
+		};
 
-		const string u1 =
-			"https://scontent-ord1-1.xx.fbcdn.net/t31.0-8/14715634_1300559193310808_8524406991247613051_o.jpg";
+		foreach (string s in rg) {
+			Console.WriteLine(s);
 
-		var u4 = "https://kemono.party/data/45/a0/45a04a55cdc142ee78f6f00452886bc4b336d9f35d3d851f5044852a7e26b5da.png";
+			/*try {
+				Console.WriteLine(MediaResource.FromUrl(
+					                  s, MediaImageFilter.Default, out var br));
+			}
+			catch (Exception e) {
+				Console.WriteLine($"Failed 1");
+			}*/
 
-		Console.WriteLine(MediaResource.FromUrl(u1, MediaImageFilter.Default, out var br));
-		var r = await MBinaryResource.GetResourceAsync(u4);
-		var c = MScanner.Check(r);
-		Console.WriteLine(c.QuickJoin());
+			var r = await MBinaryResource.GetResourceAsync(s);
+
+			if (r== null) {
+				Console.WriteLine("Failed 2");
+			}
+			else {
+				var c = MScanner.Check(r);
+				Console.WriteLine(c.QuickJoin());
+
+			}
+		}
 	}
 }

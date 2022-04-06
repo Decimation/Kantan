@@ -11,14 +11,14 @@ using Kantan.Text;
 namespace Test;
 
 [Flags]
-enum MyEnum1
+public enum MyEnum1
 {
 	a = 1 << 0,
 	b = 1 << 1,
 	c = 1 << 2
 }
 
-internal class Tests_Console
+public class Tests_Console
 {
 	private static void ConsoleTest4()
 	{
@@ -126,7 +126,7 @@ internal class Tests_Console
 			},
 			Status         = "hi1",
 			SelectMultiple = true,
-			Options        = ConsoleOption.FromEnum<Program.MyEnum1>().ToList()
+			Options        = ConsoleOption.FromEnum<MyEnum1>().ToList()
 		};
 
 		var r = dialog.ReadInputAsync(c);
@@ -150,7 +150,7 @@ internal class Tests_Console
 			},
 			Status         = "hi1",
 			SelectMultiple = true,
-			Options        = ConsoleOption.FromEnum<Program.MyEnum1>().ToList()
+			Options        = ConsoleOption.FromEnum<MyEnum1>().ToList()
 		};
 
 		var r = dialog.ReadInputAsync();
