@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Kantan.Utilities;
@@ -13,7 +14,41 @@ public static class ParallelHelper
 	/*
 	 * https://devblogs.microsoft.com/pfxteam/implementing-parallel-while-with-parallel-foreach/
 	 */
+	public static async Task ForeachAsync<T>(IEnumerable<T> source, int maxParallelCount, Func<T, Task> action)
+	{
+		using (SemaphoreSlim completeSemphoreSlim = new SemaphoreSlim(1))
+		using (SemaphoreSlim taskCountLimitsemaphoreSlim = new SemaphoreSlim(maxParallelCount))
+		{
+			await completeSemphoreSlim.WaitAsync();
+			int runningtaskCount = source.Count();
 
+			foreach (var item in source)
+			{
+				await taskCountLimitsemaphoreSlim.WaitAsync();
+
+				Task.Run(async () =>
+				{
+					try
+					{
+						await action(item).ContinueWith(task =>
+						{
+							Interlocked.Decrement(ref runningtaskCount);
+							if (runningtaskCount == 0)
+							{
+								completeSemphoreSlim.Release();
+							}
+						});
+					}
+					finally
+					{
+						taskCountLimitsemaphoreSlim.Release();
+					}
+				}).GetHashCode();
+			}
+
+			await completeSemphoreSlim.WaitAsync();
+		}
+	}
 	public sealed class InfinitePartitioner : Partitioner<bool>
 	{
 		public override IList<IEnumerator<bool>> GetPartitions(int partitionCount)

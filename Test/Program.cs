@@ -96,54 +96,95 @@ public static class Program
 		};
 
 		foreach (string s in rg) {
-			Console.WriteLine(s);
+			var sw = Stopwatch.StartNew();
+			Console.WriteLine($">{s}");
 
-			/*try {
+			MediaResourceFilter filter = new MediaImageFilter();
+
+			string r;
+
+			try {
+				r = await s.AllowAnyHttpStatus().GetStringAsync();
+			}
+			catch (Exception e) {
+				continue;
+			}
+
+			var urls = filter.GetUrls(
+				new HtmlParser().ParseDocument(r));
+
+			urls = filter.Refine(urls)
+			             .Where(x => x != null)
+			             // .DistinctBy(x => UriUtilities.GetHostUri(new Uri(x)))
+			             .Distinct()
+			             .ToList();
+			sw.Stop();
+			Console.WriteLine($"{sw.Elapsed.TotalSeconds}");
+			sw.Restart();
+
+			await ParallelHelper.ForeachAsync(urls, 100, async (s1) =>
+			{
+				var url = s1;
+				Console.WriteLine($">>{url}");
+
+				var t = await HttpResource.GetAsync(url);
+				// t.Wait();
+				// var tt = t.Result;
+
+				if (t is { }) {
+					Console.WriteLine($"{t}");
+				}
+			});
+
+			Console.WriteLine($"{sw.Elapsed.TotalSeconds}");
+
+		}
+	}
+
+	private static async Task Test2(string s)
+	{
+		Console.WriteLine(s);
+
+		/*try {
 				Console.WriteLine(MediaResource.FromUrl(
 					                  s, MediaImageFilter.Default, out var br));
 			}
 			catch (Exception e) {
 				Console.WriteLine($"Failed 1");
 			}*/
-			var sw = Stopwatch.StartNew();
+		var sw = Stopwatch.StartNew();
 
-			MediaResourceFilter filter = new MediaImageFilter();
+		MediaResourceFilter filter = new MediaImageFilter();
 
-			string r = await s.GetStringAsync();
+		string r = await s.GetStringAsync();
 
-			if (r == null) {
-				continue;
+		if (r == null) {
+			return;
 
-			}
-			else {
-				var urls = filter.GetUrls(
-					new HtmlParser().ParseDocument(r));
-				urls = filter.Refine(urls);
+		}
+		else {
+			var urls = filter.GetUrls(
+				new HtmlParser().ParseDocument(r));
+			urls = filter.Refine(urls);
 
-				Parallel.ForEach(urls, (s1, state) =>
-				{
-					var c1 = HttpResource.GetAsync(s1);
-					c1.Wait();
-					var c = c1.Result;
+			Parallel.ForEach(urls, (s1, state) =>
+			{
+				var c1 = HttpResource.GetAsync(s1);
+				c1.Wait();
+				var c = c1.Result;
 
-					if (c != null) {
-						var rr = c.Resolve();
-						Console.WriteLine(rr.QuickJoin());
+				if (c != null) {
+					var rr = c.Resolve();
+					Console.WriteLine(rr.QuickJoin());
 
-					}
-				});
+				}
+			});
 
-				sw.Stop();
-				Console.WriteLine($"{sw.Elapsed.TotalSeconds}");
-
-			}
-
-			sw.Restart();
-
-			Test1(s, filter);
 			sw.Stop();
 			Console.WriteLine($"{sw.Elapsed.TotalSeconds}");
+
 		}
+
 	}
 
 	private static void Test1(string s, MediaResourceFilter filter)
