@@ -50,54 +50,6 @@ using System;
 
 public static class Program
 {
-	private static async Task Main(string[] args)
-	{
-
-		/*var client = new HttpClient();
-		var message = await client.GetAsync(@"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png");
-		var sw = new Stopwatch();
-		sw.Start();
-		string b = message.Content.GetMediaTypeFromData();
-		sw.Stop();
-		Console.WriteLine(b);
-		Console.WriteLine(message.Content.Headers.ContentType);
-		Console.WriteLine(sw.Elapsed.TotalMilliseconds);*/
-
-		// var url = @"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png";
-		/*var url = @"https://i.imgur.com/QtCausw.png";
-		RuntimeHelpers.RunClassConstructor(typeof(MediaSniffer).TypeHandle);
-		var sw = Stopwatch.StartNew();
-		Console.WriteLine(MediaSniffer.Resolve(url));
-		sw.Stop();
-		Console.WriteLine(sw.Elapsed.TotalSeconds);
-		sw.Restart();
-		Console.WriteLine(MediaSniffer.Resolve(url));
-		sw.Stop();
-		Console.WriteLine(sw.Elapsed.TotalSeconds);
-		
-		var u=HttpUtilities.GetHttpResponse(
-			"https://scontent-ord1-1.xx.fbcdn.net/t31.0-8/14715634_1300559193310808_8524406991247613051_o.jpg");
-		Console.WriteLine(u);
-		Console.WriteLine(MediaResource.FromUrl(
-			                  "https://scontent-ord1-1.xx.fbcdn.net/t31.0-8/14715634_1300559193310808_8524406991247613051_o.jpg",
-			                  MediaImageFilter.Default, out var br));
-			                  */
-		var u = "https://kemono.party/data/45/a0/45a04a55cdc142ee78f6f00452886bc4b336d9f35d3d851f5044852a7e26b5da.png";
-		var r = await MBinaryResource.GetResourceAsync(u);
-		var c = MScanner.Check(r);
-		Console.WriteLine(c.QuickJoin());
-	}
-
-	readonly struct MyStruct2 { }
-
-	struct MyStruct { }
-
-	[RequiresPreviewFeatures]
-	interface IInterface
-	{
-		static abstract IInterface get<T>(T t);
-	}
-
 	private static void Test1()
 	{
 		var url = @"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png";
@@ -124,151 +76,20 @@ public static class Program
 		_ = new Uri(rg[0]).Host;
 	}
 
-	private static void ConsoleTest4()
+	private static async Task Main(string[] args)
 	{
-		ConsoleManager.Init();
 
-		ConsoleManager.Win32.WriteConsoleInput(ConsoleManager.StdIn, new[]
-		{
-			new InputRecord()
-			{
-				KeyEvent = new KeyEventRecord()
-				{
-					UnicodeChar = 'A'
-				}
-			}
-		}, 1, out _);
-	}
+		const string u2 = @"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png";
+		const string u3 = @"https://i.imgur.com/QtCausw.png";
 
-	private static ConsoleDialog _dialog;
+		const string u1 =
+			"https://scontent-ord1-1.xx.fbcdn.net/t31.0-8/14715634_1300559193310808_8524406991247613051_o.jpg";
 
-	private class ConsoleOption1 : IConsoleOption
-	{
-		public string a;
-		public int    x;
+		var u4 = "https://kemono.party/data/45/a0/45a04a55cdc142ee78f6f00452886bc4b336d9f35d3d851f5044852a7e26b5da.png";
 
-		public Dictionary<string, object> Data
-			=> new()
-			{
-				["a"] = a,
-				["x"] = x,
-
-			};
-
-		public ConsoleOption GetConsoleOption()
-		{
-			return null;
-		}
-	}
-
-	private static async Task ConsoleTest()
-	{
-		var dialog = new ConsoleDialog()
-		{
-			Subtitle = "a\nb\nc",
-			Functions = new()
-			{
-				[ConsoleKey.F1] = () =>
-				{
-					Console.WriteLine("g");
-
-				},
-			},
-			//SelectMultiple = true,
-			Options = ConsoleOption.FromArray(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 }).ToList()
-		};
-		var myClass = new ConsoleOption1();
-		dialog.Options[0].Data = myClass.Data;
-
-		for (int i = 0; i < dialog.Options.Count; i++) {
-			dialog.Options[i].Data = myClass.Data;
-		}
-
-		dialog.Options[0].Functions[ConsoleModifiers.Shift] = () =>
-		{
-			Console.WriteLine("shift");
-			return null;
-		};
-
-		dialog.Options[0].Functions[ConsoleModifiers.Control] = () =>
-		{
-			Console.WriteLine("ctrl");
-			return null;
-		};
-
-		dialog.Options[0].Functions[ConsoleModifiers.Control | ConsoleModifiers.Alt] = () =>
-		{
-			Console.WriteLine("alt+ctrl");
-			return null;
-		};
-
-		var r = dialog.ReadInputAsync();
-
-		Task.Factory.StartNew(() =>
-		{
-			Thread.Sleep(1000);
-			dialog.Options.Add(new ConsoleOption() { Name = "test" });
-		});
-
-		await r;
-
-		Console.WriteLine(r.Result);
-
-	}
-
-	[Flags]
-	enum MyEnum1
-	{
-		a = 1 << 0,
-		b = 1 << 1,
-		c = 1 << 2
-	}
-
-	private static async Task ConsoleTest3(CancellationToken c)
-	{
-		var dialog = new ConsoleDialog()
-		{
-			Functions = new()
-			{
-				[ConsoleKey.F1] = () =>
-				{
-					Console.WriteLine("g");
-
-				},
-			},
-			Status         = "hi1",
-			SelectMultiple = true,
-			Options        = ConsoleOption.FromEnum<MyEnum1>().ToList()
-		};
-
-		var r = dialog.ReadInputAsync(c);
-		await r;
-
-		Console.WriteLine(r.Result.Output.QuickJoin());
-
-	}
-
-	private static async Task ConsoleTest2()
-	{
-		var dialog = new ConsoleDialog()
-		{
-			Functions = new()
-			{
-				[ConsoleKey.F1] = () =>
-				{
-					Console.WriteLine("g");
-
-				},
-			},
-			Status         = "hi1",
-			SelectMultiple = true,
-			Options        = ConsoleOption.FromEnum<MyEnum1>().ToList()
-		};
-
-		var r = dialog.ReadInputAsync();
-		await r;
-
-		Console.WriteLine(r.Result.Output.QuickJoin());
-
+		Console.WriteLine(MediaResource.FromUrl(u1, MediaImageFilter.Default, out var br));
+		var r = await MBinaryResource.GetResourceAsync(u4);
+		var c = MScanner.Check(r);
+		Console.WriteLine(c.QuickJoin());
 	}
 }
