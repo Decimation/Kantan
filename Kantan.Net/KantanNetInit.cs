@@ -1,4 +1,5 @@
-﻿global using VP = JetBrains.Annotations.ValueProviderAttribute;
+﻿global using KNI=Kantan.Net.KantanNetInit;
+global using VP = JetBrains.Annotations.ValueProviderAttribute;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -29,7 +30,7 @@ public static class KantanNetInit
 
 	public static readonly ILogger Logger;
 
-	public static readonly Assembly Asm = typeof(KantanNetInit).GetTypeInfo().Assembly;
+	public static readonly Assembly Assembly = typeof(KantanNetInit).GetTypeInfo().Assembly;
 
 	static KantanNetInit()
 	{

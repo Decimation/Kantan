@@ -35,53 +35,25 @@ public sealed class HttpMediaResourceFilter : IHttpResourceFilter
 		}
 		*/
 
-		if (url.Contains("www.deviantart.com"))
-		{
+		if (url.Contains("www.deviantart.com")) {
 			//https://images-wixmp-
 			return url.Contains("images-wixmp");
 		}
 
-		if (url.Contains("pbs.twimg.com") || url.Contains("twitter.com"))
-		{
+		if (url.Contains("pbs.twimg.com") || url.Contains("twitter.com")) {
 			return !url.Contains("profile_banners");
 		}
 
-		if (url.StartsWith("https://pbs.twimg.com/profile_banners/"))
-		{
+		if (url.StartsWith("https://pbs.twimg.com/profile_banners/")) {
 			return false;
 		}
 
-		if (url.EndsWith(".svg"))
-		{
+		if (url.EndsWith(".svg")) {
 			return false;
 		}
 
 		return true;
-		
-	}
 
-	private static ResourceManager GetManager(Assembly assembly)
-	{
-		string name = null;
-
-		foreach (string v in assembly.GetManifestResourceNames()) {
-			string value = assembly.GetName().Name;
-
-			if (v.Contains(value!) || v.Contains("EmbeddedResources")) {
-				name = v;
-				break;
-			}
-		}
-
-		if (name == null) {
-			return null;
-		}
-
-		name = name[..name.LastIndexOf('.')];
-
-		var resourceManager = new ResourceManager(name, assembly);
-
-		return resourceManager;
 	}
 
 	public string DiscreteType => DiscreteMediaTypes.Image;

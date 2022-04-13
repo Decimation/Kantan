@@ -44,7 +44,7 @@ public static class MediaSniffer
 	/// <summary>
 	///     Scans for binary resources within a webpage.
 	/// </summary>
-	public static async Task<List<MediaResource>> ScanAsync(string url, ISet<HttpTypes> types, int count = 10,
+	public static async Task<List<MediaResource>> ScanAsync(string url, ISet<HttpType> types, int count = 10,
 	                                                        long? timeoutMS = null,
 	                                                        CancellationToken? token = null,
 	                                                        IMediaResourceFilter b = null)

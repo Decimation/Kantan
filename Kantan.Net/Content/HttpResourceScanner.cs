@@ -39,20 +39,39 @@ public static class HttpResourceScanner
 
 		switch (l) {
 			case >= 2 when (input.SequenceEqual(seq1a) || input.SequenceEqual(seq1b)):
-				return HttpTypes.MT_TEXT_PLAIN;
+				return HttpType.MT_TEXT_PLAIN;
 			case >= 3 when (input.SequenceEqual(seq2)):
-				return HttpTypes.MT_TEXT_PLAIN;
+				return HttpType.MT_TEXT_PLAIN;
 
 		}
 
 		if (!input.Any(IsBinaryDataByte)) {
-			return HttpTypes.MT_TEXT_PLAIN;
+			return HttpType.MT_TEXT_PLAIN;
 		}
 
-		return HttpTypes.MT_APPLICATION_OCTET_STREAM;
+		return HttpType.MT_APPLICATION_OCTET_STREAM;
 	}
 
-	public static bool CheckPattern(byte[] input, HttpTypes s, ISet<byte> ignored = null)
+	/// <remarks><a href="https://mimesniff.spec.whatwg.org/#terminology">3</a></remarks>
+	public static bool IsBinaryDataByte(byte b)
+	{
+		return b is >= 0x00 and <= 0x08 or 0x0B or >= 0x0E and <= 0x1A or >= 0x1C and <= 0x1F;
+	}
+
+	/// <remarks><a href="https://mimesniff.spec.whatwg.org/#reading-the-resource-header">5.2</a></remarks>
+	public static async Task<byte[]> ReadResourceHeader(Stream m)
+	{
+		int d = checked((int) m.Length);
+		int l = d >= RSRC_HEADER_LEN ? RSRC_HEADER_LEN : d;
+
+		byte[] data = new byte[l];
+
+		var l2 = await m.ReadAsync(data, 0, l);
+
+		return data;
+	}
+
+	public static bool CheckPattern(byte[] input, HttpType s, ISet<byte> ignored = null)
 		=> CheckPattern(input, s.Pattern, s.Mask, ignored);
 
 	/// <remarks><a href="https://mimesniff.spec.whatwg.org/#matching-a-mime-type-pattern">6</a></remarks>
@@ -91,22 +110,24 @@ public static class HttpResourceScanner
 		return true;
 	}
 
-	/// <remarks><a href="https://mimesniff.spec.whatwg.org/#terminology">3</a></remarks>
-	public static bool IsBinaryDataByte(byte b)
+	public static async Task<HttpResource[]> ScanAsync(string url, IHttpResourceFilter filter = null)
 	{
-		return b is >= 0x00 and <= 0x08 or 0x0B or >= 0x0E and <= 0x1A or >= 0x1C and <= 0x1F;
-	}
+		filter ??= IHttpResourceFilter.Default;
 
-	/// <remarks><a href="https://mimesniff.spec.whatwg.org/#reading-the-resource-header">5.2</a></remarks>
-	public static async Task<byte[]> ReadResourceHeader(Stream m)
-	{
-		int d = checked((int) m.Length);
-		int l = d >= RSRC_HEADER_LEN ? RSRC_HEADER_LEN : d;
+		List<string> urls = await filter.Extract(url);
 
-		byte[] data = new byte[l];
+		HttpResource[] hr = await Task.WhenAll(urls.Select(async Task<HttpResource>(s1) =>
+		{
+			var rsrc = await HttpResource.GetAsync(s1);
+			rsrc?.Resolve();
 
-		var l2 = await m.ReadAsync(data, 0, l);
+			return rsrc;
+		}));
 
-		return data;
+		hr = hr.Where(x => x is { IsBinary: true } 
+		                   /*&& x.Stream.Length >= filter.MinimumSize
+		                   && filter.TypeBlacklist.Contains(x.ComputedType)*/).ToArray();
+
+		return hr;
 	}
 }

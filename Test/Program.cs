@@ -79,18 +79,9 @@ public static class Program
 
 		foreach (string s in rg1) {
 			var sw = Stopwatch.StartNew();
-			// Console.WriteLine($">{s}");
+			Console.WriteLine($">{s}");
 
-			List<string> urls = await IHttpResourceFilter.Default.Extract(s);
-
-			v = await Task.WhenAll(urls.Select(async Task<HttpResource>(s1) =>
-			{
-				HttpResource httpResource = await HttpResource.GetAsync(s1);
-				httpResource?.Resolve();
-
-				return httpResource;
-			}));
-			v = v.Where(x => x.IsBinary).ToArray();
+			v = await HttpResourceScanner.ScanAsync(s, IHttpResourceFilter.Default);
 			sw.Stop();
 
 			Console.WriteLine($"{sw.Elapsed.TotalSeconds}");
@@ -144,6 +135,12 @@ public static class Program
 		_ = new Uri(rg[0]).Host;
 	}
 
+	private static void Test1(string s, IHttpResourceFilter filter)
+	{
+		var u2 = MediaSniffer.Scan(s, filter);
+		Console.WriteLine(u2.QuickJoin());
+	}
+
 	private static async Task Test2(string s)
 	{
 		Console.WriteLine(s);
@@ -188,11 +185,5 @@ public static class Program
 
 		}
 
-	}
-
-	private static void Test1(string s, IHttpResourceFilter filter)
-	{
-		var u2 = MediaSniffer.Scan(s, filter);
-		Console.WriteLine(u2.QuickJoin());
 	}
 }

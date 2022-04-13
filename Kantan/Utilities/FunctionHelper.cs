@@ -8,7 +8,7 @@ namespace Kantan.Utilities;
 
 public static class FunctionHelper
 {
-	public static List<T> AddUntil<T>(this Func<T> f, Predicate<T> until, Predicate<T> stop)
+	public static List<T> RunUntil<T>(this Func<T> f, Predicate<T> until, Predicate<T> stop)
 	{
 		var rg = new List<T>();
 

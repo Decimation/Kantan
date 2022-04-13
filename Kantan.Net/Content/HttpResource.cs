@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,13 +23,9 @@ namespace Kantan.Net.Content;
 /// </remarks>
 public sealed class HttpResource : IDisposable
 {
-	public string SuppliedType { get; init; }
-
 	public bool CheckBugFlag { get; init; }
 
 	public bool NoSniffFlag { get; init; }
-
-	public string ComputedType { get; private set; }
 
 	public Stream Stream { get; init; }
 
@@ -36,38 +33,19 @@ public sealed class HttpResource : IDisposable
 
 	public byte[] Header { get; init; }
 
-	public List<HttpTypes> ResolvedTypes { get; private set; }
+	public string SuppliedType { get; init; }
 
-	public string Type => ComputedType ?? SuppliedType;
+	public string ComputedType { get; private set; }
+
+	public List<HttpType> ResolvedTypes { get; private set; }
+
+	// public string Type => ComputedType ?? SuppliedType;
 
 	public string Url { get; init; }
 
+	public bool IsBinary => ComputedType == HttpType.MT_APPLICATION_OCTET_STREAM;
+
 	public HttpResource() { }
-
-	/// <remarks>
-	///     <a href="https://mimesniff.spec.whatwg.org/#supplied-mime-type-detection-algorithm">5.1</a>
-	/// </remarks>
-	private static string GetSuppliedType(IFlurlResponse r, out bool c)
-	{
-		c = false;
-
-		const string CONTENT_TYPE_HEADER = "Content-Type";
-
-		if (r.Headers.TryGetFirst(CONTENT_TYPE_HEADER, out string st)) {
-
-			c = st is HttpTypes.MT_TEXT_PLAIN
-				    or $"{HttpTypes.MT_TEXT_PLAIN} charset=ISO-8859-1"
-				    or $"{HttpTypes.MT_TEXT_PLAIN} charset=iso-8859-1"
-				    or $"{HttpTypes.MT_TEXT_PLAIN} charset=UTF-8";
-
-		}
-
-		// Skip 3
-		// Skip 4
-		// todo 5
-
-		return st;
-	}
 
 	public static async Task<HttpResource> GetAsync(string u)
 	{
@@ -93,6 +71,7 @@ public sealed class HttpResource : IDisposable
 
 		if (response == null) {
 			return null;
+
 		}
 
 		/*if (response is not { ResponseMessage: { IsSuccessStatusCode: true } }) {
@@ -101,44 +80,39 @@ public sealed class HttpResource : IDisposable
 
 		var stream = await response.GetStreamAsync();
 
+		var header = await HttpResourceScanner.ReadResourceHeader(stream);
+
 		var resource = new HttpResource()
 		{
 			Response      = response,
 			Stream        = stream,
-			SuppliedType  = GetSuppliedType(response, out var b),
+			SuppliedType  = GetSuppliedType(response, out bool b),
 			CheckBugFlag  = b,
-			ResolvedTypes = new List<HttpTypes>(),
-			Header        = await HttpResourceScanner.ReadResourceHeader(stream),
+			ResolvedTypes = new List<HttpType>(),
+			Header        = header,
+			ComputedType  = HttpResourceScanner.IsBinaryResource(header),
 			Url           = u
 		};
 
 		return resource;
 	}
 
-	public override string ToString()
-	{
-		return $"{Url}: {Type}, {ResolvedTypes.QuickJoin()}";
-	}
-
-	public bool IsBinary => ResolvedTypes.Any();
-
-	public List<HttpTypes> Resolve(bool runExtra = false, IHttpTypeResolver extraResolver = null)
+	public List<HttpType> Resolve(bool runExtra = false, IHttpTypeResolver extraResolver = null)
 	{
 		if (IsBinary) {
 			// todo ...
 		}
 
-		var rg = HttpTypes.All
-		                  .Where(t => HttpResourceScanner.CheckPattern(Header, t))
-		                  .ToList();
+		List<HttpType> rg = HttpType.All.Where(t => HttpResourceScanner.CheckPattern(Header, t))
+		                            .ToList();
 
 		if (runExtra) {
 
 			extraResolver ??= IHttpTypeResolver.Default;
 
-			var rx = extraResolver.Resolve(Stream);
+			string rx = extraResolver.Resolve(Stream);
 
-			var type = new HttpTypes()
+			var type = new HttpType()
 			{
 				Type = rx
 			};
@@ -147,9 +121,35 @@ public sealed class HttpResource : IDisposable
 		}
 
 		ResolvedTypes = rg.Distinct().ToList();
-		ComputedType  = ResolvedTypes.FirstOrDefault().Type;
 
 		return rg;
+	}
+
+	/// <remarks>
+	///     <a href="https://mimesniff.spec.whatwg.org/#supplied-mime-type-detection-algorithm">5.1</a>
+	/// </remarks>
+	private static string GetSuppliedType(IFlurlResponse r, out bool c)
+	{
+		c = false;
+
+		const string CONTENT_TYPE_HEADER = "Content-Type";
+
+		if (r.Headers.TryGetFirst(CONTENT_TYPE_HEADER, out string st))
+			c = st is HttpType.MT_TEXT_PLAIN
+				    or $"{HttpType.MT_TEXT_PLAIN} charset=ISO-8859-1"
+				    or $"{HttpType.MT_TEXT_PLAIN} charset=iso-8859-1"
+				    or $"{HttpType.MT_TEXT_PLAIN} charset=UTF-8";
+
+		// Skip 3
+		// Skip 4
+		// todo 5
+
+		return st;
+	}
+
+	public override string ToString()
+	{
+		return $"{Url}: {SuppliedType}, {ComputedType}, {ResolvedTypes.QuickJoin()}";
 	}
 
 	public void Dispose()

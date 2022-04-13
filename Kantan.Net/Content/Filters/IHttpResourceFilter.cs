@@ -71,13 +71,15 @@ public interface IHttpResourceFilter
 
 		try {
 			r = await s.AllowAnyHttpStatus().GetStringAsync();
-
 		}
 		catch (Exception e) {
+			Debug.WriteLine($"{nameof(IHttpResourceFilter)}: {e.Message}");
 			return Enumerable.Empty<string>() as List<string>;
 		}
 
-		urls = Parse(new HtmlParser().ParseDocument(r));
+		var parser = new HtmlParser();
+		var doc  = parser.ParseDocument(r);
+		urls = Parse(doc);
 
 		urls = Refine(urls)
 		       .Where(x => x != null)
