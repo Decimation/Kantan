@@ -13,7 +13,7 @@ public sealed class HttpMediaResourceFilter : IHttpResourceFilter
 
 	public int? MinimumSize => 50_000;
 
-	public bool UrlFilter(string url)
+	public bool Filter(string url)
 	{
 		if (url.Contains("www.deviantart.com")) {
 			//https://images-wixmp-

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.NetworkInformation;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -22,7 +23,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Kantan.Net;
 
-public static class IPUtilities
+public static class HostUtilities
 {
 	public static Task<IPGeolocation> GetIPInformationAsync()
 	{
@@ -34,7 +35,6 @@ public static class IPUtilities
 
 		return task;
 	}
-
 
 	public static IPAddress GetHostAddress(string hostOrIP) => Dns.GetHostAddresses(hostOrIP)[0];
 
@@ -51,6 +51,20 @@ public static class IPUtilities
 		}
 
 		return GetHostAddress(s).ToString();
+	}
+
+	public static PingReply Ping(Uri u, int? ms = null) => Ping(HostUtilities.GetAddress(u.ToString()), ms);
+
+	public static PingReply Ping(string hostOrIP, int? ms = null)
+	{
+		var ping = new Ping();
+
+		var task = ping.SendPingAsync(hostOrIP, ms ?? HttpUtilities.Timeout);
+		task.Wait();
+
+		PingReply r = task.Result;
+
+		return r;
 	}
 }
 
@@ -119,7 +133,6 @@ public struct IPGeolocation
 
 	// [JsonProperty("user_agent")]
 	// public UserAgent UserAgent { get; set; }
-
 
 	public override string ToString()
 	{

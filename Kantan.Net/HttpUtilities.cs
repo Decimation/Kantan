@@ -54,13 +54,26 @@ namespace Kantan.Net;
 /// <seealso cref="HttpUtility" />
 public static class HttpUtilities
 {
+	public static int Timeout { get; set; } = 2000;
+
+	public static int MaxAutoRedirects { get; set; } = 50;
+
+	public static string UserAgent { get; set; } = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+	                                               "(KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36";
+
+	public static FlurlClient Client { get; internal set; } = new ()
+	{
+		Settings =
+			{ }
+	};
+
 	static HttpUtilities()
 	{
-		Client = new()
+		/*Client = new()
 		{
 			Settings =
 				{ }
-		};
+		};*/
 
 		ServicePointManager.SecurityProtocol =
 			SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
@@ -72,15 +85,6 @@ public static class HttpUtilities
 		                     .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
 
 	}
-
-	public static int Timeout { get; set; } = 2000;
-
-	public static int MaxAutoRedirects { get; set; } = 50;
-
-	public static string UserAgent { get; set; } = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-	                                               "(KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36";
-
-	public static FlurlClient Client { get; internal set; }
 
 	[CanBeNull]
 	public static string GetFinalRedirect(string url)
@@ -141,6 +145,18 @@ public static class HttpUtilities
 		} while (maxRedirCount-- > 0);
 
 		return newUrl;
+	}
+
+	public static string GetFile(string url, string folder)
+	{
+		string    fileName = Path.GetFileName(url);
+		using var client   = new HttpClient();
+
+		client.DefaultRequestHeaders.Add("User-Agent", UserAgent);
+		string dir = Path.Combine(folder, fileName);
+		client.DownloadFile(url, dir);
+
+		return dir;
 	}
 
 	public static string ToQueryString(this NameValueCollection nvc)
@@ -215,18 +231,6 @@ public static class HttpUtilities
 
 		var document = parser.ParseDocument(html);
 		return document;
-	}
-
-	public static string GetFile(string url, string folder)
-	{
-		string    fileName = Path.GetFileName(url);
-		using var client   = new HttpClient();
-
-		client.DefaultRequestHeaders.Add("User-Agent", UserAgent);
-		string dir = Path.Combine(folder, fileName);
-		client.DownloadFile(url, dir);
-
-		return dir;
 	}
 
 	public static Stream GetStream(this HttpClient client, string url)
@@ -314,16 +318,18 @@ public static class HttpUtilities
 			Timeout = TimeSpan.FromMilliseconds(ms ?? Timeout)
 		};*/
 
+		IFlurlResponse response = null;
+
 		try {
 			// var response = await client.SendAsync(request, c);
-			var response = await f.SendAsync(method, cancellationToken: token.Value);
-			return response;
+			response = await f.SendAsync(method, cancellationToken: token.Value);
 		}
 		catch (Exception x) {
 			Debug.WriteLine($"{nameof(GetHttpResponseAsync)}: {x}", LogCategories.C_VERBOSE);
 
-			return null;
 		}
+
+		return response;
 
 	}
 
@@ -340,26 +346,9 @@ public static class HttpUtilities
 		var v = GetHttpResponseAsync(url, ms, method, allowAutoRedirect, maxAutoRedirects, token);
 		// v.Wait(c.Token);
 
-		if (v is { }) {
-			v.Wait(token.Value);
-			return v.Result;
-		}
+		v?.Wait(token.Value);
 
-		return null;
-	}
-
-	public static PingReply Ping(Uri u, int? ms = null) => Ping(IPUtilities.GetAddress(u.ToString()), ms);
-
-	public static PingReply Ping(string hostOrIP, int? ms = null)
-	{
-		var ping = new Ping();
-
-		var task = ping.SendPingAsync(hostOrIP, ms ?? Timeout);
-		task.Wait();
-
-		PingReply r = task.Result;
-
-		return r;
+		return v?.Result;
 	}
 
 	public static void OpenUrl(string url)

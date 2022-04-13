@@ -12,31 +12,6 @@ namespace Kantan.Utilities;
 
 public static class StreamHelper
 {
-	public static List<T> ReadUntil<T>(Func<T> f, Predicate<T> a, Predicate<T> b)
-	{
-		var rg = new List<T>();
-
-		T t;
-
-		do {
-			t = f();
-
-			if (b(t)) {
-				return null;
-			}
-
-			rg.Add(t);
-
-			/*if (a(t)) {
-				break;
-			}*/
-
-		} while (!a(t));
-
-
-		return rg;
-	}
-
 	public static string[] ReadAllLines(this StreamReader stream)
 	{
 		var list = new List<string>();
@@ -51,7 +26,6 @@ public static class StreamHelper
 
 		return list.ToArray();
 	}
-
 
 	public static byte[] ToByteArray(this Stream stream)
 	{

@@ -104,7 +104,7 @@ public sealed class HttpResource : IDisposable
 			SuppliedType  = GetSuppliedType(response, out var b),
 			CheckBugFlag  = b,
 			ResolvedTypes = new List<HttpTypes>(),
-			Header        = await HttpScanner.ReadResourceHeader(stream)
+			Header        = await HttpResourceScanner.ReadResourceHeader(stream)
 		};
 
 		return resource;
@@ -113,7 +113,6 @@ public sealed class HttpResource : IDisposable
 	public override string ToString()
 	{
 		return $"{nameof(SuppliedType)}: {SuppliedType}, " +
-		       $"{nameof(NoSniffFlag)}: {NoSniffFlag}, " +
 		       $"{nameof(ComputedType)}: {ComputedType}, " +
 		       $"{nameof(Stream)}: {Stream}, " +
 		       $"{nameof(ResolvedTypes)}: {ResolvedTypes.QuickJoin()}";
@@ -122,11 +121,11 @@ public sealed class HttpResource : IDisposable
 	public List<HttpTypes> Resolve(bool runExtra = false, IHttpTypeResolver extraResolver = null)
 	{
 		if (ResolvedTypes is { }) {
-			//...
+			// todo ...
 		}
 
 		var rg = HttpTypes.All
-		                  .Where(t => HttpScanner.CheckPattern(Header, t))
+		                  .Where(t => HttpResourceScanner.CheckPattern(Header, t))
 		                  .ToList();
 
 		if (runExtra) {

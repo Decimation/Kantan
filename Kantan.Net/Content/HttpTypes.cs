@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Reflection;
+using Kantan.Net.Content.Filters;
 
 namespace Kantan.Net.Content;
 
@@ -81,7 +82,21 @@ public readonly struct HttpTypes
 		       $"{nameof(IsPartial)}: {IsPartial}";
 	}
 
-	public const string MT_TEXT_PLAIN = "text/plain";
+	public const string MT_TEXT_PLAIN = $"{DiscreteMediaTypes.Text}/plain";
 
-	public const string MT_APPLICATION_OCTET_STREAM = "application/octet-stream";
+	public const string MT_APPLICATION_OCTET_STREAM = $"{DiscreteMediaTypes.Application}/octet-stream";
+}
+
+/// <see cref="IHttpResourceFilter.DiscreteType"/>
+public static class DiscreteMediaTypes
+{
+	public const string Image       = "image";
+	public const string Text        = "text";
+	public const string Application = "application";
+	public const string Video       = "video";
+	public const string Audio       = "audio";
+	public const string Model       = "model";
+
+	// todo
+	// ...
 }

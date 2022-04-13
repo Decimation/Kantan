@@ -20,7 +20,7 @@ using Kantan.Net.Content.Resolvers;
 // ReSharper disable NonReadonlyMemberInGetHashCode
 
 // ReSharper disable InconsistentNaming
-#pragma warning disable IDE0059,IDE0060
+#pragma warning disable IDE0059,IDE0060,CS0612
 namespace Kantan.Net.Media;
 
 /// <summary>
@@ -86,7 +86,7 @@ public static class MediaSniffer
 			}
 
 			return u;
-		}).Distinct().Where(x => b.UrlFilter(x)).ToList();*/
+		}).Distinct().Where(x => b.Filter(x)).ToList();*/
 
 		for (int i = urls.Count - 1; i >= 0; i--) {
 
@@ -97,7 +97,7 @@ public static class MediaSniffer
 					urls[i] = UriUtilities.NormalizeUrl(u2);
 				}
 
-				if (!b.UrlFilter( /*u2*/ urls[i])) {
+				if (!b.Filter( /*u2*/ urls[i])) {
 
 					Debug.WriteLine($"removing {u2}");
 					urls.RemoveAt(i);
@@ -188,7 +188,7 @@ public static class MediaSniffer
 			}
 
 			return u;
-		}).Distinct().Where(x => b.UrlFilter(x)).ToList();*/
+		}).Distinct().Where(x => b.Filter(x)).ToList();*/
 
 		urls = b.Refine(urls);
 
@@ -268,18 +268,4 @@ public static class MediaSniffer
 
 		return (s1, s2);
 	}
-}
-
-/// <see cref="IHttpResourceFilter.DiscreteType"/>
-public static class DiscreteMediaTypes
-{
-	public const string Image       = "image";
-	public const string Text        = "text";
-	public const string Application = "application";
-	public const string Video       = "video";
-	public const string Audio       = "audio";
-	public const string Model       = "model";
-
-	// todo
-	// ...
 }

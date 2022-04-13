@@ -15,7 +15,7 @@ public static class MagicNative
 	public static extern IntPtr magic_open(MagicOpenFlags flags);
 
 	[DllImport(MAGIC_LIB_PATH, CallingConvention = CallingConvention.Cdecl)]
-	public static extern int magic_load(IntPtr magic_cookie, string filename);
+	public static extern int magic_load(IntPtr mc, string filename);
 
 	[DllImport(MAGIC_LIB_PATH, CallingConvention = CallingConvention.Cdecl)]
 	public static extern void magic_close(IntPtr magic_cookie);
@@ -101,8 +101,8 @@ public enum MagicOpenFlags
 	MAGIC_CHECK = 0x000040,
 
 	/// <summary>
-	/// On systems that support utime(3) or utimes(2), attempt to
-	/// preserve the access time of files analysed.
+	/// On systems that support <c>utime(3)</c> or <c>utimes(2)</c>, attempt to
+	/// preserve the access time of files analyzed.
 	/// </summary>
 	MAGIC_PRESERVE_ATIME = 0x000080,
 
@@ -122,10 +122,7 @@ public enum MagicOpenFlags
 	/// Return a MIME encoding, instead of a textual description.
 	/// </summary>
 	MAGIC_MIME_ENCODING = 0x000400,
-
-	/// <summary>
-	/// A shorthand for MAGIC_MIME_TYPE | MAGIC_MIME_ENCODING.
-	/// </summary>
+	
 	MAGIC_MIME = (MAGIC_MIME_TYPE | MAGIC_MIME_ENCODING),
 
 	/// <summary>
@@ -142,10 +139,7 @@ public enum MagicOpenFlags
 	/// Don't report on compression, only report about the uncompressed data.
 	/// </summary>
 	MAGIC_COMPRESS_TRANSP = 0x200000,
-
-	/// <summary>
-	/// A shorthand for (MAGIC_EXTENSION|MAGIC_MIME|MAGIC_APPLE)
-	/// </summary>
+	
 	MAGIC_NODESC = (MAGIC_EXTENSION | MAGIC_MIME | MAGIC_APPLE),
 
 	/// <summary>

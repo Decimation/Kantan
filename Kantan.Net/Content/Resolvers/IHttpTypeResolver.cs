@@ -1,5 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using AngleSharp.Html.Parser;
+using Flurl.Http;
+using Kantan.Net.Content.Filters;
 
 namespace Kantan.Net.Content.Resolvers;
 
@@ -9,3 +15,4 @@ public interface IHttpTypeResolver : IDisposable
 
 	public static IHttpTypeResolver Default { get; set; } = new UrlmonResolver();
 }
+

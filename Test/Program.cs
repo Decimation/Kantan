@@ -29,6 +29,7 @@ using Kantan.Model;
 using Kantan.Net;
 using Kantan.Net.Content;
 using Kantan.Net.Content.Filters;
+using Kantan.Net.Content.Resolvers;
 using Kantan.Net.Media;
 using Kantan.Text;
 using Kantan.Utilities;
@@ -42,7 +43,7 @@ using HttpMethod = System.Net.Http.HttpMethod;
 // ReSharper disable UnusedMember.Local
 
 // ReSharper disable UnusedParameter.Local
-#pragma warning disable IDE0060, CS1998, IDE0051,CS0169,4014,CS0649,IDE0044
+#pragma warning disable IDE0060, CS1998, IDE0051,CS0169,4014,CS0649,IDE0044,CS0612
 
 namespace Test;
 
@@ -74,7 +75,7 @@ public static class Program
 			var sw = Stopwatch.StartNew();
 			// Console.WriteLine($">{s}");
 
-			List<string> urls = await HttpScanner.ExtractUrls(s, new HttpMediaResourceFilter());
+			List<string> urls = await IHttpResourceFilter.Default.ExtractUrls(s);
 
 			sw.Stop();
 			Console.WriteLine($"{sw.Elapsed.TotalSeconds}");
@@ -99,6 +100,8 @@ public static class Program
 		}
 
 		Console.ReadKey();
+
+		KantanNetInit.Close();
 	}
 
 	private static void Test1()

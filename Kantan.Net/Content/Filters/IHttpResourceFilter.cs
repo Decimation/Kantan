@@ -1,8 +1,13 @@
 ﻿#region
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 using AngleSharp.Html.Dom;
+using AngleSharp.Html.Parser;
+using Flurl.Http;
 using Kantan.Net.Media;
 
 #endregion
@@ -19,7 +24,9 @@ public interface IHttpResourceFilter
 	[VP(nameof(DiscreteMediaTypes))]
 	public List<string> TypeBlacklist { get; }
 
-	public bool UrlFilter(string s);
+	public static IHttpResourceFilter Default = new HttpMediaResourceFilter();
+
+	public bool Filter(string s);
 
 	public virtual List<string> Refine(List<string> urls)
 	{
@@ -36,7 +43,7 @@ public interface IHttpResourceFilter
 					continue;
 				}
 
-				if (!UrlFilter( /*u2*/ urls[i])) {
+				if (!Filter( /*u2*/ urls[i])) {
 
 					Debug.WriteLine($"removing {u2}");
 					urls.RemoveAt(i);
@@ -47,5 +54,31 @@ public interface IHttpResourceFilter
 		return urls;
 	}
 
-	public abstract List<string> GetUrls(IHtmlDocument document);
+	public List<string> GetUrls(IHtmlDocument document);
+
+	public async Task<List<string>> ExtractUrls(string s)
+	{
+		// filter = new MediaImageFilter();
+
+		string       r;
+		List<string> urls = null;
+
+		try {
+			r = await s.AllowAnyHttpStatus().GetStringAsync();
+
+		}
+		catch (Exception e) {
+			return Enumerable.Empty<string>() as List<string>;
+		}
+
+		urls = GetUrls(new HtmlParser().ParseDocument(r));
+
+		urls = Refine(urls)
+		       .Where(x => x != null)
+		       // .DistinctBy(x => UriUtilities.GetHostUri(new Uri(x)))
+		       .Distinct()
+		       .ToList();
+
+		return urls;
+	}
 }

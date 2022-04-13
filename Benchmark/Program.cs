@@ -11,6 +11,7 @@ using Kantan.Collections;
 using Kantan.Net;
 using Kantan.Net.Content;
 using Kantan.Net.Content.Filters;
+using Kantan.Net.Content.Resolvers;
 using Kantan.Net.Media;
 using Kantan.Numeric;
 using Kantan.Utilities;
@@ -167,8 +168,8 @@ public class Benchmarks6
 	[Benchmark]
 	public void b()
 	{
-		var x1 = HttpScanner.ExtractUrls(@"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png",
-		                                 HttpMediaResourceFilter.Default);
+		var x1 = IHttpResourceFilter.Default.ExtractUrls(
+			@"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png");
 		x1.Wait();
 		var x = x1.Result;
 		Task.WhenAll(x.Select(async Task<HttpResource>(y) => { return await HttpResource.GetAsync(y); })).Wait();
