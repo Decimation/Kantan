@@ -47,23 +47,13 @@ using Newtonsoft.Json;
 namespace Kantan.Net;
 
 /// <summary>
-/// Network, HTTP, web utilities
+///     Network, HTTP, web utilities
 /// </summary>
-/// <seealso cref="WebUtilities"/>
-/// <seealso cref="Dns"/>
-/// <seealso cref="IPAddress"/>
-/// <seealso cref="HttpUtility"/>
+/// <seealso cref="Dns" />
+/// <seealso cref="IPAddress" />
+/// <seealso cref="HttpUtility" />
 public static class HttpUtilities
 {
-	public static int Timeout { get; set; } = 2000;
-
-	public static int MaxAutoRedirects { get; set; } = 50;
-
-	public static string UserAgent { get; set; } = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-	                                               "(KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36";
-
-	public static           FlurlClient Client { get; internal set; }
-
 	static HttpUtilities()
 	{
 		Client = new()
@@ -82,6 +72,15 @@ public static class HttpUtilities
 		                     .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
 
 	}
+
+	public static int Timeout { get; set; } = 2000;
+
+	public static int MaxAutoRedirects { get; set; } = 50;
+
+	public static string UserAgent { get; set; } = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+	                                               "(KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36";
+
+	public static FlurlClient Client { get; internal set; }
 
 	[CanBeNull]
 	public static string GetFinalRedirect(string url)

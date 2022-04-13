@@ -2,11 +2,12 @@
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using Kantan.Net.Media;
 using Kantan.Net.Properties;
 
-namespace Kantan.Net.Media.Resolvers;
+namespace Kantan.Net.Content.Resolvers;
 
-public sealed class MagicResolver : IMediaTypeResolver, IDisposable
+public sealed class MagicResolver : IHttpTypeResolver, IDisposable
 {
 	public MagicResolver(string mgc = null)
 	{
@@ -20,7 +21,6 @@ public sealed class MagicResolver : IMediaTypeResolver, IDisposable
 		Magic = MagicNative.magic_open(MagicMimeFlags);
 		var rd = MagicNative.magic_load(Magic, mgc);
 	}
-
 
 	public string Resolve(Stream stream)
 	{

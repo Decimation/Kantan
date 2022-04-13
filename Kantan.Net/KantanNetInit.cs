@@ -10,6 +10,8 @@ using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using Kantan.Net.Content.Resolvers;
+using Kantan.Net.Media.Filters;
 using Kantan.Net.Properties;
 
 // ReSharper disable InconsistentNaming
@@ -19,15 +21,22 @@ using Kantan.Net.Properties;
 [assembly:InternalsVisibleTo("Test")]
 namespace Kantan.Net;
 
-internal static class Init
+public static class KantanNetInit
 {
-	internal const string NAME = "Kantan.Net";
+	public const string NAME = "Kantan.Net";
 
 	[ModuleInitializer]
-	internal static void Setup()
+	public static void Setup()
 	{
 		Trace.WriteLine($"[{NAME}]: init");
-		var assemblyLocation = typeof(Init).GetTypeInfo().Assembly.Location;
+		var assemblyLocation = typeof(KantanNetInit).GetTypeInfo().Assembly.Location;
 		
+	}
+
+	public static void Close()
+	{
+		IHttpTypeResolver.Default.Dispose();
+		HttpUtilities.Client.Dispose();
+		//todo...
 	}
 }

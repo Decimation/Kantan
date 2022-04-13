@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Kantan.Net.Media;
+namespace Kantan.Net.Content.Resolvers;
 
 /*
  * Adapted from https://github.com/hey-red/Mime

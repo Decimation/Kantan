@@ -2,10 +2,11 @@
 using System.IO;
 using System.Runtime.InteropServices;
 using Kantan.Diagnostics;
+using Kantan.Net.Media;
 
-namespace Kantan.Net.Media.Resolvers;
+namespace Kantan.Net.Content.Resolvers;
 
-public sealed class UrlmonResolver : IMediaTypeResolver
+public sealed class UrlmonResolver : IHttpTypeResolver
 {
 	public string Resolve(Stream stream)
 	{
@@ -13,6 +14,10 @@ public sealed class UrlmonResolver : IMediaTypeResolver
 		return ResolveFromData(buf);
 	}
 
+	public void Dispose()
+	{
+		
+	}
 
 	private static string ResolveFromData(byte[] dataBytes, string mimeProposed = null)
 	{
@@ -29,7 +34,6 @@ public sealed class UrlmonResolver : IMediaTypeResolver
 			//suggestPtr = Marshal.StringToCoTaskMemUni(mimeProposed); // for your experiments ;-)
 			mimeRet = mimeProposed;
 		}
-
 
 		const MimeFromDataFlags flags = MimeFromDataFlags.ENABLE_MIME_SNIFFING |
 		                                MimeFromDataFlags.RETURN_UPDATED_IMG_MIMES |

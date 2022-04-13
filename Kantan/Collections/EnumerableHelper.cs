@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Kantan.Text;
 using static Kantan.Internal.Common;
 using Map = System.Collections.Generic.Dictionary<object, object>;
@@ -303,6 +305,6 @@ public static class EnumerableHelper
 
 		return dict;
 	}
-
+	
 	private const string DICT_DELIM = "=";
 }

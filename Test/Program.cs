@@ -30,7 +30,6 @@ using Kantan.Net;
 using Kantan.Net.Content;
 using Kantan.Net.Media;
 using Kantan.Net.Media.Filters;
-using Kantan.Net.Media.Resolvers;
 using Kantan.Text;
 using Kantan.Utilities;
 using Microsoft.VisualBasic.CompilerServices;
@@ -51,6 +50,98 @@ using System;
 
 public static class Program
 {
+	private static async Task Main(string[] args)
+	{
+
+		var rg1 = new[]
+		{
+			@"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png",
+			@"https://i.imgur.com/QtCausw.png",
+			@"https://en.wikipedia.org/wiki/Lambda_calculus",
+			@"http://www.zerochan.net/2750747",
+			"https://scontent-ord1-1.xx.fbcdn.net/t31.0-8/14715634_1300559193310808_8524406991247613051_o.jpg",
+			"https://kemono.party/data/45/a0/45a04a55cdc142ee78f6f00452886bc4b336d9f35d3d851f5044852a7e26b5da.png"
+		};
+
+		var rg = new[]
+		{
+			@"http://www.zerochan.net/2750747",
+		};
+
+		HttpResource[] v = Array.Empty<HttpResource>();
+
+		foreach (string s in rg) {
+			var sw = Stopwatch.StartNew();
+			// Console.WriteLine($">{s}");
+
+			List<string> urls = await ExtractUrls(s, new MediaImageFilter());
+
+			sw.Stop();
+			Console.WriteLine($"{sw.Elapsed.TotalSeconds}");
+			sw.Restart();
+
+			// await ParallelHelper.ForeachAsync(urls, 100, Action);
+
+			v = await Task.WhenAll(urls.Select(Action));
+			Console.WriteLine(v.QuickJoin());
+			Console.WriteLine($"{sw.Elapsed.TotalSeconds}");
+
+		}
+
+		Console.ReadKey();
+
+		foreach (var x in v) {
+			x.Dispose();
+		}
+
+		Console.ReadKey();
+	}
+
+	private static async Task<HttpResource> Action(string s1)
+	{
+		// Console.WriteLine($">>{url}");
+
+		var t = await HttpResource.GetAsync(s1);
+
+		// t.Wait();
+		// var tt = t.Result;
+
+		if (t is { }) {
+			// Console.WriteLine($"{t}");
+
+			return t;
+		}
+
+		return null;
+
+	}
+
+	private static async Task<List<string>> ExtractUrls(string s, MediaResourceFilter filter)
+	{
+		// filter = new MediaImageFilter();
+
+		string       r;
+		List<string> urls = null;
+
+		try {
+			r = await s.AllowAnyHttpStatus().GetStringAsync();
+
+		}
+		catch (Exception e) {
+			return Enumerable.Empty<string>() as List<string>;
+		}
+
+		urls = filter.GetUrls(new HtmlParser().ParseDocument(r));
+
+		urls = filter.Refine(urls)
+		             .Where(x => x != null)
+		             // .DistinctBy(x => UriUtilities.GetHostUri(new Uri(x)))
+		             .Distinct()
+		             .ToList();
+
+		return urls;
+	}
+
 	private static void Test1()
 	{
 		var url = @"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png";
@@ -75,70 +166,6 @@ public static class Program
 
 		_ = new Url(rg[0]).Host;
 		_ = new Uri(rg[0]).Host;
-	}
-
-	private static async Task Main(string[] args)
-	{
-
-		var rg1 = new[]
-		{
-			@"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png",
-			@"https://i.imgur.com/QtCausw.png",
-			@"https://en.wikipedia.org/wiki/Lambda_calculus",
-			@"http://www.zerochan.net/2750747",
-			"https://scontent-ord1-1.xx.fbcdn.net/t31.0-8/14715634_1300559193310808_8524406991247613051_o.jpg",
-			"https://kemono.party/data/45/a0/45a04a55cdc142ee78f6f00452886bc4b336d9f35d3d851f5044852a7e26b5da.png"
-		};
-
-		var rg = new[]
-		{
-			@"http://www.zerochan.net/2750747",
-		};
-
-		foreach (string s in rg) {
-			var sw = Stopwatch.StartNew();
-			Console.WriteLine($">{s}");
-
-			MediaResourceFilter filter = new MediaImageFilter();
-
-			string r;
-
-			try {
-				r = await s.AllowAnyHttpStatus().GetStringAsync();
-			}
-			catch (Exception e) {
-				continue;
-			}
-
-			var urls = filter.GetUrls(
-				new HtmlParser().ParseDocument(r));
-
-			urls = filter.Refine(urls)
-			             .Where(x => x != null)
-			             // .DistinctBy(x => UriUtilities.GetHostUri(new Uri(x)))
-			             .Distinct()
-			             .ToList();
-			sw.Stop();
-			Console.WriteLine($"{sw.Elapsed.TotalSeconds}");
-			sw.Restart();
-
-			await ParallelHelper.ForeachAsync(urls, 100, async (s1) =>
-			{
-				var url = s1;
-				Console.WriteLine($">>{url}");
-
-				var t = await HttpResource.GetAsync(url);
-				// t.Wait();
-				// var tt = t.Result;
-
-				if (t is { }) {
-					Console.WriteLine($"{t}");
-				}
-			});
-
-			Console.WriteLine($"{sw.Elapsed.TotalSeconds}");
-
-		}
 	}
 
 	private static async Task Test2(string s)

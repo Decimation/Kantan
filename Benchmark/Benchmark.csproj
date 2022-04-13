@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <EnablePreviewFeatures>true</EnablePreviewFeatures>
+    <!-- <EnablePreviewFeatures>true</EnablePreviewFeatures> -->
     <TargetFramework>net6.0</TargetFramework>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>

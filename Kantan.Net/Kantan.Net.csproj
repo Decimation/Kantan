@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <EnablePreviewFeatures>true</EnablePreviewFeatures>
+    <!-- <EnablePreviewFeatures>true</EnablePreviewFeatures> -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>JETBRAINS_ANNOTATIONS;TRACE</DefineConstants>
     <LangVersion>latest</LangVersion>

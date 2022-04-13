@@ -10,8 +10,15 @@ using Kantan.Diagnostics;
 
 namespace Kantan.Net.Content;
 
+// +++ H1
+// ++ H2
+// + H3
+// - H4
+// -- H5
+// --- H6
+
 /// <summary>
-/// <a href="https://mimesniff.spec.whatwg.org/">See</a>
+/// <a href="https://mimesniff.spec.whatwg.org/">Implements <em>MIME</em></a>
 /// </summary>
 public static class HttpScanner
 {

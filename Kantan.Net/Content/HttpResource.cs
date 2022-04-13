@@ -7,8 +7,8 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Flurl.Http;
+using Kantan.Net.Content.Resolvers;
 using Kantan.Net.Media;
-using Kantan.Net.Media.Resolvers;
 using Kantan.Text;
 
 namespace Kantan.Net.Content;
@@ -34,22 +34,50 @@ public sealed class HttpResource : IDisposable
 
 	private HttpResource() { }
 
+	/// <remarks><a href="https://mimesniff.spec.whatwg.org/#supplied-mime-type-detection-algorithm">5.1</a></remarks>
+	private static string GetSuppliedType(IFlurlResponse r, out bool c)
+	{
+		c = false;
+
+		const string CONTENT_TYPE_HEADER = "Content-Type";
+
+		if (r.Headers.TryGetFirst(CONTENT_TYPE_HEADER, out string st)) {
+
+			c = st is HttpTypes.MT_TEXT_PLAIN
+				    or $"{HttpTypes.MT_TEXT_PLAIN} charset=ISO-8859-1"
+				    or $"{HttpTypes.MT_TEXT_PLAIN} charset=iso-8859-1"
+				    or $"{HttpTypes.MT_TEXT_PLAIN} charset=UTF-8";
+
+		}
+
+		// Skip 3
+		// Skip 4
+		// todo 5
+
+		return st;
+	}
+
 	public static async Task<HttpResource> GetAsync(string u)
 	{
 		//todo: error handling
+
 		IFlurlResponse response = null;
 
 		/*if (!UriUtilities.IsUri(u, out var u2)) {
 			return null;
 		}*/
 
-		try {
-			response = await u.AllowAnyHttpStatus().WithTimeout(HttpUtilities.Timeout).GetAsync();
+		try
+		{
+			response = await u.AllowAnyHttpStatus()
+			                  .WithTimeout(HttpUtilities.Timeout)
+			                  .GetAsync();
+
 			// response = new HttpClient().GetAsync(u);
 		}
 		catch (Exception e) {
 			Debug.WriteLine($"{e.Message}");
-			return null;
+
 		}
 
 		if (response == null) {
@@ -75,33 +103,10 @@ public sealed class HttpResource : IDisposable
 		return resource;
 	}
 
-	/// <remarks><a href="https://mimesniff.spec.whatwg.org/#supplied-mime-type-detection-algorithm">5.1</a></remarks>
-	private static string GetSuppliedType(IFlurlResponse r, out bool c)
-	{
-		c = false;
-
-		const string CONTENT_TYPE_HEADER = "Content-Type";
-
-		if (r.Headers.TryGetFirst(CONTENT_TYPE_HEADER, out string st)) {
-
-			c = st is HttpTypes.MT_TEXT_PLAIN
-				    or $"{HttpTypes.MT_TEXT_PLAIN} charset=ISO-8859-1"
-				    or $"{HttpTypes.MT_TEXT_PLAIN} charset=iso-8859-1"
-				    or $"{HttpTypes.MT_TEXT_PLAIN} charset=UTF-8";
-
-		}
-
-		// Skip 3
-		// Skip 4
-		// todo 5
-
-		return st;
-	}
-
 	public void Dispose()
 	{
-		Stream?.Dispose();
 		Response?.Dispose();
+		Stream?.Dispose();
 	}
 
 	public override string ToString()
@@ -113,23 +118,26 @@ public sealed class HttpResource : IDisposable
 		       $"{nameof(ResolvedTypes)}: {ResolvedTypes.QuickJoin()}";
 	}
 
-	public List<HttpTypes> Resolve(bool runExtra = false, IMediaTypeResolver extraResolver = null)
+	public List<HttpTypes> Resolve(bool runExtra = false, IHttpTypeResolver extraResolver = null)
 	{
 		if (ResolvedTypes is { }) {
 			//...
 		}
 
-		var rg = HttpTypes.All.Where(t => HttpScanner.CheckPattern(Header, t)).ToList();
+		var rg = HttpTypes.All
+		                  .Where(t => HttpScanner.CheckPattern(Header, t))
+		                  .ToList();
 
 		if (runExtra) {
 
-			extraResolver ??= IMediaTypeResolver.Default;
+			extraResolver ??= IHttpTypeResolver.Default;
 			var rx = extraResolver.Resolve(Stream);
 
 			var type = new HttpTypes()
 			{
 				Type = rx
 			};
+
 			rg.Add(type);
 		}
 

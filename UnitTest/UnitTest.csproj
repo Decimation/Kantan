@@ -4,7 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
-    <EnablePreviewFeatures>true</EnablePreviewFeatures>
+    <!-- <EnablePreviewFeatures>true</EnablePreviewFeatures> -->
     <LangVersion>latest</LangVersion>
     <Configurations>Debug;Release;TestDebug</Configurations>
   </PropertyGroup>

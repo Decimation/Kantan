@@ -17,30 +17,26 @@ public static class ParallelHelper
 	public static async Task ForeachAsync<T>(IEnumerable<T> source, int maxParallelCount, Func<T, Task> action)
 	{
 		using (SemaphoreSlim completeSemphoreSlim = new SemaphoreSlim(1))
-		using (SemaphoreSlim taskCountLimitsemaphoreSlim = new SemaphoreSlim(maxParallelCount))
-		{
+		using (SemaphoreSlim taskCountLimitsemaphoreSlim = new SemaphoreSlim(maxParallelCount)) {
 			await completeSemphoreSlim.WaitAsync();
 			int runningtaskCount = source.Count();
 
-			foreach (var item in source)
-			{
+			foreach (var item in source) {
 				await taskCountLimitsemaphoreSlim.WaitAsync();
 
 				Task.Run(async () =>
 				{
-					try
-					{
+					try {
 						await action(item).ContinueWith(task =>
 						{
 							Interlocked.Decrement(ref runningtaskCount);
-							if (runningtaskCount == 0)
-							{
+
+							if (runningtaskCount == 0) {
 								completeSemphoreSlim.Release();
 							}
 						});
 					}
-					finally
-					{
+					finally {
 						taskCountLimitsemaphoreSlim.Release();
 					}
 				}).GetHashCode();
@@ -49,6 +45,7 @@ public static class ParallelHelper
 			await completeSemphoreSlim.WaitAsync();
 		}
 	}
+
 	public sealed class InfinitePartitioner : Partitioner<bool>
 	{
 		public override IList<IEnumerator<bool>> GetPartitions(int partitionCount)

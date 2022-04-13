@@ -12,8 +12,8 @@ using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Flurl.Http;
 using Kantan.Net.Content;
+using Kantan.Net.Content.Resolvers;
 using Kantan.Net.Media.Filters;
-using Kantan.Net.Media.Resolvers;
 
 // ReSharper disable UnusedVariable
 
@@ -225,18 +225,18 @@ public static class MediaSniffer
 		return images;
 	}
 
-	public static string Resolve(string url) => Resolve(url, IMediaTypeResolver.Default);
+	public static string Resolve(string url) => Resolve(url, IHttpTypeResolver.Default);
 
-	public static string Resolve(this HttpContent content) => Resolve(content, IMediaTypeResolver.Default);
+	public static string Resolve(this HttpContent content) => Resolve(content, IHttpTypeResolver.Default);
 
-	public static string Resolve(string url, IMediaTypeResolver resolver)
+	public static string Resolve(string url, IHttpTypeResolver resolver)
 	{
 		var task = url.GetStreamAsync();
 		task.Wait();
 		return resolver.Resolve(task.Result);
 	}
 
-	public static string Resolve(this HttpContent content, IMediaTypeResolver resolver)
+	public static string Resolve(this HttpContent content, IHttpTypeResolver resolver)
 	{
 		var stream = content.ReadAsStream();
 		return resolver.Resolve(stream);

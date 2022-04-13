@@ -11,14 +11,19 @@ using System.Threading.Tasks;
 #pragma warning disable CA2255
 namespace Kantan;
 
-internal static class Init
+public static class KantanInit
 {
-	internal const string NAME = "Kantan";
+	public const string NAME = "Kantan";
 
 	[ModuleInitializer]
-	internal static void Setup()
+	public static void Setup()
 	{
 		Trace.WriteLine($"[{NAME}]: init");
 		
+	}
+
+	public static void Close()
+	{
+
 	}
 }

@@ -7,7 +7,7 @@
     <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
     <DefineConstants>JETBRAINS_ANNOTATIONS;TRACE</DefineConstants>
     <Configurations>Debug;Release;TestDebug</Configurations>
-    <EnablePreviewFeatures>true</EnablePreviewFeatures>
+    <!-- <EnablePreviewFeatures>true</EnablePreviewFeatures> -->
 
   </PropertyGroup>
 
