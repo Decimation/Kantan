@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
@@ -31,6 +32,7 @@ using Kantan.Net.Content;
 using Kantan.Net.Content.Filters;
 using Kantan.Net.Content.Resolvers;
 using Kantan.Net.Media;
+using Kantan.Net.Properties;
 using Kantan.Text;
 using Kantan.Utilities;
 using Microsoft.VisualBasic.CompilerServices;
@@ -58,6 +60,10 @@ public static class Program
 		{
 			@"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png",
 			@"https://i.imgur.com/QtCausw.png",
+			@"https://www.deviantart.com/sciamano240",
+			"https://www.zerochan.net/2750747",
+			"http://s1.zerochan.net/atago.(azur.lane).600.2750747.jpg",
+			"https://twitter.com/mircosciamart/status/1186775807655587841",
 			@"https://en.wikipedia.org/wiki/Lambda_calculus",
 			@"http://www.zerochan.net/2750747",
 			"https://scontent-ord1-1.xx.fbcdn.net/t31.0-8/14715634_1300559193310808_8524406991247613051_o.jpg",
@@ -71,22 +77,26 @@ public static class Program
 
 		HttpResource[] v = Array.Empty<HttpResource>();
 
-		foreach (string s in rg) {
+		foreach (string s in rg1) {
 			var sw = Stopwatch.StartNew();
 			// Console.WriteLine($">{s}");
 
-			List<string> urls = await IHttpResourceFilter.Default.ExtractUrls(s);
+			List<string> urls = await IHttpResourceFilter.Default.Extract(s);
 
+			v = await Task.WhenAll(urls.Select(async Task<HttpResource>(s1) =>
+			{
+				HttpResource httpResource = await HttpResource.GetAsync(s1);
+				httpResource?.Resolve();
+
+				return httpResource;
+			}));
+			v = v.Where(x => x.IsBinary).ToArray();
 			sw.Stop();
+
 			Console.WriteLine($"{sw.Elapsed.TotalSeconds}");
 			sw.Restart();
 
 			// await ParallelHelper.ForeachAsync(urls, 100, Action);
-
-			v = await Task.WhenAll(urls.Select(async Task<HttpResource>(s1) =>
-			{
-				return await HttpResource.GetAsync(s1);
-			}));
 
 			Console.WriteLine(v.QuickJoin());
 			Console.WriteLine($"{sw.Elapsed.TotalSeconds}");
@@ -102,6 +112,9 @@ public static class Program
 		Console.ReadKey();
 
 		KantanNetInit.Close();
+
+		var m = new ResourceManager(typeof(Resources));
+
 	}
 
 	private static void Test1()
@@ -110,7 +123,8 @@ public static class Program
 
 		var rg = new[]
 		{
-			"https://www.zerochan.net/2750747", "http://s1.zerochan.net/atago.(azur.lane).600.2750747.jpg",
+			"https://www.zerochan.net/2750747",
+			"http://s1.zerochan.net/atago.(azur.lane).600.2750747.jpg",
 			"https://twitter.com/mircosciamart/status/1186775807655587841"
 		};
 
@@ -152,7 +166,7 @@ public static class Program
 
 		}
 		else {
-			var urls = filter.GetUrls(
+			var urls = filter.Parse(
 				new HtmlParser().ParseDocument(r));
 			urls = filter.Refine(urls);
 

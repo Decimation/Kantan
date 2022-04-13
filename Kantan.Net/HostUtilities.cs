@@ -1,22 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Json;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Net.NetworkInformation;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Text.Encodings.Web;
 using System.Threading.Tasks;
-using System.Web;
-using Flurl;
 using Flurl.Http;
 using Kantan.Net.Properties;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
@@ -36,7 +25,8 @@ public static class HostUtilities
 		return task;
 	}
 
-	public static IPAddress GetHostAddress(string hostOrIP) => Dns.GetHostAddresses(hostOrIP)[0];
+	public static IPAddress GetHostAddress(string hostOrIP) => Dns.GetHostAddresses(hostOrIP)
+	                                                              .FirstOrDefault();
 
 	public static string GetAddress(string hostOrIP)
 	{
@@ -53,11 +43,11 @@ public static class HostUtilities
 		return GetHostAddress(s).ToString();
 	}
 
-	public static PingReply Ping(Uri u, int? ms = null) => Ping(HostUtilities.GetAddress(u.ToString()), ms);
+	public static PingReply Ping(Uri u, int? ms = null) => Ping(GetAddress(u.ToString()), ms);
 
 	public static PingReply Ping(string hostOrIP, int? ms = null)
 	{
-		var ping = new Ping();
+		using var ping = new Ping();
 
 		var task = ping.SendPingAsync(hostOrIP, ms ?? HttpUtilities.Timeout);
 		task.Wait();
@@ -72,74 +62,74 @@ public static class HostUtilities
 /*public class UserAgent
 {
 	[JsonProperty("product")]
-	public string Product { get; set; }
+	public string Product { get; internal set; }
 
 	[JsonProperty("version")]
-	public string Version { get; set; }
+	public string Version { get; internal set; }
 
 	[JsonProperty("raw_value")]
-	public string RawValue { get; set; }
+	public string RawValue { get; internal set; }
 }*/
 
 public struct IPGeolocation
 {
 	[JsonProperty("ip")]
-	public string Ip { get; set; }
+	public string IP { get; internal set; }
 
 	[JsonProperty("ip_decimal")]
-	public long IpDecimal { get; set; }
+	public long IPDecimal { get; internal set; }
 
 	[JsonProperty("country")]
-	public string Country { get; set; }
+	public string Country { get; internal set; }
 
 	[JsonProperty("country_iso")]
-	public string CountryIso { get; set; }
+	public string CountryIso { get; internal set; }
 
 	[JsonProperty("country_eu")]
-	public bool CountryEu { get; set; }
+	public bool CountryEu { get; internal set; }
 
 	[JsonProperty("region_name")]
-	public string RegionName { get; set; }
+	public string RegionName { get; internal set; }
 
 	[JsonProperty("region_code")]
-	public string RegionCode { get; set; }
+	public string RegionCode { get; internal set; }
 
 	[JsonProperty("metro_code")]
-	public int MetroCode { get; set; }
+	public int MetroCode { get; internal set; }
 
 	[JsonProperty("zip_code")]
-	public string ZipCode { get; set; }
+	public string ZipCode { get; internal set; }
 
 	[JsonProperty("city")]
-	public string City { get; set; }
+	public string City { get; internal set; }
 
 	[JsonProperty("latitude")]
-	public double Latitude { get; set; }
+	public double Latitude { get; internal set; }
 
 	[JsonProperty("longitude")]
-	public double Longitude { get; set; }
+	public double Longitude { get; internal set; }
 
 	[JsonProperty("time_zone")]
-	public string TimeZone { get; set; }
+	public string TimeZone { get; internal set; }
 
 	[JsonProperty("asn")]
-	public string Asn { get; set; }
+	public string Asn { get; internal set; }
 
 	[JsonProperty("asn_org")]
-	public string AsnOrg { get; set; }
+	public string AsnOrg { get; internal set; }
 
 	[JsonProperty("hostname")]
-	public string Hostname { get; set; }
+	public string Hostname { get; internal set; }
 
 	// [JsonProperty("user_agent")]
-	// public UserAgent UserAgent { get; set; }
+	// public UserAgent UserAgent { get; internal set; }
 
 	public override string ToString()
 	{
-		return $"{nameof(Ip)}: {Ip}, {nameof(IpDecimal)}: {IpDecimal}, {nameof(Country)}: {Country}, " +
-			   $"{nameof(CountryIso)}: {CountryIso}, {nameof(CountryEu)}: {CountryEu}, {nameof(RegionName)}: {RegionName}, " +
-			   $"{nameof(RegionCode)}: {RegionCode}, {nameof(MetroCode)}: {MetroCode}, {nameof(ZipCode)}: {ZipCode}, " +
-			   $"{nameof(City)}: {City}, {nameof(Latitude)}: {Latitude}, {nameof(Longitude)}: {Longitude}, {nameof(TimeZone)}: {TimeZone}, " +
-			   $"{nameof(Asn)}: {Asn}, {nameof(AsnOrg)}: {AsnOrg}, {nameof(Hostname)}: {Hostname}";
+		return $"{nameof(IP)}: {IP}, {nameof(IPDecimal)}: {IPDecimal}, {nameof(Country)}: {Country}, " +
+		       $"{nameof(CountryIso)}: {CountryIso}, {nameof(CountryEu)}: {CountryEu}, {nameof(RegionName)}: {RegionName}, " +
+		       $"{nameof(RegionCode)}: {RegionCode}, {nameof(MetroCode)}: {MetroCode}, {nameof(ZipCode)}: {ZipCode}, " +
+		       $"{nameof(City)}: {City}, {nameof(Latitude)}: {Latitude}, {nameof(Longitude)}: {Longitude}, {nameof(TimeZone)}: {TimeZone}, " +
+		       $"{nameof(Asn)}: {Asn}, {nameof(AsnOrg)}: {AsnOrg}, {nameof(Hostname)}: {Hostname}";
 	}
 }

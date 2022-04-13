@@ -72,7 +72,7 @@ public static class MediaSniffer
 		// urls.AddRange(document.QuerySelectorAttributes("a", "href"));
 		// urls.AddRange(document.QuerySelectorAttributes("img", "src"));
 
-		List<string> urls = b.GetUrls(document);
+		List<string> urls = b.Parse(document);
 
 		/*
 		* Normalize urls
@@ -174,7 +174,7 @@ public static class MediaSniffer
 		// urls.AddRange(document.QuerySelectorAttributes("a", "href"));
 		// urls.AddRange(document.QuerySelectorAttributes("img", "src"));
 
-		List<string> urls = b.GetUrls(document);
+		List<string> urls = b.Parse(document);
 
 		/*
 		* Normalize urls

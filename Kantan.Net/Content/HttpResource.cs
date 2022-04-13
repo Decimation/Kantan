@@ -22,23 +22,27 @@ namespace Kantan.Net.Content;
 /// </remarks>
 public sealed class HttpResource : IDisposable
 {
-	public string SuppliedType { get; private set; }
+	public string SuppliedType { get; init; }
 
-	public bool CheckBugFlag { get; private set; }
+	public bool CheckBugFlag { get; init; }
 
-	public bool NoSniffFlag { get; private set; }
+	public bool NoSniffFlag { get; init; }
 
 	public string ComputedType { get; private set; }
 
-	public Stream Stream { get; private set; }
+	public Stream Stream { get; init; }
 
-	public IFlurlResponse Response { get; private set; }
+	public IFlurlResponse Response { get; init; }
 
-	public byte[] Header { get; private set; }
+	public byte[] Header { get; init; }
 
 	public List<HttpTypes> ResolvedTypes { get; private set; }
 
-	private HttpResource() { }
+	public string Type => ComputedType ?? SuppliedType;
+
+	public string Url { get; init; }
+
+	public HttpResource() { }
 
 	/// <remarks>
 	///     <a href="https://mimesniff.spec.whatwg.org/#supplied-mime-type-detection-algorithm">5.1</a>
@@ -104,7 +108,8 @@ public sealed class HttpResource : IDisposable
 			SuppliedType  = GetSuppliedType(response, out var b),
 			CheckBugFlag  = b,
 			ResolvedTypes = new List<HttpTypes>(),
-			Header        = await HttpResourceScanner.ReadResourceHeader(stream)
+			Header        = await HttpResourceScanner.ReadResourceHeader(stream),
+			Url           = u
 		};
 
 		return resource;
@@ -112,15 +117,14 @@ public sealed class HttpResource : IDisposable
 
 	public override string ToString()
 	{
-		return $"{nameof(SuppliedType)}: {SuppliedType}, " +
-		       $"{nameof(ComputedType)}: {ComputedType}, " +
-		       $"{nameof(Stream)}: {Stream}, " +
-		       $"{nameof(ResolvedTypes)}: {ResolvedTypes.QuickJoin()}";
+		return $"{Url}: {Type}, {ResolvedTypes.QuickJoin()}";
 	}
+
+	public bool IsBinary => ResolvedTypes.Any();
 
 	public List<HttpTypes> Resolve(bool runExtra = false, IHttpTypeResolver extraResolver = null)
 	{
-		if (ResolvedTypes is { }) {
+		if (IsBinary) {
 			// todo ...
 		}
 
@@ -131,6 +135,7 @@ public sealed class HttpResource : IDisposable
 		if (runExtra) {
 
 			extraResolver ??= IHttpTypeResolver.Default;
+
 			var rx = extraResolver.Resolve(Stream);
 
 			var type = new HttpTypes()
@@ -141,7 +146,8 @@ public sealed class HttpResource : IDisposable
 			rg.Add(type);
 		}
 
-		ResolvedTypes = rg;
+		ResolvedTypes = rg.Distinct().ToList();
+		ComputedType  = ResolvedTypes.FirstOrDefault().Type;
 
 		return rg;
 	}

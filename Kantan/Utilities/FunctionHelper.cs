@@ -4,32 +4,31 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Kantan.Utilities
+namespace Kantan.Utilities;
+
+public static class FunctionHelper
 {
-	internal class FunctionHelper
+	public static List<T> AddUntil<T>(this Func<T> f, Predicate<T> until, Predicate<T> stop)
 	{
-		public static List<T> ReadUntil<T>(Func<T> f, Predicate<T> a, Predicate<T> b)
-		{
-			var rg = new List<T>();
+		var rg = new List<T>();
 
-			T t;
+		T t;
 
-			do {
-				t = f();
+		do {
+			t = f();
 
-				if (b(t)) {
-					return null;
-				}
+			if (stop(t)) {
+				return null;
+			}
 
-				rg.Add(t);
+			rg.Add(t);
 
-				/*if (a(t)) {
-				break;
-			}*/
+			/*if (until(t)) {
+			break;
+		}*/
 
-			} while (!a(t));
+		} while (!until(t));
 
-			return rg;
-		}
+		return rg;
 	}
 }

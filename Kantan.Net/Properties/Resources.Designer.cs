@@ -70,6 +70,33 @@ namespace Kantan.Net.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to www.deviantart.com=images-wixmp.
+        /// </summary>
+        internal static string KV_Media {
+            get {
+                return ResourceManager.GetString("KV_Media", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .svg.
+        /// </summary>
+        internal static string KV_Media_EW {
+            get {
+                return ResourceManager.GetString("KV_Media_EW", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://pbs.twimg.com/profile_banners/.
+        /// </summary>
+        internal static string KV_Media_SW {
+            get {
+                return ResourceManager.GetString("KV_Media_SW", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         internal static byte[] magic {

@@ -1,7 +1,15 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
+using System.Reflection;
+using System.Resources;
+using AngleSharp.Common;
 using AngleSharp.Html.Dom;
 using Kantan.Net.Media;
+using Kantan.Net.Properties;
+using Kantan.Utilities;
+using Microsoft.Extensions.Logging;
 
 // ReSharper disable ConvertIfStatementToReturnStatement
 
@@ -15,29 +23,70 @@ public sealed class HttpMediaResourceFilter : IHttpResourceFilter
 
 	public bool Filter(string url)
 	{
-		if (url.Contains("www.deviantart.com")) {
+		/*var map = ResourceHelper.ReadMap(Resources.KV_Media);
+
+		foreach (var (k, v) in map) {
+
+			if (k.Any(url.Contains)) {
+				KantanNetInit.Logger.LogDebug($"{url}");
+
+				return url.Contains(v);
+			}
+		}
+		*/
+
+		if (url.Contains("www.deviantart.com"))
+		{
 			//https://images-wixmp-
 			return url.Contains("images-wixmp");
 		}
 
-		if (url.Contains("pbs.twimg.com") || url.Contains("twitter.com")) {
+		if (url.Contains("pbs.twimg.com") || url.Contains("twitter.com"))
+		{
 			return !url.Contains("profile_banners");
 		}
 
-		if (url.StartsWith("https://pbs.twimg.com/profile_banners/")) {
+		if (url.StartsWith("https://pbs.twimg.com/profile_banners/"))
+		{
 			return false;
 		}
 
-		if (url.EndsWith(".svg")) {
+		if (url.EndsWith(".svg"))
+		{
 			return false;
 		}
 
 		return true;
+		
+	}
+
+	private static ResourceManager GetManager(Assembly assembly)
+	{
+		string name = null;
+
+		foreach (string v in assembly.GetManifestResourceNames()) {
+			string value = assembly.GetName().Name;
+
+			if (v.Contains(value!) || v.Contains("EmbeddedResources")) {
+				name = v;
+				break;
+			}
+		}
+
+		if (name == null) {
+			return null;
+		}
+
+		name = name[..name.LastIndexOf('.')];
+
+		var resourceManager = new ResourceManager(name, assembly);
+
+		return resourceManager;
 	}
 
 	public string DiscreteType => DiscreteMediaTypes.Image;
 
-	public List<string> GetUrls(IHtmlDocument document)
+	public List<string> Parse(IHtmlDocument document)
 	{
 		var rg = document.QuerySelectorAttributes("img", "src")
 		                 .Union(document.QuerySelectorAttributes("a", "href"))

@@ -8,7 +8,9 @@ using System.Threading.Tasks;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Flurl.Http;
+using Kantan.Diagnostics;
 using Kantan.Net.Media;
+using Microsoft.Extensions.Logging;
 
 #endregion
 
@@ -24,39 +26,43 @@ public interface IHttpResourceFilter
 	[VP(nameof(DiscreteMediaTypes))]
 	public List<string> TypeBlacklist { get; }
 
-	public static IHttpResourceFilter Default = new HttpMediaResourceFilter();
+	public static IHttpResourceFilter Default { get; internal set; } = new HttpMediaResourceFilter();
 
 	public bool Filter(string s);
 
 	public virtual List<string> Refine(List<string> urls)
 	{
+
 		for (int i = urls.Count - 1; i >= 0; i--) {
-
-			if (urls[i] is { }) {
-
-				if (UriUtilities.IsUri(urls[i], out var u2)) {
-
-					urls[i] = UriUtilities.NormalizeUrl(u2);
-				}
-				else {
-					urls.RemoveAt(i);
-					continue;
-				}
-
-				if (!Filter( /*u2*/ urls[i])) {
-
-					Debug.WriteLine($"removing {u2}");
-					urls.RemoveAt(i);
-				}
+			if (urls[i] is null) {
+				urls.RemoveAt(i);
+				continue;
 			}
+
+			if (UriUtilities.IsUri(urls[i], out var u2)) {
+				urls[i] = UriUtilities.NormalizeUrl(u2);
+			}
+			else {
+				urls.RemoveAt(i);
+				continue;
+			}
+
+			if (!Filter(urls[i])) {
+				/*KantanNetInit.LoggerFactory.CreateLogger<IHttpResourceFilter>()
+					  .LogDebug(message: $"removing {u2}");*/
+
+				// Debug.WriteLine($"removing {u2}",LogCategories.C_VERBOSE);
+				urls.RemoveAt(i);
+			}
+
 		}
 
 		return urls;
 	}
 
-	public List<string> GetUrls(IHtmlDocument document);
+	public List<string> Parse(IHtmlDocument document);
 
-	public async Task<List<string>> ExtractUrls(string s)
+	public async Task<List<string>> Extract(string s)
 	{
 		// filter = new MediaImageFilter();
 
@@ -71,7 +77,7 @@ public interface IHttpResourceFilter
 			return Enumerable.Empty<string>() as List<string>;
 		}
 
-		urls = GetUrls(new HtmlParser().ParseDocument(r));
+		urls = Parse(new HtmlParser().ParseDocument(r));
 
 		urls = Refine(urls)
 		       .Where(x => x != null)
