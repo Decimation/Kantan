@@ -12,8 +12,8 @@ using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Flurl.Http;
 using Kantan.Net.Content;
+using Kantan.Net.Content.Filters;
 using Kantan.Net.Content.Resolvers;
-using Kantan.Net.Media.Filters;
 
 // ReSharper disable UnusedVariable
 
@@ -26,6 +26,7 @@ namespace Kantan.Net.Media;
 /// <summary>
 /// Binary data and Mime (Media) type sniffing
 /// </summary>
+[Obsolete]
 public static class MediaSniffer
 {
 	/*
@@ -40,7 +41,6 @@ public static class MediaSniffer
 	static MediaSniffer() { }
 
 #if TST
-	
 	/// <summary>
 	///     Scans for binary resources within a webpage.
 	/// </summary>
@@ -53,7 +53,7 @@ public static class MediaSniffer
 		timeoutMS ??= HttpUtilities.Timeout;
 
 		IHtmlDocument document = null;
-		b     ??= new MediaImageFilter();
+		b ??= new MediaImageFilter();
 		token ??= CancellationToken.None;
 
 		try {
@@ -146,7 +146,7 @@ public static class MediaSniffer
 	/// <summary>
 	///     Scans for binary resources within a webpage.
 	/// </summary>
-	public static List<MediaResource> Scan(string url, MediaResourceFilter b, int count = 10,
+	public static List<MediaResource> Scan(string url, IHttpResourceFilter b, int count = 10,
 	                                       long? timeoutMS = null,
 	                                       CancellationToken? token = null)
 	{
@@ -270,7 +270,7 @@ public static class MediaSniffer
 	}
 }
 
-/// <see cref="MediaResourceFilter.DiscreteType"/>
+/// <see cref="IHttpResourceFilter.DiscreteType"/>
 public static class DiscreteMediaTypes
 {
 	public const string Image       = "image";

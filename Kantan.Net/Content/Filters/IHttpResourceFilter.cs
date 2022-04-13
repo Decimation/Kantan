@@ -1,21 +1,25 @@
-﻿using System;
+﻿#region
+
 using System.Collections.Generic;
 using System.Diagnostics;
 using AngleSharp.Html.Dom;
+using Kantan.Net.Media;
 
-namespace Kantan.Net.Media.Filters;
+#endregion
 
-public abstract class MediaResourceFilter
+namespace Kantan.Net.Content.Filters;
+
+public interface IHttpResourceFilter
 {
-	public abstract int? MinimumSize { get; }
+	public int? MinimumSize { get; }
 
 	[VP(nameof(DiscreteMediaTypes))]
-	public abstract string DiscreteType { get; }
+	public string DiscreteType { get; }
 
 	[VP(nameof(DiscreteMediaTypes))]
-	public abstract List<string> TypeBlacklist { get; }
+	public List<string> TypeBlacklist { get; }
 
-	public abstract bool UrlFilter(string s);
+	public bool UrlFilter(string s);
 
 	public virtual List<string> Refine(List<string> urls)
 	{

@@ -2,17 +2,18 @@
 using System.Net.Http;
 using System.Threading;
 using Flurl.Http;
-using Kantan.Net.Media.Filters;
+using Kantan.Net.Content.Filters;
 
 namespace Kantan.Net.Media;
 
+[Obsolete]
 public class MediaResource : IDisposable
 {
 	public Uri Url { get; set; }
 
 	public HttpResponseMessage Response { get; set; }
 
-	public MediaResourceFilter Filter { get; set; }
+	public IHttpResourceFilter Filter { get; set; }
 
 	public MediaResource() { }
 
@@ -30,10 +31,10 @@ public class MediaResource : IDisposable
 	{
 		Response?.Dispose();
 		GC.SuppressFinalize(this);
-		
+
 	}
 
-	public static bool FromUrl(string url, MediaResourceFilter filter, out MediaResource mr,
+	public static bool FromUrl(string url, IHttpResourceFilter filter, out MediaResource mr,
 	                           int? timeout = null, CancellationToken? token = null)
 	{
 

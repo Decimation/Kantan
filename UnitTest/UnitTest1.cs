@@ -11,8 +11,8 @@ using Kantan.Diagnostics;
 using Kantan.Model;
 using Kantan.Net;
 using Kantan.Net.Content;
+using Kantan.Net.Content.Filters;
 using Kantan.Net.Media;
-using Kantan.Net.Media.Filters;
 using Kantan.Numeric;
 using Kantan.Text;
 using Kantan.Utilities;
@@ -52,7 +52,7 @@ public class MimeTypeTests
 	[TestCase("https://www.zerochan.net/2750747", "http://static.zerochan.net/atago.(azur.lane).full.2750747.png")]
 	public void Test1(string u, string s)
 	{
-		var binaryUris = MediaSniffer.Scan(u, new MediaImageFilter());
+		var binaryUris = MediaSniffer.Scan(u, new HttpMediaResourceFilter());
 		Assert.True(binaryUris.Select(x => x.Url.ToString()).ToList().Contains(s));
 	}
 }

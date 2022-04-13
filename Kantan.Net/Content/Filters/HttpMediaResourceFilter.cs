@@ -1,17 +1,19 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using AngleSharp.Html.Dom;
+using Kantan.Net.Media;
+
 // ReSharper disable ConvertIfStatementToReturnStatement
 
-namespace Kantan.Net.Media.Filters;
+namespace Kantan.Net.Content.Filters;
 
-public sealed class MediaImageFilter : MediaResourceFilter
+public sealed class HttpMediaResourceFilter : IHttpResourceFilter
 {
-	public static readonly MediaImageFilter Default = new();
+	public static readonly HttpMediaResourceFilter Default = new();
 
-	public override int? MinimumSize => 50_000;
+	public int? MinimumSize => 50_000;
 
-	public override bool UrlFilter(string url)
+	public bool UrlFilter(string url)
 	{
 		if (url.Contains("www.deviantart.com")) {
 			//https://images-wixmp-
@@ -33,9 +35,9 @@ public sealed class MediaImageFilter : MediaResourceFilter
 		return true;
 	}
 
-	public override string DiscreteType => DiscreteMediaTypes.Image;
+	public string DiscreteType => DiscreteMediaTypes.Image;
 
-	public override List<string> GetUrls(IHtmlDocument document)
+	public List<string> GetUrls(IHtmlDocument document)
 	{
 		var rg = document.QuerySelectorAttributes("img", "src")
 		                 .Union(document.QuerySelectorAttributes("a", "href"))
@@ -44,5 +46,5 @@ public sealed class MediaImageFilter : MediaResourceFilter
 		return rg;
 	}
 
-	public override List<string> TypeBlacklist => new() { "image/svg+xml" };
+	public List<string> TypeBlacklist => new() { "image/svg+xml" };
 }

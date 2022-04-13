@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Numerics;
 using System.Threading;
@@ -8,6 +9,9 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using Kantan.Collections;
 using Kantan.Net;
+using Kantan.Net.Content;
+using Kantan.Net.Content.Filters;
+using Kantan.Net.Media;
 using Kantan.Numeric;
 using Kantan.Utilities;
 using Array = System.Array;
@@ -80,7 +84,6 @@ public class Benchmarks2
 
 		return rg.ReplaceAllSequences(search, replace);
 
-
 	}
 }
 
@@ -109,6 +112,7 @@ public class Benchmarks5
 		x = new int[] { 1 };
 
 	}
+
 	[Benchmark]
 	public int[] a()
 	{
@@ -140,11 +144,43 @@ public class Benchmarks5
 	}
 }
 
+public class Benchmarks6
+{
+	/*
+| Method |     Mean |     Error |    StdDev |   Median |
+|------- |---------:|----------:|----------:|---------:|
+|      a | 987.6 ms | 210.53 ms | 617.46 ms | 425.1 ms |
+|      b | 137.7 ms |   1.21 ms |   0.95 ms | 137.2 ms |
+	 */
+
+	[GlobalSetup]
+	public void GlobalSetup() { }
+
+	[Benchmark]
+	public void a()
+	{
+		MediaSniffer.Scan(@"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png",
+		                  HttpMediaResourceFilter.Default);
+
+	}
+
+	[Benchmark]
+	public void b()
+	{
+		var x1 = HttpScanner.ExtractUrls(@"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png",
+		                                 HttpMediaResourceFilter.Default);
+		x1.Wait();
+		var x = x1.Result;
+		Task.WhenAll(x.Select(async Task<HttpResource>(y) => { return await HttpResource.GetAsync(y); })).Wait();
+
+	}
+}
+
 public static class Program
 {
 	public static void Main(string[] args)
 	{
-		BenchmarkRunner.Run<Benchmarks5>();
+		BenchmarkRunner.Run<Benchmarks6>();
 
 	}
 }

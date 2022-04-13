@@ -1,8 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using AngleSharp.Html.Parser;
+using Flurl.Http;
 using Kantan.Diagnostics;
+using Kantan.Net.Content.Filters;
 
 // ReSharper disable InconsistentNaming
 
@@ -23,6 +27,32 @@ namespace Kantan.Net.Content;
 public static class HttpScanner
 {
 	private const int RSRC_HEADER_LEN = 1445;
+
+	public static async Task<List<string>> ExtractUrls(string s, IHttpResourceFilter filter)
+	{
+		// filter = new MediaImageFilter();
+
+		string       r;
+		List<string> urls = null;
+
+		try {
+			r = await s.AllowAnyHttpStatus().GetStringAsync();
+
+		}
+		catch (Exception e) {
+			return Enumerable.Empty<string>() as List<string>;
+		}
+
+		urls = filter.GetUrls(new HtmlParser().ParseDocument(r));
+
+		urls = filter.Refine(urls)
+		             .Where(x => x != null)
+		             // .DistinctBy(x => UriUtilities.GetHostUri(new Uri(x)))
+		             .Distinct()
+		             .ToList();
+
+		return urls;
+	}
 
 	/// <remarks><a href="https://mimesniff.spec.whatwg.org/#sniffing-a-mislabeled-binary-resource">7.2</a></remarks>
 	public static string IsBinaryResource(byte[] input)

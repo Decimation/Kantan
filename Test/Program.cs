@@ -28,8 +28,8 @@ using Kantan.Internal;
 using Kantan.Model;
 using Kantan.Net;
 using Kantan.Net.Content;
+using Kantan.Net.Content.Filters;
 using Kantan.Net.Media;
-using Kantan.Net.Media.Filters;
 using Kantan.Text;
 using Kantan.Utilities;
 using Microsoft.VisualBasic.CompilerServices;
@@ -74,7 +74,7 @@ public static class Program
 			var sw = Stopwatch.StartNew();
 			// Console.WriteLine($">{s}");
 
-			List<string> urls = await ExtractUrls(s, new MediaImageFilter());
+			List<string> urls = await HttpScanner.ExtractUrls(s, new HttpMediaResourceFilter());
 
 			sw.Stop();
 			Console.WriteLine($"{sw.Elapsed.TotalSeconds}");
@@ -82,7 +82,11 @@ public static class Program
 
 			// await ParallelHelper.ForeachAsync(urls, 100, Action);
 
-			v = await Task.WhenAll(urls.Select(Action));
+			v = await Task.WhenAll(urls.Select(async Task<HttpResource>(s1) =>
+			{
+				return await HttpResource.GetAsync(s1);
+			}));
+
 			Console.WriteLine(v.QuickJoin());
 			Console.WriteLine($"{sw.Elapsed.TotalSeconds}");
 
@@ -97,51 +101,6 @@ public static class Program
 		Console.ReadKey();
 	}
 
-	private static async Task<HttpResource> Action(string s1)
-	{
-		// Console.WriteLine($">>{url}");
-
-		var t = await HttpResource.GetAsync(s1);
-
-		// t.Wait();
-		// var tt = t.Result;
-
-		if (t is { }) {
-			// Console.WriteLine($"{t}");
-
-			return t;
-		}
-
-		return null;
-
-	}
-
-	private static async Task<List<string>> ExtractUrls(string s, MediaResourceFilter filter)
-	{
-		// filter = new MediaImageFilter();
-
-		string       r;
-		List<string> urls = null;
-
-		try {
-			r = await s.AllowAnyHttpStatus().GetStringAsync();
-
-		}
-		catch (Exception e) {
-			return Enumerable.Empty<string>() as List<string>;
-		}
-
-		urls = filter.GetUrls(new HtmlParser().ParseDocument(r));
-
-		urls = filter.Refine(urls)
-		             .Where(x => x != null)
-		             // .DistinctBy(x => UriUtilities.GetHostUri(new Uri(x)))
-		             .Distinct()
-		             .ToList();
-
-		return urls;
-	}
-
 	private static void Test1()
 	{
 		var url = @"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png";
@@ -152,11 +111,11 @@ public static class Program
 			"https://twitter.com/mircosciamart/status/1186775807655587841"
 		};
 
-		var binaryUris = MediaSniffer.Scan(rg[^1], new MediaImageFilter())
-		                             .Union(MediaSniffer.Scan(rg[1], new MediaImageFilter()));
+		var binaryUris = MediaSniffer.Scan(rg[^1], new HttpMediaResourceFilter())
+		                             .Union(MediaSniffer.Scan(rg[1], new HttpMediaResourceFilter()));
 
 		foreach (var v1 in rg) {
-			var v2 = MediaSniffer.Scan(v1, MediaImageFilter.Default);
+			var v2 = MediaSniffer.Scan(v1, HttpMediaResourceFilter.Default);
 
 			foreach (MediaResource v in v2) {
 				Console.WriteLine(v.Url);
@@ -181,7 +140,7 @@ public static class Program
 			}*/
 		var sw = Stopwatch.StartNew();
 
-		MediaResourceFilter filter = new MediaImageFilter();
+		IHttpResourceFilter filter = new HttpMediaResourceFilter();
 
 		string r = await s.GetStringAsync();
 
@@ -214,7 +173,7 @@ public static class Program
 
 	}
 
-	private static void Test1(string s, MediaResourceFilter filter)
+	private static void Test1(string s, IHttpResourceFilter filter)
 	{
 		var u2 = MediaSniffer.Scan(s, filter);
 		Console.WriteLine(u2.QuickJoin());

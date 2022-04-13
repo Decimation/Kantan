@@ -11,7 +11,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Kantan.Net.Content.Resolvers;
-using Kantan.Net.Media.Filters;
 using Kantan.Net.Properties;
 
 // ReSharper disable InconsistentNaming

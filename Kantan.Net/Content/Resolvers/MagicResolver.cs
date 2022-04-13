@@ -1,14 +1,27 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using Kantan.Net.Media;
 using Kantan.Net.Properties;
 
+#endregion
+
 namespace Kantan.Net.Content.Resolvers;
 
 public sealed class MagicResolver : IHttpTypeResolver, IDisposable
 {
+	public const MagicOpenFlags MagicMimeFlags =
+		MagicOpenFlags.MAGIC_ERROR |
+		MagicOpenFlags.MAGIC_MIME_TYPE |
+		MagicOpenFlags.MAGIC_NO_CHECK_COMPRESS |
+		MagicOpenFlags.MAGIC_NO_CHECK_ELF |
+		MagicOpenFlags.MAGIC_NO_CHECK_APPTYPE;
+
+	public IntPtr Magic { get; }
+
 	public MagicResolver(string mgc = null)
 	{
 		if (mgc == null) {
@@ -28,15 +41,6 @@ public sealed class MagicResolver : IHttpTypeResolver, IDisposable
 		var sz  = MagicNative.magic_buffer(Magic, buf, buf.Length);
 		return Marshal.PtrToStringAnsi(sz);
 	}
-
-	public const MagicOpenFlags MagicMimeFlags =
-		MagicOpenFlags.MAGIC_ERROR |
-		MagicOpenFlags.MAGIC_MIME_TYPE |
-		MagicOpenFlags.MAGIC_NO_CHECK_COMPRESS |
-		MagicOpenFlags.MAGIC_NO_CHECK_ELF |
-		MagicOpenFlags.MAGIC_NO_CHECK_APPTYPE;
-
-	public IntPtr Magic { get; }
 
 	public void Dispose()
 	{

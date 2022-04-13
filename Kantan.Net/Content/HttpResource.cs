@@ -1,4 +1,6 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -11,9 +13,13 @@ using Kantan.Net.Content.Resolvers;
 using Kantan.Net.Media;
 using Kantan.Text;
 
+#endregion
+
 namespace Kantan.Net.Content;
 
-/// <remarks><a href="https://mimesniff.spec.whatwg.org/#handling-a-resource">5</a></remarks>
+/// <remarks>
+///     <a href="https://mimesniff.spec.whatwg.org/#handling-a-resource">5</a>
+/// </remarks>
 public sealed class HttpResource : IDisposable
 {
 	public string SuppliedType { get; private set; }
@@ -34,7 +40,9 @@ public sealed class HttpResource : IDisposable
 
 	private HttpResource() { }
 
-	/// <remarks><a href="https://mimesniff.spec.whatwg.org/#supplied-mime-type-detection-algorithm">5.1</a></remarks>
+	/// <remarks>
+	///     <a href="https://mimesniff.spec.whatwg.org/#supplied-mime-type-detection-algorithm">5.1</a>
+	/// </remarks>
 	private static string GetSuppliedType(IFlurlResponse r, out bool c)
 	{
 		c = false;
@@ -67,8 +75,7 @@ public sealed class HttpResource : IDisposable
 			return null;
 		}*/
 
-		try
-		{
+		try {
 			response = await u.AllowAnyHttpStatus()
 			                  .WithTimeout(HttpUtilities.Timeout)
 			                  .GetAsync();
@@ -101,12 +108,6 @@ public sealed class HttpResource : IDisposable
 		};
 
 		return resource;
-	}
-
-	public void Dispose()
-	{
-		Response?.Dispose();
-		Stream?.Dispose();
 	}
 
 	public override string ToString()
@@ -144,5 +145,11 @@ public sealed class HttpResource : IDisposable
 		ResolvedTypes = rg;
 
 		return rg;
+	}
+
+	public void Dispose()
+	{
+		Response?.Dispose();
+		Stream?.Dispose();
 	}
 }
