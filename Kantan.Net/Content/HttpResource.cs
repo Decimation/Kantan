@@ -80,7 +80,7 @@ public sealed class HttpResource : IDisposable
 
 		var stream = await response.GetStreamAsync();
 
-		var header = await HttpResourceScanner.ReadResourceHeader(stream);
+		var header = await HttpScanner.ReadResourceHeader(stream);
 
 		var resource = new HttpResource()
 		{
@@ -90,7 +90,7 @@ public sealed class HttpResource : IDisposable
 			CheckBugFlag  = b,
 			ResolvedTypes = new List<HttpType>(),
 			Header        = header,
-			ComputedType  = HttpResourceScanner.IsBinaryResource(header),
+			ComputedType  = HttpScanner.IsBinaryResource(header),
 			Url           = u
 		};
 
@@ -103,7 +103,7 @@ public sealed class HttpResource : IDisposable
 			// todo ...
 		}
 
-		List<HttpType> rg = HttpType.All.Where(t => HttpResourceScanner.CheckPattern(Header, t))
+		List<HttpType> rg = HttpType.All.Where(t => HttpScanner.CheckPattern(Header, t))
 		                            .ToList();
 
 		if (runExtra) {

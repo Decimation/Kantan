@@ -24,6 +24,8 @@ public readonly struct HttpType
 
 	// todo: move to Embedded Resources
 
+	#region
+
 	public static readonly HttpType gif = new()
 	{
 		Pattern = new byte[] { 0x47, 0x49, 0x46, 0x38, 0x37, 0x61, },
@@ -66,6 +68,8 @@ public readonly struct HttpType
 		Type    = "image/bmp"
 	};
 
+	#endregion
+
 	static HttpType()
 	{
 		All = typeof(HttpType)
@@ -82,21 +86,13 @@ public readonly struct HttpType
 		       $"{nameof(IsPartial)}: {IsPartial}";
 	}
 
-	public const string MT_TEXT_PLAIN = $"{DiscreteMediaTypes.Text}/plain";
+	public const string MT_TEXT_PLAIN               = $"{MT_TEXT}/plain";
+	public const string MT_APPLICATION_OCTET_STREAM = $"{MT_APPLICATION}/octet-stream";
 
-	public const string MT_APPLICATION_OCTET_STREAM = $"{DiscreteMediaTypes.Application}/octet-stream";
-}
-
-/// <see cref="IHttpResourceFilter.DiscreteType"/>
-public static class DiscreteMediaTypes
-{
-	public const string Image       = "image";
-	public const string Text        = "text";
-	public const string Application = "application";
-	public const string Video       = "video";
-	public const string Audio       = "audio";
-	public const string Model       = "model";
-
-	// todo
-	// ...
+	public const string MT_IMAGE       = "image";
+	public const string MT_TEXT        = "text";
+	public const string MT_APPLICATION = "application";
+	public const string MT_VIDEO       = "video";
+	public const string MT_AUDIO       = "audio";
+	public const string MT_MODEL       = "model";
 }

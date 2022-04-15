@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using AngleSharp.Html.Parser;
-using Flurl.Http;
 using Kantan.Diagnostics;
 using Kantan.Net.Content.Filters;
 
@@ -24,7 +21,7 @@ namespace Kantan.Net.Content;
 /// <summary>
 /// <a href="https://mimesniff.spec.whatwg.org/">Implements <em>MIME</em></a>
 /// </summary>
-public static class HttpResourceScanner
+public static class HttpScanner
 {
 	private const int RSRC_HEADER_LEN = 1445;
 
@@ -110,9 +107,9 @@ public static class HttpResourceScanner
 		return true;
 	}
 
-	public static async Task<HttpResource[]> ScanAsync(string url, IHttpResourceFilter filter = null)
+	public static async Task<HttpResource[]> ScanAsync(string url, HttpResourceFilter filter = null)
 	{
-		filter ??= IHttpResourceFilter.Default;
+		filter ??= HttpResourceFilter.Default;
 
 		List<string> urls = await filter.Extract(url);
 

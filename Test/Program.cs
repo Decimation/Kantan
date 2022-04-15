@@ -53,58 +53,40 @@ using System;
 
 public static class Program
 {
+	private static string[] _rg1 = new[]
+	{
+		@"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png",
+		@"https://i.imgur.com/QtCausw.png",
+		@"https://www.deviantart.com/sciamano240",
+		"https://www.zerochan.net/2750747",
+		"http://s1.zerochan.net/atago.(azur.lane).600.2750747.jpg",
+		"https://twitter.com/mircosciamart/status/1186775807655587841",
+		@"https://en.wikipedia.org/wiki/Lambda_calculus",
+		@"http://www.zerochan.net/2750747",
+		"https://scontent-ord1-1.xx.fbcdn.net/t31.0-8/14715634_1300559193310808_8524406991247613051_o.jpg",
+		"https://kemono.party/data/45/a0/45a04a55cdc142ee78f6f00452886bc4b336d9f35d3d851f5044852a7e26b5da.png"
+	};
+
+	private static string[] _rg = new[]
+	{
+		@"http://www.zerochan.net/2750747",
+	};
+
 	private static async Task Main(string[] args)
 	{
 
-		var rg1 = new[]
-		{
-			@"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png",
-			@"https://i.imgur.com/QtCausw.png",
-			@"https://www.deviantart.com/sciamano240",
-			"https://www.zerochan.net/2750747",
-			"http://s1.zerochan.net/atago.(azur.lane).600.2750747.jpg",
-			"https://twitter.com/mircosciamart/status/1186775807655587841",
-			@"https://en.wikipedia.org/wiki/Lambda_calculus",
-			@"http://www.zerochan.net/2750747",
-			"https://scontent-ord1-1.xx.fbcdn.net/t31.0-8/14715634_1300559193310808_8524406991247613051_o.jpg",
-			"https://kemono.party/data/45/a0/45a04a55cdc142ee78f6f00452886bc4b336d9f35d3d851f5044852a7e26b5da.png"
-		};
+		// var v = await Kantan.Net.Content.HttpScanner.ScanAsync(_rg[0], HttpResourceFilter.Default);
 
-		var rg = new[]
-		{
-			@"http://www.zerochan.net/2750747",
-		};
+		foreach (var a in _rg1) {
+			foreach (var aa in await HttpScanner.ScanAsync(a)) {
+				Console.WriteLine(aa.Url);
 
-		HttpResource[] v = Array.Empty<HttpResource>();
-
-		foreach (string s in rg1) {
-			var sw = Stopwatch.StartNew();
-			Console.WriteLine($">{s}");
-
-			v = await HttpResourceScanner.ScanAsync(s, IHttpResourceFilter.Default);
-			sw.Stop();
-
-			Console.WriteLine($"{sw.Elapsed.TotalSeconds}");
-			sw.Restart();
-
-			// await ParallelHelper.ForeachAsync(urls, 100, Action);
-
-			Console.WriteLine(v.QuickJoin());
-			Console.WriteLine($"{sw.Elapsed.TotalSeconds}");
-
+			}
 		}
 
-		Console.ReadKey();
-
-		foreach (var x in v) {
-			x.Dispose();
-		}
-
-		Console.ReadKey();
+		Debugger.Break();
 
 		KantanNetInit.Close();
-
-		var m = new ResourceManager(typeof(Resources));
 
 	}
 
@@ -135,7 +117,7 @@ public static class Program
 		_ = new Uri(rg[0]).Host;
 	}
 
-	private static void Test1(string s, IHttpResourceFilter filter)
+	private static void Test1(string s, HttpResourceFilter filter)
 	{
 		var u2 = MediaSniffer.Scan(s, filter);
 		Console.WriteLine(u2.QuickJoin());
@@ -154,7 +136,7 @@ public static class Program
 			}*/
 		var sw = Stopwatch.StartNew();
 
-		IHttpResourceFilter filter = new HttpMediaResourceFilter();
+		HttpResourceFilter filter = new HttpMediaResourceFilter();
 
 		string r = await s.GetStringAsync();
 

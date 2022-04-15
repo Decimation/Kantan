@@ -50,10 +50,14 @@ public class MimeTypeTests
 	[Test]
 	[TestCase("https://www.zerochan.net/2750747", "http://s1.zerochan.net/atago.(azur.lane).600.2750747.jpg")]
 	[TestCase("https://www.zerochan.net/2750747", "http://static.zerochan.net/atago.(azur.lane).full.2750747.png")]
-	public void Test1(string u, string s)
+	public async Task Test1(string u, string s)
 	{
-		var binaryUris = MediaSniffer.Scan(u, new HttpMediaResourceFilter());
-		Assert.True(binaryUris.Select(x => x.Url.ToString()).ToList().Contains(s));
+		// var binaryUris = MediaSniffer.Scan(u, new HttpMediaResourceFilter());
+		// Assert.True(binaryUris.Select(x => x.Url.ToString()).ToList().Contains(s));
+
+		Assert.Contains(
+			s, (await HttpScanner.ScanAsync(u, HttpResourceFilter.Media)).Select(x => x.Url).ToList());
+
 	}
 }
 

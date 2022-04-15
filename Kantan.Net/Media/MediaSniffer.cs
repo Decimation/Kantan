@@ -146,7 +146,7 @@ public static class MediaSniffer
 	/// <summary>
 	///     Scans for binary resources within a webpage.
 	/// </summary>
-	public static List<MediaResource> Scan(string url, IHttpResourceFilter b, int count = 10,
+	public static List<MediaResource> Scan(string url, HttpResourceFilter b, int count = 10,
 	                                       long? timeoutMS = null,
 	                                       CancellationToken? token = null)
 	{

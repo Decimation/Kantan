@@ -15,7 +15,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Kantan.Net.Content.Filters;
 
-public sealed class HttpMediaResourceFilter : IHttpResourceFilter
+public sealed class HttpMediaResourceFilter : HttpResourceFilter
 {
 	public static readonly HttpMediaResourceFilter Default = new();
 
@@ -56,7 +56,7 @@ public sealed class HttpMediaResourceFilter : IHttpResourceFilter
 
 	}
 
-	public string DiscreteType => DiscreteMediaTypes.Image;
+	public string DiscreteType => HttpType.MT_IMAGE;
 
 	public List<string> Parse(IHtmlDocument document)
 	{

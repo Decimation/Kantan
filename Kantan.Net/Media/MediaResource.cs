@@ -13,7 +13,7 @@ public class MediaResource : IDisposable
 
 	public HttpResponseMessage Response { get; set; }
 
-	public IHttpResourceFilter Filter { get; set; }
+	public HttpResourceFilter Filter { get; set; }
 
 	public MediaResource() { }
 
@@ -34,7 +34,7 @@ public class MediaResource : IDisposable
 
 	}
 
-	public static bool FromUrl(string url, IHttpResourceFilter filter, out MediaResource mr,
+	public static bool FromUrl(string url, HttpResourceFilter filter, out MediaResource mr,
 	                           int? timeout = null, CancellationToken? token = null)
 	{
 
