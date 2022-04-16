@@ -1,9 +1,13 @@
-﻿using System.Collections.Generic;
+﻿#region
+
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Kantan.Diagnostics;
 using Kantan.Net.Content.Filters;
+
+#endregion
 
 // ReSharper disable InconsistentNaming
 
@@ -19,13 +23,15 @@ namespace Kantan.Net.Content;
 // --- H6
 
 /// <summary>
-/// <a href="https://mimesniff.spec.whatwg.org/">Implements <em>MIME</em></a>
+///     <a href="https://mimesniff.spec.whatwg.org/">Implements <em>MIME</em></a>
 /// </summary>
 public static class HttpScanner
 {
 	private const int RSRC_HEADER_LEN = 1445;
 
-	/// <remarks><a href="https://mimesniff.spec.whatwg.org/#sniffing-a-mislabeled-binary-resource">7.2</a></remarks>
+	/// <remarks>
+	///     <a href="https://mimesniff.spec.whatwg.org/#sniffing-a-mislabeled-binary-resource">7.2</a>
+	/// </remarks>
 	public static string IsBinaryResource(byte[] input)
 	{
 		var l = input.Length;
@@ -49,13 +55,17 @@ public static class HttpScanner
 		return HttpType.MT_APPLICATION_OCTET_STREAM;
 	}
 
-	/// <remarks><a href="https://mimesniff.spec.whatwg.org/#terminology">3</a></remarks>
+	/// <remarks>
+	///     <a href="https://mimesniff.spec.whatwg.org/#terminology">3</a>
+	/// </remarks>
 	public static bool IsBinaryDataByte(byte b)
 	{
 		return b is >= 0x00 and <= 0x08 or 0x0B or >= 0x0E and <= 0x1A or >= 0x1C and <= 0x1F;
 	}
 
-	/// <remarks><a href="https://mimesniff.spec.whatwg.org/#reading-the-resource-header">5.2</a></remarks>
+	/// <remarks>
+	///     <a href="https://mimesniff.spec.whatwg.org/#reading-the-resource-header">5.2</a>
+	/// </remarks>
 	public static async Task<byte[]> ReadResourceHeader(Stream m)
 	{
 		int d = checked((int) m.Length);
@@ -71,10 +81,13 @@ public static class HttpScanner
 	public static bool CheckPattern(byte[] input, HttpType s, ISet<byte> ignored = null)
 		=> CheckPattern(input, s.Pattern, s.Mask, ignored);
 
-	/// <remarks><a href="https://mimesniff.spec.whatwg.org/#matching-a-mime-type-pattern">6</a></remarks>
+	/// <remarks>
+	///     <a href="https://mimesniff.spec.whatwg.org/#matching-a-mime-type-pattern">6</a>
+	/// </remarks>
 	public static bool CheckPattern(byte[] input, byte[] pattern, byte[] mask, ISet<byte> ignored = null)
 	{
 		Require.Assert(pattern.Length == mask.Length);
+
 		ignored ??= Enumerable.Empty<byte>().ToHashSet();
 
 		if (input.Length < pattern.Length) {
@@ -121,9 +134,10 @@ public static class HttpScanner
 			return rsrc;
 		}));
 
-		hr = hr.Where(x => x is { IsBinary: true } 
-		                   /*&& x.Stream.Length >= filter.MinimumSize
-		                   && filter.TypeBlacklist.Contains(x.ComputedType)*/).ToArray();
+		hr = hr.Where(x => x is { IsBinary: true }
+			       /*&& x.Stream.Length >= filter.MinimumSize
+			       && filter.TypeBlacklist.Contains(x.ComputedType)*/)
+		       .ToArray();
 
 		return hr;
 	}

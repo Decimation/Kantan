@@ -119,7 +119,9 @@ public class HttpResourceFilter
 		List<string> urls = null;
 
 		try {
-			r = await s.AllowAnyHttpStatus().GetStringAsync();
+			r = await s.WithClient(HttpUtilities.Client)
+			           .AllowAnyHttpStatus()
+			           .GetStringAsync();
 		}
 		catch (Exception e) {
 			Debug.WriteLine($"{nameof(HttpResourceFilter)}: {e.Message}");

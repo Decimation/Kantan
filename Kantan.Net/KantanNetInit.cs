@@ -1,4 +1,4 @@
-﻿global using KNI=Kantan.Net.KantanNetInit;
+﻿global using KNI = Kantan.Net.KantanNetInit;
 global using VP = JetBrains.Annotations.ValueProviderAttribute;
 using System;
 using System.Collections.Generic;
@@ -35,7 +35,8 @@ public static class KantanNetInit
 	static KantanNetInit()
 	{
 		Logger = LoggerFactory.CreateLogger($"Main");
-
+		RuntimeHelpers.RunClassConstructor(typeof(HttpUtilities).TypeHandle);
+		Setup();
 	}
 
 	[ModuleInitializer]

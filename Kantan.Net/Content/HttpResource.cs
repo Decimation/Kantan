@@ -58,7 +58,8 @@ public sealed class HttpResource : IDisposable
 		}*/
 
 		try {
-			response = await u.AllowAnyHttpStatus()
+			response = await u.WithClient(HttpUtilities.Client)
+			                  .AllowAnyHttpStatus()
 			                  .WithTimeout(HttpUtilities.Timeout)
 			                  .GetAsync();
 

@@ -61,7 +61,7 @@ public static class HttpUtilities
 	public static string UserAgent { get; set; } = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
 	                                               "(KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36";
 
-	public static FlurlClient Client { get; internal set; } = new ()
+	public static FlurlClient Client { get; internal set; } = new()
 	{
 		Settings =
 			{ }
@@ -74,6 +74,8 @@ public static class HttpUtilities
 			Settings =
 				{ }
 		};*/
+
+		ServicePointManager.DefaultConnectionLimit = 300;
 
 		ServicePointManager.SecurityProtocol =
 			SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;

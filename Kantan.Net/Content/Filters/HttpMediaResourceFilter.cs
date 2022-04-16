@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -15,11 +16,14 @@ using Microsoft.Extensions.Logging;
 
 namespace Kantan.Net.Content.Filters;
 
+[Obsolete]
 public sealed class HttpMediaResourceFilter : HttpResourceFilter
 {
 	public static readonly HttpMediaResourceFilter Default = new();
 
 	public int? MinimumSize => 50_000;
+
+	public string DiscreteType => HttpType.MT_IMAGE;
 
 	public bool Filter(string url)
 	{
@@ -55,8 +59,6 @@ public sealed class HttpMediaResourceFilter : HttpResourceFilter
 		return true;
 
 	}
-
-	public string DiscreteType => HttpType.MT_IMAGE;
 
 	public List<string> Parse(IHtmlDocument document)
 	{
