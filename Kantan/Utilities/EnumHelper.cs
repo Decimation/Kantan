@@ -13,14 +13,14 @@ namespace Kantan.Utilities;
 /// </summary>
 public static class EnumHelper
 {
-	public static List<TEnum> GetSetFlags<TEnum>(TEnum value, bool excludeZero = true) where  TEnum : Enum
+	public static List<TEnum> GetSetFlags<TEnum>(TEnum value, bool excludeZero = true) where TEnum : Enum
 	{
 		var flags = Enum.GetValues(typeof(TEnum))
 		                .Cast<TEnum>()
 		                .Where(f => value.HasFlag(f))
 		                .ToList();
 
-			
+
 		if (excludeZero) {
 			flags.RemoveAll(e => Convert.ToInt32(e) == 0);
 

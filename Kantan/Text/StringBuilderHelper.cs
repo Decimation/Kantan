@@ -12,7 +12,8 @@ namespace Kantan.Text;
 public static class StringBuilderHelper
 {
 	public static StringBuilder Append(this StringBuilder sb, string name, object? val,
-	                                   string? valStr = null, bool newLine = true, Color? nameColor = null)
+	                                   string? valStr = null, bool newLine = true, 
+	                                   Color? nameColor = null)
 	{
 		if (val == null) {
 			goto ret;

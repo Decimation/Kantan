@@ -64,7 +64,15 @@ public static class HttpUtilities
 	public static FlurlClient Client { get; internal set; } = new()
 	{
 		Settings =
-			{ }
+		{
+			Redirects =
+			{
+				AllowSecureToInsecure = true,
+				Enabled               = true
+			},
+			
+		},
+		
 	};
 
 	static HttpUtilities()
@@ -108,7 +116,7 @@ public static class HttpUtilities
 			try {
 
 				var resp1 = GetHttpResponse(url, method: HttpMethod.Head);
-				var resp  = resp1.ResponseMessage;
+				var resp  = resp1?.ResponseMessage;
 
 				switch (resp.StatusCode) {
 					case HttpStatusCode.OK:

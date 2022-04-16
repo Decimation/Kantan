@@ -25,14 +25,10 @@ namespace Kantan.Collections;
 /// </summary>
 public static class EnumerableHelper
 {
-
 	public static T MoveAndGet<T>(this IEnumerator<T> t)
 	{
-		if (t.MoveNext()) {
-			return t.Current;
-		}
+		return t.MoveNext() ? t.Current : default;
 
-		return default;
 		// throw new Exception();
 	}
 
@@ -56,19 +52,6 @@ public static class EnumerableHelper
 	public static bool StartsWith<T>(this IList<T> list, IList<T> sequence)
 		=> list.Take(sequence.Count).SequenceEqual(sequence);
 
-	public static T[] Generate<T>(Func<T, T> f, int n)
-	{
-		var rg = new T[n];
-
-		for (int i = 0; i < n; i++) {
-			T t = i == 0 ? default : rg[i - 1];
-			rg[i] = f(t);
-		}
-
-		return rg;
-	}
-
-	public static T[] Generate<T>(Func<T> f, int n) => Generate<T>(x => f(), n);
 
 	/// <summary>
 	/// Retrieves a random element from <paramref name="list"/>.
@@ -221,7 +204,7 @@ public static class EnumerableHelper
 		return keys.ToDictionary(keySelector, v => valueSelector(dic[v]));
 
 	}
-	
+
 	public static bool TryCastDictionary<T>(T obj, out Map buf) where T : IDictionary
 	{
 		bool condition = obj.GetType().GetInterface(nameof(IDictionary)) != null;
@@ -305,6 +288,6 @@ public static class EnumerableHelper
 
 		return dict;
 	}
-	
+
 	private const string DICT_DELIM = "=";
 }

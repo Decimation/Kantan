@@ -1,9 +1,13 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
+#endregion
 
 // ReSharper disable UnusedMember.Global
 
@@ -217,11 +221,9 @@ public static class TaskHelper
 
 	public static async Task AwaitWithTimeout(this Task task, int timeout, Action success, Action error)
 	{
-		if (await Task.WhenAny(task, Task.Delay(timeout)) == task) {
+		if (await Task.WhenAny(task, Task.Delay(timeout)) == task)
 			success();
-		}
-		else {
+		else
 			error();
-		}
 	}
 }

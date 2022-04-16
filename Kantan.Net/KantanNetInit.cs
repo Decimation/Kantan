@@ -28,15 +28,14 @@ public static class KantanNetInit
 
 	public static readonly LoggerFactory LoggerFactory = new() { };
 
-	public static readonly ILogger Logger;
+	public static readonly ILogger Logger = LoggerFactory.CreateLogger($"{nameof(NAME)}");
 
-	public static readonly Assembly Assembly = typeof(KantanNetInit).GetTypeInfo().Assembly;
+	public static readonly Assembly Assembly = typeof(KNI).GetTypeInfo().Assembly;
 
 	static KantanNetInit()
 	{
-		Logger = LoggerFactory.CreateLogger($"Main");
-		RuntimeHelpers.RunClassConstructor(typeof(HttpUtilities).TypeHandle);
-		Setup();
+		// RuntimeHelpers.RunClassConstructor(typeof(HttpUtilities).TypeHandle);
+		// Setup();
 	}
 
 	[ModuleInitializer]

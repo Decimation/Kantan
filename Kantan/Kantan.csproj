@@ -65,8 +65,8 @@
     <Folder Include="Properties\" />
   </ItemGroup>
   <PropertyGroup>
-    <PackageId>Kantan</PackageId>
-    <Version>1.0.0</Version>
+    <PackageId>$(AssemblyName)</PackageId>
+    <Version>$(VersionPrefix)</Version>
     <Authors>Read Stanton (Decimation)</Authors>
     <PackageTags>Utilities common</PackageTags>
     <RepositoryUrl>https://github.com/Decimation/Kantan</RepositoryUrl>

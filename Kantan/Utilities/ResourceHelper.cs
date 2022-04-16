@@ -36,7 +36,6 @@ public static class ResourceHelper
 
 	public static Dictionary<string[], string> ReadMap(string s)
 	{
-
 		var a = s.Split('\n')
 		         .Select(x => x.Split('='))
 		         .ToDictionary(x => x[0].Split(','), x => x[1]);

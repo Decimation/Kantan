@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+// ReSharper disable IdentifierTypo
 
 namespace Kantan.Utilities;
 
@@ -16,34 +17,36 @@ public static class ParallelHelper
 	 */
 	public static async Task ForeachAsync<T>(IEnumerable<T> source, int maxParallelCount, Func<T, Task> action)
 	{
-		using (SemaphoreSlim completeSemphoreSlim = new SemaphoreSlim(1))
-		using (SemaphoreSlim taskCountLimitsemaphoreSlim = new SemaphoreSlim(maxParallelCount)) {
-			await completeSemphoreSlim.WaitAsync();
-			int runningtaskCount = source.Count();
+		using var completeSemphoreSlim = new SemaphoreSlim(1);
 
-			foreach (var item in source) {
-				await taskCountLimitsemaphoreSlim.WaitAsync();
+		using var taskCountLimitsemaphoreSlim = new SemaphoreSlim(maxParallelCount);
 
-				Task.Run(async () =>
-				{
-					try {
-						await action(item).ContinueWith(task =>
-						{
-							Interlocked.Decrement(ref runningtaskCount);
+		await completeSemphoreSlim.WaitAsync();
+		int runningtaskCount = source.Count();
 
-							if (runningtaskCount == 0) {
-								completeSemphoreSlim.Release();
-							}
-						});
-					}
-					finally {
-						taskCountLimitsemaphoreSlim.Release();
-					}
-				}).GetHashCode();
-			}
+		foreach (var item in source) {
+			await taskCountLimitsemaphoreSlim.WaitAsync();
 
-			await completeSemphoreSlim.WaitAsync();
+			Task.Run(async () =>
+			{
+				try {
+					await action(item).ContinueWith(task =>
+					{
+						Interlocked.Decrement(ref runningtaskCount);
+
+						if (runningtaskCount == 0) {
+							completeSemphoreSlim.Release();
+						}
+					});
+				}
+				finally {
+					taskCountLimitsemaphoreSlim.Release();
+				}
+			}).GetHashCode();
 		}
+
+		await completeSemphoreSlim.WaitAsync();
+
 	}
 
 	public sealed class InfinitePartitioner : Partitioner<bool>

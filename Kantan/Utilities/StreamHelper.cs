@@ -30,9 +30,12 @@ public static class StreamHelper
 	public static byte[] ToByteArray(this Stream stream)
 	{
 		stream.Position = 0;
-		using var ms = new MemoryStream();
-		stream.CopyTo(ms);
-		var rg = ms.ToArray();
+		// using var ms = new MemoryStream();
+		// stream.CopyTo(ms);
+		// var rg = ms.ToArray();
+		var rg = new byte[stream.Length];
+
+		int i = stream.Read(rg, 0, checked((int) stream.Length));
 
 		return rg;
 	}
