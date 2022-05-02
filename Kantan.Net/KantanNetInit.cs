@@ -1,4 +1,6 @@
-﻿global using KNI = Kantan.Net.KantanNetInit;
+﻿global using UT = System.Runtime.InteropServices.UnmanagedType;
+global using MA = System.Runtime.InteropServices.MarshalAsAttribute;
+global using KNI = Kantan.Net.KantanNetInit;
 global using VP = JetBrains.Annotations.ValueProviderAttribute;
 using System;
 using System.Collections.Generic;

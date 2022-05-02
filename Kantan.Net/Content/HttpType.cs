@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Reflection;
 using Kantan.Net.Content.Filters;
+// ReSharper disable InconsistentNaming
 
 namespace Kantan.Net.Content;
 
@@ -86,6 +87,8 @@ public readonly struct HttpType
 		       $"{nameof(IsPartial)}: {IsPartial}";
 	}
 
+	#region 
+
 	public const string MT_TEXT_PLAIN               = $"{MT_TEXT}/plain";
 	public const string MT_APPLICATION_OCTET_STREAM = $"{MT_APPLICATION}/octet-stream";
 
@@ -95,4 +98,6 @@ public readonly struct HttpType
 	public const string MT_VIDEO       = "video";
 	public const string MT_AUDIO       = "audio";
 	public const string MT_MODEL       = "model";
+
+	#endregion
 }

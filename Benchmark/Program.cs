@@ -12,8 +12,8 @@ using Kantan.Net;
 using Kantan.Net.Content;
 using Kantan.Net.Content.Filters;
 using Kantan.Net.Content.Resolvers;
-using Kantan.Net.Media;
 using Kantan.Numeric;
+using Kantan.Threading;
 using Kantan.Utilities;
 using Array = System.Array;
 
@@ -157,13 +157,14 @@ public class Benchmarks6
 	[GlobalSetup]
 	public void GlobalSetup() { }
 
+	/*
 	[Benchmark]
 	public void a()
 	{
 		MediaSniffer.Scan(@"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png",
 		                  HttpMediaResourceFilter.Default);
 
-	}
+	}*/
 
 	[Benchmark]
 	public void b()

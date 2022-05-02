@@ -31,7 +31,6 @@ using Kantan.Net;
 using Kantan.Net.Content;
 using Kantan.Net.Content.Filters;
 using Kantan.Net.Content.Resolvers;
-using Kantan.Net.Media;
 using Kantan.Net.Properties;
 using Kantan.Text;
 using Kantan.Utilities;
@@ -70,6 +69,7 @@ public static class Program
 	private static string[] _rg = new[]
 	{
 		@"http://www.zerochan.net/2750747",
+		@"https://kemono.party/patreon/user/3332300/post/65227512"
 	};
 
 	private static async Task Main(string[] args)
@@ -77,20 +77,20 @@ public static class Program
 
 		// var v = await Kantan.Net.Content.HttpScanner.ScanAsync(_rg[0], HttpResourceFilter.Default);
 
-		foreach (var a in _rg1) {
+		foreach (var a in _rg) {
 			foreach (var aa in await HttpScanner.ScanAsync(a)) {
 				Console.WriteLine(aa.Url);
-
 			}
 		}
 
 		Debugger.Break();
 
 		KantanNetInit.Close();
+		
 
 	}
 
-	private static void Test1()
+	/*private static void Test1()
 	{
 		var url = @"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png";
 
@@ -121,8 +121,9 @@ public static class Program
 	{
 		var u2 = MediaSniffer.Scan(s, filter);
 		Console.WriteLine(u2.QuickJoin());
-	}
+	}*/
 
+	/*
 	private static async Task Test2(string s)
 	{
 		Console.WriteLine(s);
@@ -133,7 +134,7 @@ public static class Program
 			}
 			catch (Exception e) {
 				Console.WriteLine($"Failed 1");
-			}*/
+			}#1#
 		var sw = Stopwatch.StartNew();
 
 		HttpResourceFilter filter = new HttpMediaResourceFilter();
@@ -167,5 +168,5 @@ public static class Program
 
 		}
 
-	}
+	}*/
 }

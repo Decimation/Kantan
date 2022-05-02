@@ -9,7 +9,6 @@ using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Flurl.Http;
 using Kantan.Diagnostics;
-using Kantan.Net.Media;
 using Kantan.Net.Properties;
 using Kantan.Utilities;
 using Microsoft.Extensions.Logging;

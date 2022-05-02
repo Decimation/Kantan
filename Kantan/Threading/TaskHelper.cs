@@ -1,8 +1,6 @@
 ﻿#region
 
 using System;
-using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,7 +9,7 @@ using System.Threading.Tasks;
 
 // ReSharper disable UnusedMember.Global
 
-namespace Kantan.Utilities;
+namespace Kantan.Threading;
 
 public static class TaskHelper
 {

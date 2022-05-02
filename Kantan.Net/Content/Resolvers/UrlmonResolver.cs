@@ -1,8 +1,10 @@
-﻿using System;
+﻿
+using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using Kantan.Diagnostics;
-using Kantan.Net.Media;
+using Kantan.Utilities;
+
 
 namespace Kantan.Net.Content.Resolvers;
 
@@ -14,10 +16,7 @@ public sealed class UrlmonResolver : IHttpTypeResolver
 		return ResolveFromData(buf);
 	}
 
-	public void Dispose()
-	{
-		
-	}
+	public void Dispose() { }
 
 	private static string ResolveFromData(byte[] dataBytes, string mimeProposed = null)
 	{

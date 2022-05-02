@@ -81,7 +81,7 @@ public static class Require
 		string? s;
 
 		if (o is IEnumerable xx) {
-			List<object> rg = xx.CopyToList();
+			List<object> rg = xx.CastToList();
 
 			s = rg.QuickJoin();
 		}

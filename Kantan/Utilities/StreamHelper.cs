@@ -12,6 +12,19 @@ namespace Kantan.Utilities;
 
 public static class StreamHelper
 {
+	public static byte[] GetHeaderBlock(this Stream stream)
+	{
+		var ms = (MemoryStream)stream;
+
+		ms.Position = 0;
+
+		const int i = 256;
+
+		var buffer = new byte[i];
+		int read   = ms.Read(buffer);
+		return buffer;
+	}
+
 	public static string[] ReadAllLines(this StreamReader stream)
 	{
 		var list = new List<string>();

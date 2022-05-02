@@ -4,8 +4,8 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
-using Kantan.Net.Media;
 using Kantan.Net.Properties;
+using Kantan.Utilities;
 
 #endregion
 
@@ -35,6 +35,7 @@ public sealed class MagicResolver : IHttpTypeResolver, IDisposable
 		var rd = MagicNative.magic_load(Magic, mgc);
 	}
 
+	
 	public string Resolve(Stream stream)
 	{
 		var buf = (stream).GetHeaderBlock();

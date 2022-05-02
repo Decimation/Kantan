@@ -25,6 +25,9 @@ namespace Kantan.Collections;
 /// </summary>
 public static class EnumerableHelper
 {
+	/// <summary>
+	/// Invokes <see cref="IEnumerator.MoveNext"/> then returns <see cref="IEnumerator.Current"/> if <c>non-null</c>; otherwise <c>default</c>
+	/// </summary>
 	public static T MoveAndGet<T>(this IEnumerator<T> t)
 	{
 		return t.MoveNext() ? t.Current : default;
@@ -52,6 +55,26 @@ public static class EnumerableHelper
 	public static bool StartsWith<T>(this IList<T> list, IList<T> sequence)
 		=> list.Take(sequence.Count).SequenceEqual(sequence);
 
+	
+	public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source)
+	{
+		// return source.OrderBy(x => Guid.NewGuid());
+		return source.OrderBy(x => RandomInstance.Next());
+	}
+
+	public static IList<T> Shuffle<T>(this IList<T> list)
+	{
+		var cpy = new List<T>(list);
+		int n   = cpy.Count;
+
+		while (n > 1) {
+			n--;
+			int k = RandomInstance.Next(n + 1);
+
+			(cpy[k], cpy[n]) = (cpy[n], cpy[k]);
+		}
+		return cpy;
+	}
 
 	/// <summary>
 	/// Retrieves a random element from <paramref name="list"/>.
@@ -59,12 +82,14 @@ public static class EnumerableHelper
 	/// <typeparam name="T"><see cref="List{T}"/> type</typeparam>
 	/// <param name="list"><see cref="List{T}"/> from which to retrieve a random element</param>
 	/// <returns>A random element</returns>
-	public static T GetRandomElement<T>(this IList<T> list)
+	public static T TakeRandom<T>(this IList<T> list)
 	{
 		int i = RandomInstance.Next(list.Count);
 
 		return list[i];
 	}
+
+	public static IEnumerable<T> TakeRandom<T>(this IList<T> list, int cnt) => list.Shuffle().Take(cnt);
 
 	public static object[] CastObjectArray(this Array r)
 	{
@@ -86,19 +111,6 @@ public static class EnumerableHelper
 		}
 	}
 
-	public static Dictionary<string, string> ReadCsv(string s)
-	{
-		var dic = new Dictionary<string, string>();
-
-		foreach (string s1 in s.Split('\n')) {
-			string[] split = s1.Split(',');
-
-			dic.Add(split[0].RemoveNewLines(), split[1].RemoveNewLines());
-		}
-
-		return dic;
-	}
-
 	public static IEnumerable<int> AllIndexesOf<T>(this List<T> list, T search)
 		=> AllIndexesOf(list.IndexOf, 1, search);
 
@@ -111,25 +123,6 @@ public static class EnumerableHelper
 	public static IList<T> ReplaceAllSequences<T>(this List<T> rg, IList<T> sequence, IList<T> replace)
 		where T : IEquatable<T>
 	{
-
-		/*
-			 | Method |     Mean |   Error |   StdDev |
-			|------- |---------:|--------:|---------:|
-			|   Test | 454.5 ns | 8.87 ns | 10.56 ns |
-		 */
-
-		/*
-			 | Method |     Mean |   Error |  StdDev |
-			|------- |---------:|--------:|--------:|
-			|   Test | 236.0 ns | 1.93 ns | 1.81 ns |
-		 */
-
-		/*
-			 | Method |     Mean |   Error |  StdDev |
-			|------- |---------:|--------:|--------:|
-			|   Test | 219.9 ns | 1.06 ns | 0.94 ns |
-		 */
-
 		int i = 0;
 
 		var seqSpan = CollectionsMarshal.AsSpan(sequence as List<T>);
@@ -152,33 +145,14 @@ public static class EnumerableHelper
 
 		return rg;
 	}
-
-	/*public static bool IndexOutOfBounds<T>(this IList<T> rg, int idx)
-	{
-		//idx < io.Length && idx >= 0
-		//(idx < rg.Count && idx >= 0)
-		//!(idx > rg.Count || idx < 0)
-
-		return idx < rg.Count && idx >= 0;
-	}*/
-
+	
 	public static IEnumerator<T> Cast<T>(this IEnumerator iterator)
 	{
 		while (iterator.MoveNext()) {
 			yield return (T) iterator.Current;
 		}
 	}
-
-	/*[CBN]
-	public static T TryIndex<T>(this Span<T> s, Index i)
-	{
-		if (i.Value >= s.Length) {
-			return default;
-		}
-
-		return s[i];
-	}*/
-
+	
 	public static IEnumerable<T> Difference<T>(this IEnumerable<T> a, IEnumerable<T> b) => b.Where(c => !a.Contains(c));
 
 	public static void Replace<T>(this List<T> list, Predicate<T> oldItemSelector, T newItem)
@@ -188,6 +162,59 @@ public static class EnumerableHelper
 		//or check for nullability of list and etc ...
 		int oldItemIndex = list.FindIndex(oldItemSelector);
 		list[oldItemIndex] = newItem;
+	}
+
+	public static List<object> CastToList(this IEnumerable value) => CastToList<object>(value);
+
+	public static List<T> CastToList<T>(this IEnumerable value) => value.Cast<T>().ToList();
+
+	private static bool TryIndex<T>(Index i, int len, out T value)
+	{
+		value = default;
+
+		if (i.Value >= len) {
+			return false;
+		}
+
+		return true;
+	}
+
+	public static bool TryIndex<T>(this IList<T> list, Index i, [CBN] out T value)
+	{
+		var b = TryIndex(i, list.Count, out value);
+
+		if (b) {
+			value = list[i];
+		}
+
+		return b;
+	}
+
+	public static bool TryIndex<T>(this Span<T> span, Index i, [CBN] out T value)
+	{
+		var b = TryIndex(i, span.Length, out value);
+
+		if (b) {
+			value = span[i];
+		}
+
+		return b;
+
+	}
+
+	#region Dictionary
+
+	public static Dictionary<string, string> ReadCsv(string s)
+	{
+		var dic = new Dictionary<string, string>();
+
+		foreach (string s1 in s.Split('\n')) {
+			string[] split = s1.Split(',');
+
+			dic.Add(split[0].RemoveNewLines(), split[1].RemoveNewLines());
+		}
+
+		return dic;
 	}
 
 	public static Dictionary<TKey, TValue> CastDictionary<TKey, TValue>(this IDictionary dic)
@@ -226,47 +253,6 @@ public static class EnumerableHelper
 		return true;
 	}
 
-	public static List<object> CopyToList(this IEnumerable value) => CopyToList<object>(value);
-
-	public static List<T> CopyToList<T>(this IEnumerable value)
-	{
-		return value.Cast<T>().ToList();
-	}
-
-	private static bool TryIndex<T>(Index i, int len, out T value)
-	{
-		value = default;
-
-		if (i.Value >= len) {
-			return false;
-		}
-
-		return true;
-	}
-
-	public static bool TryIndex<T>(this IList<T> list, Index i, [CBN] out T value)
-	{
-		var b = TryIndex(i, list.Count, out value);
-
-		if (b) {
-			value = list[i];
-		}
-
-		return b;
-	}
-
-	public static bool TryIndex<T>(this Span<T> span, Index i, [CBN] out T value)
-	{
-		var b = TryIndex(i, span.Length, out value);
-
-		if (b) {
-			value = span[i];
-		}
-
-		return b;
-
-	}
-
 	/// <summary>
 	/// Writes a <see cref="Dictionary{TKey,TValue}"/> to file <paramref name="filename"/>.
 	/// </summary>
@@ -290,4 +276,6 @@ public static class EnumerableHelper
 	}
 
 	private const string DICT_DELIM = "=";
+
+	#endregion
 }
