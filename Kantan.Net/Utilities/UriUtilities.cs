@@ -1,20 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Web;
-using Flurl;
-using JetBrains.Annotations;
 
 // ReSharper disable InconsistentNaming
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable IdentifierTypo
 
-namespace Kantan.Net;
+namespace Kantan.Net.Utilities;
 
 public static class UriUtilities
 {

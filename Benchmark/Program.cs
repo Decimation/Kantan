@@ -10,7 +10,6 @@ using BenchmarkDotNet.Running;
 using Kantan.Collections;
 using Kantan.Net;
 using Kantan.Net.Content;
-using Kantan.Net.Content.Filters;
 using Kantan.Net.Content.Resolvers;
 using Kantan.Numeric;
 using Kantan.Threading;

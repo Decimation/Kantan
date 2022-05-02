@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Flurl.Http;
 using Kantan.Net.Content.Resolvers;
+using Kantan.Net.Utilities;
 using Kantan.Text;
 
 #endregion

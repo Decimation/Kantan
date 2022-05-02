@@ -28,8 +28,8 @@ using Kantan.Collections;
 using Kantan.Internal;
 using Kantan.Model;
 using Kantan.Net;
+using Kantan.Net.Adapters;
 using Kantan.Net.Content;
-using Kantan.Net.Content.Filters;
 using Kantan.Net.Content.Resolvers;
 using Kantan.Net.Properties;
 using Kantan.Text;
@@ -83,90 +83,12 @@ public static class Program
 			}
 		}
 
-		Debugger.Break();
+		// Debugger.Break();
+
+
+		var u = CliAdapters.gallery_dl_resolve("https://kemono.party/patreon/user/3332300/post/65227512");
+		Console.WriteLine(u);
 
 		KantanNetInit.Close();
-		
-
 	}
-
-	/*private static void Test1()
-	{
-		var url = @"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png";
-
-		var rg = new[]
-		{
-			"https://www.zerochan.net/2750747",
-			"http://s1.zerochan.net/atago.(azur.lane).600.2750747.jpg",
-			"https://twitter.com/mircosciamart/status/1186775807655587841"
-		};
-
-		var binaryUris = MediaSniffer.Scan(rg[^1], new HttpMediaResourceFilter())
-		                             .Union(MediaSniffer.Scan(rg[1], new HttpMediaResourceFilter()));
-
-		foreach (var v1 in rg) {
-			var v2 = MediaSniffer.Scan(v1, HttpMediaResourceFilter.Default);
-
-			foreach (MediaResource v in v2) {
-				Console.WriteLine(v.Url);
-
-			}
-		}
-
-		_ = new Url(rg[0]).Host;
-		_ = new Uri(rg[0]).Host;
-	}
-
-	private static void Test1(string s, HttpResourceFilter filter)
-	{
-		var u2 = MediaSniffer.Scan(s, filter);
-		Console.WriteLine(u2.QuickJoin());
-	}*/
-
-	/*
-	private static async Task Test2(string s)
-	{
-		Console.WriteLine(s);
-
-		/*try {
-				Console.WriteLine(MediaResource.FromUrl(
-					                  s, MediaImageFilter.Default, out var br));
-			}
-			catch (Exception e) {
-				Console.WriteLine($"Failed 1");
-			}#1#
-		var sw = Stopwatch.StartNew();
-
-		HttpResourceFilter filter = new HttpMediaResourceFilter();
-
-		string r = await s.GetStringAsync();
-
-		if (r == null) {
-			return;
-
-		}
-		else {
-			var urls = filter.Parse(
-				new HtmlParser().ParseDocument(r));
-			urls = filter.Refine(urls);
-
-			Parallel.ForEach(urls, (s1, state) =>
-			{
-				var c1 = HttpResource.GetAsync(s1);
-				c1.Wait();
-				var c = c1.Result;
-
-				if (c != null) {
-					var rr = c.Resolve();
-					Console.WriteLine(rr.QuickJoin());
-
-				}
-			});
-
-			sw.Stop();
-			Console.WriteLine($"{sw.Elapsed.TotalSeconds}");
-
-		}
-
-	}*/
 }

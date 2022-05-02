@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using System.Reflection;
-using Kantan.Net.Content.Filters;
+
 // ReSharper disable InconsistentNaming
 
 namespace Kantan.Net.Content;

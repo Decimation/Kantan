@@ -1,31 +1,21 @@
-﻿global using CBN = JetBrains.Annotations.CanBeNullAttribute;
-global using MURV = JetBrains.Annotations.MustUseReturnValueAttribute;
-using System.Threading;
+﻿
 using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.NetworkInformation;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Flurl.Http;
-using Flurl.Http.Configuration;
 using JetBrains.Annotations;
 using Kantan.Diagnostics;
-using Kantan.Model;
-using Kantan.Net.Properties;
-using Newtonsoft.Json;
 
 #pragma warning disable CS0168, IDE0051
 #pragma warning disable IDE0060
@@ -44,7 +34,7 @@ using Newtonsoft.Json;
 // ReSharper disable UnusedMember.Global
 #nullable disable
 
-namespace Kantan.Net;
+namespace Kantan.Net.Utilities;
 
 /// <summary>
 ///     Network, HTTP, web utilities

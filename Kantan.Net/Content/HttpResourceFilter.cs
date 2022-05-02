@@ -8,14 +8,11 @@ using System.Threading.Tasks;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Flurl.Http;
-using Kantan.Diagnostics;
-using Kantan.Net.Properties;
-using Kantan.Utilities;
-using Microsoft.Extensions.Logging;
+using Kantan.Net.Utilities;
 
 #endregion
 
-namespace Kantan.Net.Content.Filters;
+namespace Kantan.Net.Content;
 
 public class HttpResourceFilter
 {

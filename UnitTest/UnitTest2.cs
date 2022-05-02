@@ -2,7 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Kantan.Net;
 using Kantan.Net.Content;
-using Kantan.Net.Content.Filters;
+using Kantan.Net.Utilities;
 using NUnit.Framework;
 
 namespace UnitTest;

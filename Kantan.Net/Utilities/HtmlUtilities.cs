@@ -3,7 +3,7 @@ using System.Linq;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 
-namespace Kantan.Net;
+namespace Kantan.Net.Utilities;
 
 public static class HtmlUtilities
 {

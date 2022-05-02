@@ -1,6 +1,8 @@
 ﻿global using UT = System.Runtime.InteropServices.UnmanagedType;
 global using MA = System.Runtime.InteropServices.MarshalAsAttribute;
 global using KNI = Kantan.Net.KantanNetInit;
+global using MURV = JetBrains.Annotations.MustUseReturnValueAttribute;
+global using CBN = JetBrains.Annotations.CanBeNullAttribute;
 global using VP = JetBrains.Annotations.ValueProviderAttribute;
 using System;
 using System.Collections.Generic;
@@ -14,6 +16,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Kantan.Net.Content.Resolvers;
 using Kantan.Net.Properties;
+using Kantan.Net.Utilities;
 using Microsoft.Extensions.Logging;
 
 // ReSharper disable InconsistentNaming

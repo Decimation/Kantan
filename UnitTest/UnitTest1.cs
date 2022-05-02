@@ -11,7 +11,7 @@ using Kantan.Diagnostics;
 using Kantan.Model;
 using Kantan.Net;
 using Kantan.Net.Content;
-using Kantan.Net.Content.Filters;
+using Kantan.Net.Utilities;
 using Kantan.Numeric;
 using Kantan.Text;
 using Kantan.Utilities;

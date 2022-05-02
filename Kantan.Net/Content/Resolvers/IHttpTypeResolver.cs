@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using AngleSharp.Html.Parser;
 using Flurl.Http;
-using Kantan.Net.Content.Filters;
 
 namespace Kantan.Net.Content.Resolvers;
 
