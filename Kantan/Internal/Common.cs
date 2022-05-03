@@ -3,6 +3,7 @@ using System.IO;
 using System.Net.Http;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Environment = System.Environment;
 
 // ReSharper disable UnusedMember.Global
 
@@ -31,6 +32,8 @@ internal static class Common
 	/// </summary>
 	internal const int INVALID = -1;
 
+	
+
 	/*private const string Kantan = "Kantan";
 
 	internal static string AppFolder
@@ -47,6 +50,4 @@ internal static class Common
 			return appFolder;
 		}
 	}*/
-
-	
 }

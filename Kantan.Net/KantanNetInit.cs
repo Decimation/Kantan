@@ -55,6 +55,7 @@ public static class KantanNetInit
 		IHttpTypeResolver.Default.Dispose();
 		HttpUtilities.Client.Dispose();
 		LoggerFactory.Dispose();
+		MagicResolver.Instance.Dispose();
 		//todo...
 	}
 }

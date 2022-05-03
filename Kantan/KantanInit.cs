@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -17,10 +18,14 @@ public static class KantanInit
 {
 	public const string NAME = "Kantan";
 
+	public static readonly string DataFolder =
+		Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), NAME);
+
 	[ModuleInitializer]
 	public static void Setup()
 	{
 		Trace.WriteLine($"[{NAME}]: init");
+		Directory.CreateDirectory(DataFolder);
 	}
 
 	public static void Close() { }

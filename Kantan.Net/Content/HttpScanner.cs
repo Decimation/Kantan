@@ -3,12 +3,17 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Flurl.Http;
+using JetBrains.Annotations;
 using Kantan.Diagnostics;
 using Kantan.Net.Content.Resolvers;
+using Kantan.Net.Properties;
+using Kantan.Net.Utilities;
 using Kantan.Utilities;
 
 #endregion
@@ -129,41 +134,67 @@ public static class HttpScanner
 		File
 	}
 
-	public static async Task<object> ScanAltAsync(string url, AltScannerType m = AltScannerType.Magic)
+	[ItemCanBeNull]
+	public static async Task<string> ScanAltAsync(string url, TimeSpan? ts = default,
+	                                              AltScannerType m = AltScannerType.Magic)
 	{
+		ts ??= TimeSpan.FromMilliseconds(HttpUtilities.Timeout);
+		
+
 		switch (m) {
 
 			case AltScannerType.Magic:
 				// IFlurlResponse res    = await url.GetAsync();
-				var stream = await url.GetStreamAsync();
+				// var stream = await url.WithAutoRedirect(true).WithTimeout(ts.Value).AllowAnyHttpStatus().GetStreamAsync();
 
-				var output1 = MagicResolver.Instance.Resolve(stream);
 
-				return output1;
-				break;
+				try {
+					var res = await url.WithAutoRedirect(true)
+					                   .WithTimeout(ts.Value)
+					                   .AllowAnyHttpStatus().GetAsync();
+
+					var stream = await res.GetStreamAsync();
+					
+					var output1 = MagicResolver.Instance.Resolve(stream);
+
+					// var rs      = new HttpResource() { Url = url, Stream = stream, Response = res, ResolvedTypes = { new HttpType(){ } }};
+
+					return output1;
+
+
+				}
+				catch (Exception) {
+					return null;
+				}
 			case AltScannerType.File:
 
-				IFlurlResponse res = await url.GetAsync();
-				byte[]         buf = await res.GetBytesAsync();
+				// IFlurlResponse res = await url.GetAsync();
 
-				byte[] hdr = buf[0..0xFF];
+				try {
+					byte[] buf = await url.GetBytesAsync();
 
-				string s = Path.GetTempFileName();
+					byte[] hdr = buf[0..0xFF];
 
-				await File.WriteAllBytesAsync(s, hdr);
+					string s = Path.GetTempFileName();
 
-				//@"C:\msys64\usr\bin\file.exe"
-				// var name   = SearchInPath("file.exe");
+					await File.WriteAllBytesAsync(s, hdr);
 
-				var name   = "file.exe";
-				var output = ProcessHelper.GetProcessOutput(name, s);
+					//@"C:\msys64\usr\bin\file.exe"
+					// var name   = SearchInPath("file.exe");
 
-				File.Delete(s);
+					var args = $"{s} -i";
 
-				return output;
-				break;
+					var output = ProcessHelper.GetProcessOutput(Resources.EXE_FILE, args);
+
+					File.Delete(s);
+
+					return output;
+				}
+				catch (Exception) {
+					return null;
+				}
 			default:
-				throw new ArgumentOutOfRangeException(nameof(m), m, null);
+				return null;
 		}
 
 	}

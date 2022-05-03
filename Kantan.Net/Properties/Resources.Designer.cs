@@ -61,6 +61,33 @@ namespace Kantan.Net.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to file.exe.
+        /// </summary>
+        internal static string EXE_FILE {
+            get {
+                return ResourceManager.GetString("EXE_FILE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to gallery-dl.exe.
+        /// </summary>
+        internal static string EXE_GALLERYDL {
+            get {
+                return ResourceManager.GetString("EXE_GALLERYDL", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to magic.mgc.
+        /// </summary>
+        internal static string F_MAGIC {
+            get {
+                return ResourceManager.GetString("F_MAGIC", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to https://ifconfig.co/.
         /// </summary>
         internal static string IFConfigUrl {

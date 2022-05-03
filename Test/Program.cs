@@ -92,12 +92,44 @@ public static class Program
 		// var u = CliAdapters.gallery_dl_resolve("https://kemono.party/patreon/user/3332300/post/65227512");
 		// Console.WriteLine(u);
 
-		var task      = HttpScanner.ScanAltAsync(u2);
-		var alt2Async = await HttpScanner.ScanAlt2Async(u2);
+		/*
+		 * image/png
+text/html
+0.8617613
+text/html
+0.4304751
+image/png
+1.6637436
+image/jpeg
+0.3022393
+text/html
+0.711541
+text/html
+0.4215932
+image/jpeg
+0.9666091
+text/html
+0.4441395
+text/html
+0.1990817
+
+0.0896905
+image/png
+1.3038885
+		 */
+
+		var task = HttpScanner.ScanAltAsync(u2);
 
 		Console.WriteLine(await task);
-		Console.WriteLine(alt2Async);
 		// KantanNetInit.Close();
+		foreach (string s in _rg.Union(_rg1)) {
+			var now = Stopwatch.GetTimestamp();
+			Console.WriteLine(await HttpScanner.ScanAltAsync(s));
+			var diff = TimeSpan.FromTicks(Stopwatch.GetTimestamp() - now);
+			Console.WriteLine(diff.TotalSeconds);
+
+			Console.WriteLine(await HttpScanner.ScanAsync());
+		}
 
 	}
 }

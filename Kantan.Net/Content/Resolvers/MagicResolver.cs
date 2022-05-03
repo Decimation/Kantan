@@ -11,7 +11,7 @@ using Kantan.Utilities;
 
 namespace Kantan.Net.Content.Resolvers;
 
-public sealed class MagicResolver : IHttpTypeResolver, IDisposable
+public sealed class MagicResolver : IHttpTypeResolver
 {
 	public const MagicOpenFlags MagicMimeFlags =
 		MagicOpenFlags.MAGIC_ERROR |
@@ -24,6 +24,7 @@ public sealed class MagicResolver : IHttpTypeResolver, IDisposable
 
 	public static readonly MagicResolver Instance;
 
+
 	static MagicResolver()
 	{
 		Instance = new MagicResolver();
@@ -31,18 +32,28 @@ public sealed class MagicResolver : IHttpTypeResolver, IDisposable
 
 	public MagicResolver(string mgc = null)
 	{
-		if (mgc == null) {
-			var tmp = Path.Combine(Path.GetTempPath(), "magic_tmp.mgc");
-			File.WriteAllBytes(tmp, Resources.magic);
-			mgc = tmp;
-			Debug.WriteLine($"temp magic file: {tmp}");
-		}
+		mgc ??= GetMagicFile();
 
 		Magic = MagicNative.magic_open(MagicMimeFlags);
 		var rd = MagicNative.magic_load(Magic, mgc);
+
 	}
 
-	
+	private static string GetMagicFile()
+	{
+		var mgc = Path.Combine(KantanInit.DataFolder, Resources.F_MAGIC);
+		
+		if (!File.Exists(mgc)) {
+			File.WriteAllBytes(mgc, Resources.magic);
+			Debug.WriteLine($"populating {mgc}");
+		}
+
+		Debug.WriteLine($"magic file: {mgc}");
+
+		return mgc;
+	}
+
+
 	public string Resolve(Stream stream)
 	{
 		var buf = (stream).GetHeaderBlock();
