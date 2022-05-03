@@ -83,8 +83,9 @@ public readonly struct HttpType
 
 	public override string ToString()
 	{
-		return $"{nameof(Type)}: {Type} | " +
-		       $"{nameof(IsPartial)}: {IsPartial}";
+		/*return $"{nameof(Type)}: {Type} | " +
+		       $"{nameof(IsPartial)}: {IsPartial}";*/
+		return Type;
 	}
 
 	#region 

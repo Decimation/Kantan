@@ -94,6 +94,8 @@ public sealed class HttpResource : IDisposable
 			ComputedType  = HttpScanner.IsBinaryResource(header),
 			Url           = u
 		};
+		
+		// resource.Resolve(true);
 
 		return resource;
 	}
@@ -121,7 +123,7 @@ public sealed class HttpResource : IDisposable
 			rg.Add(type);
 		}
 
-		ResolvedTypes = rg.Distinct().ToList();
+		ResolvedTypes = rg.DistinctBy(x=>x.Type).ToList();
 
 		return rg;
 	}
@@ -150,7 +152,7 @@ public sealed class HttpResource : IDisposable
 
 	public override string ToString()
 	{
-		return $"{Url}: {SuppliedType}, {ComputedType}, {ResolvedTypes.QuickJoin()}";
+		return $"{Url}:: supplied: {SuppliedType} | computed: {ComputedType} | resolved: {ResolvedTypes.QuickJoin()}";
 	}
 
 	public void Dispose()

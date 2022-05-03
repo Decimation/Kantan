@@ -118,17 +118,15 @@ image/png
 1.3038885
 		 */
 
-		var task = HttpScanner.ScanAltAsync(u2);
-
-		Console.WriteLine(await task);
 		// KantanNetInit.Close();
 		foreach (string s in _rg.Union(_rg1)) {
 			var now = Stopwatch.GetTimestamp();
-			Console.WriteLine(await HttpScanner.ScanAltAsync(s));
+			var o   = await HttpResource.GetAsync(s);
+			o?.Resolve(true);
+			Console.WriteLine(o);
 			var diff = TimeSpan.FromTicks(Stopwatch.GetTimestamp() - now);
 			Console.WriteLine(diff.TotalSeconds);
 
-			Console.WriteLine(await HttpScanner.ScanAsync());
 		}
 
 	}

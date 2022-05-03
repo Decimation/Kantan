@@ -1,6 +1,5 @@
 ﻿#region
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -8,13 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Flurl.Http;
-using JetBrains.Annotations;
 using Kantan.Diagnostics;
-using Kantan.Net.Content.Resolvers;
-using Kantan.Net.Properties;
-using Kantan.Net.Utilities;
-using Kantan.Utilities;
 
 #endregion
 
@@ -132,71 +125,6 @@ public static class HttpScanner
 	{
 		Magic,
 		File
-	}
-
-	[ItemCanBeNull]
-	public static async Task<string> ScanAltAsync(string url, TimeSpan? ts = default,
-	                                              AltScannerType m = AltScannerType.Magic)
-	{
-		ts ??= TimeSpan.FromMilliseconds(HttpUtilities.Timeout);
-		
-
-		switch (m) {
-
-			case AltScannerType.Magic:
-				// IFlurlResponse res    = await url.GetAsync();
-				// var stream = await url.WithAutoRedirect(true).WithTimeout(ts.Value).AllowAnyHttpStatus().GetStreamAsync();
-
-
-				try {
-					var res = await url.WithAutoRedirect(true)
-					                   .WithTimeout(ts.Value)
-					                   .AllowAnyHttpStatus().GetAsync();
-
-					var stream = await res.GetStreamAsync();
-					
-					var output1 = MagicResolver.Instance.Resolve(stream);
-
-					// var rs      = new HttpResource() { Url = url, Stream = stream, Response = res, ResolvedTypes = { new HttpType(){ } }};
-
-					return output1;
-
-
-				}
-				catch (Exception) {
-					return null;
-				}
-			case AltScannerType.File:
-
-				// IFlurlResponse res = await url.GetAsync();
-
-				try {
-					byte[] buf = await url.GetBytesAsync();
-
-					byte[] hdr = buf[0..0xFF];
-
-					string s = Path.GetTempFileName();
-
-					await File.WriteAllBytesAsync(s, hdr);
-
-					//@"C:\msys64\usr\bin\file.exe"
-					// var name   = SearchInPath("file.exe");
-
-					var args = $"{s} -i";
-
-					var output = ProcessHelper.GetProcessOutput(Resources.EXE_FILE, args);
-
-					File.Delete(s);
-
-					return output;
-				}
-				catch (Exception) {
-					return null;
-				}
-			default:
-				return null;
-		}
-
 	}
 
 	public static async Task<HttpResource[]> ScanAsync(string url, HttpResourceFilter filter = null)

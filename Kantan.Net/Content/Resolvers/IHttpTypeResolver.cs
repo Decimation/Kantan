@@ -12,6 +12,6 @@ public interface IHttpTypeResolver : IDisposable
 {
 	string Resolve(Stream m);
 
-	public static IHttpTypeResolver Default { get; set; } = new UrlmonResolver();
+	public static IHttpTypeResolver Default { get; set; } = new MagicResolver();
 }
 
