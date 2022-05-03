@@ -77,18 +77,27 @@ public static class Program
 
 		// var v = await Kantan.Net.Content.HttpScanner.ScanAsync(_rg[0], HttpResourceFilter.Default);
 
+		/*
 		foreach (var a in _rg) {
 			foreach (var aa in await HttpScanner.ScanAsync(a)) {
 				Console.WriteLine(aa.Url);
 			}
-		}
+		}*/
 
 		// Debugger.Break();
 
+		var u2 =
+			"https://data19.kemono.party/data/1e/90/1e90c71e9bedc2998289ca175e2dcc6580bbbc3d3c698cdbb0f427f0a0d364b7.png?f=Bianca%20bunny%201-3.png";
 
-		var u = CliAdapters.gallery_dl_resolve("https://kemono.party/patreon/user/3332300/post/65227512");
-		Console.WriteLine(u);
+		// var u = CliAdapters.gallery_dl_resolve("https://kemono.party/patreon/user/3332300/post/65227512");
+		// Console.WriteLine(u);
 
-		KantanNetInit.Close();
+		var task      = HttpScanner.ScanAltAsync(u2);
+		var alt2Async = await HttpScanner.ScanAlt2Async(u2);
+
+		Console.WriteLine(await task);
+		Console.WriteLine(alt2Async);
+		// KantanNetInit.Close();
+
 	}
 }

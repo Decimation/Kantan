@@ -11,31 +11,32 @@ public static class ProcessHelper
 {
 	public static string GetProcessOutput(string fileName, string args = null)
 	{
-		Process proc = GetProcess(fileName, args);
+		using Process proc = GetProcess(fileName, args);
 
 		proc.Start();
 
 		var sz = proc.StandardOutput.ReadToEnd();
 
 		proc.WaitForExit();
+
 		return sz;
 	}
 
 	public static Process GetProcess(string fileName, string args)
 	{
-		using var proc = new Process()
+		var proc = new Process()
 		{
 			StartInfo =
 			{
 				FileName  = fileName,
-				Arguments = args ?? String.Empty,
+				Arguments = args,
 
 				RedirectStandardInput  = false,
 				RedirectStandardOutput = true,
 				RedirectStandardError  = true,
 
 				UseShellExecute = false,
-				WindowStyle     = ProcessWindowStyle.Hidden,
+				// WindowStyle     = ProcessWindowStyle.Hidden,
 			},
 
 			EnableRaisingEvents = true,

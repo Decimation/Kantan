@@ -22,6 +22,13 @@ public sealed class MagicResolver : IHttpTypeResolver, IDisposable
 
 	public IntPtr Magic { get; }
 
+	public static readonly MagicResolver Instance;
+
+	static MagicResolver()
+	{
+		Instance = new MagicResolver();
+	}
+
 	public MagicResolver(string mgc = null)
 	{
 		if (mgc == null) {

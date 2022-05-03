@@ -1,10 +1,15 @@
 ﻿#region
 
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Flurl.Http;
 using Kantan.Diagnostics;
+using Kantan.Net.Content.Resolvers;
+using Kantan.Utilities;
 
 #endregion
 
@@ -33,16 +38,16 @@ public static class HttpScanner
 	/// </remarks>
 	public static string IsBinaryResource(byte[] input)
 	{
-		var l = input.Length;
+		int l = input.Length;
 
-		var seq1a = new byte[] { 0xFE, 0xFF };
-		var seq1b = new byte[] { 0xFF, 0xFE };
-		var seq2  = new byte[] { 0xEF, 0xBB, 0xBF };
+		byte[] seq1a = { 0xFE, 0xFF };
+		byte[] seq1b = { 0xFF, 0xFE };
+		byte[] seq2  = { 0xEF, 0xBB, 0xBF };
 
 		switch (l) {
-			case >= 2 when (input.SequenceEqual(seq1a) || input.SequenceEqual(seq1b)):
+			case >= 2 when input.SequenceEqual(seq1a) || input.SequenceEqual(seq1b):
 				return HttpType.MT_TEXT_PLAIN;
-			case >= 3 when (input.SequenceEqual(seq2)):
+			case >= 3 when input.SequenceEqual(seq2):
 				return HttpType.MT_TEXT_PLAIN;
 
 		}
@@ -72,13 +77,15 @@ public static class HttpScanner
 
 		byte[] data = new byte[l];
 
-		var l2 = await m.ReadAsync(data, 0, l);
+		int l2 = await m.ReadAsync(data, 0, l);
 
 		return data;
 	}
 
 	public static bool CheckPattern(byte[] input, HttpType s, ISet<byte> ignored = null)
-		=> CheckPattern(input, s.Pattern, s.Mask, ignored);
+	{
+		return CheckPattern(input, s.Pattern, s.Mask, ignored);
+	}
 
 	/// <remarks>
 	///     <a href="https://mimesniff.spec.whatwg.org/#matching-a-mime-type-pattern">6</a>
@@ -89,16 +96,12 @@ public static class HttpScanner
 
 		ignored ??= Enumerable.Empty<byte>().ToHashSet();
 
-		if (input.Length < pattern.Length) {
-			return false;
-		}
+		if (input.Length < pattern.Length) return false;
 
 		int s = 0;
 
 		while (s < input.Length) {
-			if (!ignored.Contains(input[s])) {
-				break;
-			}
+			if (!ignored.Contains(input[s])) break;
 
 			s++;
 		}
@@ -106,7 +109,7 @@ public static class HttpScanner
 		int p = 0;
 
 		while (p < pattern.Length) {
-			var md = input[s] & mask[p];
+			int md = input[s] & mask[p];
 
 			if (md != pattern[p]) {
 				return false;
@@ -119,6 +122,52 @@ public static class HttpScanner
 		return true;
 	}
 
+
+	public enum AltScannerType
+	{
+		Magic,
+		File
+	}
+
+	public static async Task<object> ScanAltAsync(string url, AltScannerType m = AltScannerType.Magic)
+	{
+		switch (m) {
+
+			case AltScannerType.Magic:
+				// IFlurlResponse res    = await url.GetAsync();
+				var stream = await url.GetStreamAsync();
+
+				var output1 = MagicResolver.Instance.Resolve(stream);
+
+				return output1;
+				break;
+			case AltScannerType.File:
+
+				IFlurlResponse res = await url.GetAsync();
+				byte[]         buf = await res.GetBytesAsync();
+
+				byte[] hdr = buf[0..0xFF];
+
+				string s = Path.GetTempFileName();
+
+				await File.WriteAllBytesAsync(s, hdr);
+
+				//@"C:\msys64\usr\bin\file.exe"
+				// var name   = SearchInPath("file.exe");
+
+				var name   = "file.exe";
+				var output = ProcessHelper.GetProcessOutput(name, s);
+
+				File.Delete(s);
+
+				return output;
+				break;
+			default:
+				throw new ArgumentOutOfRangeException(nameof(m), m, null);
+		}
+
+	}
+
 	public static async Task<HttpResource[]> ScanAsync(string url, HttpResourceFilter filter = null)
 	{
 		filter ??= HttpResourceFilter.Default;
@@ -127,7 +176,7 @@ public static class HttpScanner
 
 		HttpResource[] hr = await Task.WhenAll(urls.Select(async Task<HttpResource>(s1) =>
 		{
-			var rsrc = await HttpResource.GetAsync(s1);
+			HttpResource rsrc = await HttpResource.GetAsync(s1);
 			rsrc?.Resolve();
 
 			return rsrc;
