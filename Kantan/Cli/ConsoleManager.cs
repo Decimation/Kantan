@@ -11,7 +11,6 @@ using JetBrains.Annotations;
 using Kantan.Cli.Controls;
 using Kantan.Text;
 using Kantan.Utilities;
-using static Kantan.Internal.Common;
 using static Kantan.Text.Strings;
 
 // ReSharper disable IdentifierTypo
@@ -98,7 +97,7 @@ public static partial class ConsoleManager
 	/// <summary>
 	///     Root formatting function.
 	/// </summary>
-	[StringFormatMethod(STRING_FORMAT_ARG)]
+	[StringFormatMethod(KantanInit.STRING_FORMAT_ARG)]
 	internal static string FormatString(string? delim, string msg, bool repDelim = true)
 	{
 		//Debug.WriteLine(l.FuncJoin((s) => $"[{s}]"));
@@ -220,7 +219,7 @@ public static partial class ConsoleManager
 		return input;
 	}
 
-	[StringFormatMethod(STRING_FORMAT_ARG)]
+	[StringFormatMethod(KantanInit.STRING_FORMAT_ARG)]
 	public static bool ReadConfirmation(string msg, params object[] args)
 	{
 		Write($"{Constants.ASTERISK} {String.Format(msg, args)} ({OPTION_Y}/{OPTION_N}): ");
@@ -268,7 +267,7 @@ public static partial class ConsoleManager
 	/// <summary>
 	///     Root write method.
 	/// </summary>
-	[StringFormatMethod(STRING_FORMAT_ARG)]
+	[StringFormatMethod(KantanInit.STRING_FORMAT_ARG)]
 	public static void Write(bool newLine, string msg, params object[] args)
 	{
 		string fmt = String.Format(msg, args);
@@ -281,10 +280,10 @@ public static partial class ConsoleManager
 		}
 	}
 
-	[StringFormatMethod(STRING_FORMAT_ARG)]
+	[StringFormatMethod(KantanInit.STRING_FORMAT_ARG)]
 	public static void Write(string msg, params object[] args) => Write(true, msg, args);
 
-	[StringFormatMethod(STRING_FORMAT_ARG)]
+	[StringFormatMethod(KantanInit.STRING_FORMAT_ARG)]
 	public static void WriteOnCurrentLine(string msg, params object[] args)
 	{
 		msg = String.Format(msg, args);

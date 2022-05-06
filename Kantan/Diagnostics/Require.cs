@@ -44,7 +44,6 @@ using System.Runtime.Versioning;
 using JetBrains.Annotations;
 using Kantan.Collections;
 using Kantan.Text;
-using static Kantan.Internal.Common;
 
 #nullable enable
 
@@ -100,14 +99,14 @@ public static class Require
 
 
 	[DNR, DH, AM]
-	[CA(UNCONDITIONAL_HALT), SFM(STRING_FORMAT_ARG)]
+	[CA(UNCONDITIONAL_HALT), SFM(KantanInit.STRING_FORMAT_ARG)]
 	public static void Fail(string? msg = null, params object[] args) => Fail<Exception>(msg, args);
 
 	/// <summary>
 	/// Root fail function
 	/// </summary>
 	[DNR, DH, AM]
-	[CA(UNCONDITIONAL_HALT), SFM(STRING_FORMAT_ARG)]
+	[CA(UNCONDITIONAL_HALT), SFM(KantanInit.STRING_FORMAT_ARG)]
 	public static void Fail<TException>(string? msg = null, params object[] args)
 		where TException : Exception, new()
 	{
@@ -149,7 +148,7 @@ public static class Require
 	/// Root assertion function
 	/// </summary>
 	[DH, AM]
-	[CA(COND_FALSE_HALT), SFM(STRING_FORMAT_ARG)]
+	[CA(COND_FALSE_HALT), SFM(KantanInit.STRING_FORMAT_ARG)]
 	public static void Assert<TException>([AC(ACT_TRUE), DNRI(false)] bool condition,
 	                                      string? msg = null, params object[] args)
 		where TException : Exception, new()

@@ -58,7 +58,7 @@ public static class HttpUtilities
 			Redirects =
 			{
 				AllowSecureToInsecure = true,
-				Enabled               = true
+				Enabled               = true 
 			},
 			
 		},

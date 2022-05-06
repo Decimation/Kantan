@@ -23,6 +23,24 @@ public class MimeTests2
 }
 
 [TestFixture]
+public class HttpResourceTests
+{
+	[Test]
+	[TestCase(@"C:\Users\Deci\Pictures\NSFW\17EA29A6-8966-4801-A508-AC89FABE714D.png", true, false)]
+	[TestCase("http://s1.zerochan.net/atago.(azur.lane).600.2750747.jpg", false, true)]
+	public void test1(string s, bool b, bool b1)
+	{
+		var task = HttpResource.GetAsync(s);
+		task.Wait();
+
+		Assert.AreEqual(b, task.Result.IsFile);
+		Assert.AreEqual(b1, task.Result.IsUri);
+		Assert.True(task.Result.IsBinary);
+
+	}
+}
+
+[TestFixture]
 public class MimeTypeTests
 {
 	[Test]
@@ -34,7 +52,7 @@ public class MimeTypeTests
 		// Assert.True(binaryUris.Select(x => x.Url.ToString()).ToList().Contains(s));
 
 		Assert.Contains(
-			s, (await HttpScanner.ScanAsync(u, HttpResourceFilter.Media)).Select(x => x.Url).ToList());
+			s, (await HttpResourceFilter.Media.ScanAsync(u)).Select(x => x.Url).ToList());
 
 	}
 }

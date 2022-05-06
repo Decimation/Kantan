@@ -7,7 +7,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using JetBrains.Annotations;
-using Kantan.Internal;
 using Kantan.Model;
 using Kantan.Text;
 using Kantan.Utilities;
@@ -118,7 +117,7 @@ public class ConsoleOption : IMap
 			return MAX_OPTION_N + (c - OPTION_LETTER_START);
 		}
 
-		return Common.INVALID;
+		return KantanInit.INVALID;
 	}
 
 	[Pure]

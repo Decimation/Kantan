@@ -12,7 +12,9 @@ public sealed class UrlmonResolver : IHttpTypeResolver
 {
 	public string Resolve(Stream stream)
 	{
-		var buf = (stream).GetHeaderBlock();
+		var buf = (stream).ReadHeader();
+		// var buf = stream.ReadHeaderAsync(HttpType.RSRC_HEADER_LEN);
+
 		return ResolveFromData(buf);
 	}
 

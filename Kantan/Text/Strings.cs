@@ -13,7 +13,6 @@ using Kantan.Collections;
 using Kantan.Text;
 using Kantan.Utilities;
 using Kantan.Model;
-using static Kantan.Internal.Common;
 
 // ReSharper disable ArrangeObjectCreationWhenTypeNotEvident
 
@@ -37,6 +36,61 @@ namespace Kantan.Text;
 /// <seealso cref="UnicodeRanges"/>
 public static partial class Strings
 {
+	/// <param name="paragraph">The value to write.</param>
+	/// <param name="tabSize">The value that indicates the column width of tab characters.</param>
+	public static IEnumerable<string> GetWrappedWordsTab(string paragraph, int tabSize = 8)
+	{
+		//https://stackoverflow.com/questions/20534318/make-console-writeline-wrap-words-instead-of-letters
+
+		string[] lines = paragraph
+		                 .Replace("\t", new String(' ', tabSize))
+		                 .Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+
+		for (int i = 0; i < lines.Length; i++) {
+			string       process = lines[i];
+			List<String> wrapped = new List<string>();
+
+			while (process.Length > Console.WindowWidth) {
+				int wrapAt = process.LastIndexOf(' ', Math.Min(Console.WindowWidth - 1, process.Length));
+				if (wrapAt <= 0) break;
+
+				wrapped.Add(process.Substring(0, wrapAt));
+				process = process.Remove(0, wrapAt + 1);
+			}
+
+			foreach (string wrap in wrapped) {
+				yield return wrap;
+			}
+
+
+		}
+	}
+
+	public static IEnumerable<string> GetWrappedWordsWidth(string text, int width)
+	{
+		//https://stackoverflow.com/questions/20534318/make-console-writeline-wrap-words-instead-of-letters
+		var forcedZones = Regex.Matches(text, @"\n").Cast<Match>().ToList();
+		var normalZones = Regex.Matches(text, @"\s+|(?<=[-,.;])|$").Cast<Match>().ToList();
+
+		int start = 0;
+
+		while (start < text.Length) {
+			var zone =
+				forcedZones.Find(z => z.Index >= start && z.Index <= start + width) ??
+				normalZones.FindLast(z => z.Index >= start && z.Index <= start + width);
+
+			if (zone == null) {
+				yield return text.Substring(start, width);
+				start += width;
+			}
+			else {
+				yield return text.Substring(start, zone.Index - start);
+				start = zone.Index + zone.Length;
+			}
+		}
+	}
+
+
 	public static string RemoveNewLines(this string s) => s.Remove(LineControlCharacters);
 
 	public static string Remove(this string s, string[] rg)
@@ -151,7 +205,7 @@ public static partial class Strings
 	public static string CreateRandom(int length)
 	{
 		return new(Enumerable.Repeat(Constants.Alphanumeric, length)
-		                     .Select(s => s[RandomInstance.Next(s.Length)])
+		                     .Select(s => s[KantanInit.RandomInstance.Next(s.Length)])
 		                     .ToArray());
 	}
 
@@ -258,7 +312,7 @@ public static partial class Strings
 	{
 		int posA = value.LastIndexOf(a, StringComparison.Ordinal);
 
-		if (posA == INVALID) {
+		if (posA == KantanInit.INVALID) {
 			return String.Empty;
 		}
 
@@ -272,7 +326,7 @@ public static partial class Strings
 	public static string SubstringBefore(this string value, string a)
 	{
 		int posA = value.IndexOf(a, StringComparison.Ordinal);
-		return posA == INVALID ? String.Empty : value[..posA];
+		return posA == KantanInit.INVALID ? String.Empty : value[..posA];
 	}
 
 	/// <summary>
@@ -283,7 +337,7 @@ public static partial class Strings
 		int posA = value.IndexOf(a, StringComparison.Ordinal);
 		int posB = value.LastIndexOf(b, StringComparison.Ordinal);
 
-		if (posA == INVALID || posB == INVALID) {
+		if (posA == KantanInit.INVALID || posB == KantanInit.INVALID) {
 			return String.Empty;
 		}
 

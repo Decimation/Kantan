@@ -13,7 +13,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Kantan.Diagnostics;
-using Kantan.Internal;
 using Kantan.Text;
 using Kantan.Utilities;
 

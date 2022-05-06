@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Flurl.Http;
+using JetBrains.Annotations;
 using Kantan.Net.Utilities;
 
 #endregion
@@ -135,5 +136,26 @@ public class HttpResourceFilter
 		       .ToList();
 
 		return urls;
+	}
+
+
+	public async Task<HttpResource[]> ScanAsync(string url)
+	{
+		var urls = await Extract(url);
+
+		var hr = await Task.WhenAll(urls.Select(async Task<HttpResource>(s1) =>
+		{
+			HttpResource rsrc = await HttpResource.GetAsync(s1);
+			rsrc?.Resolve();
+
+			return rsrc;
+		}));
+
+		hr = hr.Where(x => x is { IsBinary: true }
+			       /*&& x.Stream.Length >= filter.MinimumSize
+			       && filter.TypeBlacklist.Contains(x.ComputedType)*/)
+		       .ToArray();
+
+		return hr;
 	}
 }

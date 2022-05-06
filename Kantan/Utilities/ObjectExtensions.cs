@@ -30,6 +30,7 @@ public static class ObjectExtensions
 		Debug.Assert(mi != null);
 
 		var value = mi.Invoke(t, null);
+
 		return Unsafe.As<object, T>(ref value);
 	}
 }

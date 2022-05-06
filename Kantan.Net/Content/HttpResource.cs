@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -13,6 +14,7 @@ using Flurl.Http;
 using Kantan.Net.Content.Resolvers;
 using Kantan.Net.Utilities;
 using Kantan.Text;
+using Kantan.Utilities;
 
 #endregion
 
@@ -39,11 +41,20 @@ public sealed class HttpResource : IDisposable
 
 	public List<HttpType> ResolvedTypes { get; private set; }
 
-	// public string Type => ComputedType ?? SuppliedType;
-
 	public string Url { get; init; }
 
 	public bool IsBinary => ComputedType == HttpType.MT_APPLICATION_OCTET_STREAM;
+
+	public bool IsFile { get; init; }
+
+	[MemberNotNullWhen(true, nameof(Response))]
+	[MemberNotNullWhen(true, nameof(SuppliedType))]
+	public bool IsUri { get; init; }
+
+	public static explicit operator bool(HttpResource h)
+	{
+		return /*h !=null&&*/ (h.IsFile || h.IsUri);
+	}
 
 	public HttpResource() { }
 
@@ -53,48 +64,58 @@ public sealed class HttpResource : IDisposable
 
 		IFlurlResponse response = null;
 
-		/*if (!UriUtilities.IsUri(u, out var u2)) {
-			return null;
-		}*/
+		Stream stream       = Stream.Null;
+		string suppliedType = null;
+		bool   b            = false;
 
-		try {
-			response = await u.WithClient(HttpUtilities.Client)
-			                  .AllowAnyHttpStatus()
-			                  .WithTimeout(HttpUtilities.Timeout)
-			                  .GetAsync();
+		bool isFile = File.Exists(u),
+		     isUri  = UriUtilities.IsUri(u, out var uu);
 
-			// response = new HttpClient().GetAsync(u);
+
+		if (isFile) {
+			stream = File.OpenRead(u);
 		}
-		catch (Exception e) {
-			Debug.WriteLine($"{e.Message}");
+		else if (isUri) {
+			try {
+				response = await u.WithClient(HttpUtilities.Client)
+				                  .AllowAnyHttpStatus()
+				                  .WithTimeout(HttpUtilities.Timeout)
+				                  .GetAsync();
 
+			}
+			catch (Exception e) {
+				Debug.WriteLine($"{e.Message}");
+
+			}
+
+			if (response == null) {
+				return null;
+			}
+
+			suppliedType = GetSuppliedType(response, out b);
+			stream       = await response.GetStreamAsync();
+		}
+		else {
+			return null;
 		}
 
-		if (response == null) {
-			return null;
-
-		}
-
-		/*if (response is not { ResponseMessage: { IsSuccessStatusCode: true } }) {
-			return null;
-		}*/
-
-		var stream = await response.GetStreamAsync();
-
-		var header = await HttpScanner.ReadResourceHeader(stream);
+		var header = await StreamHelper.ReadHeaderAsync(stream, HttpType.RSRC_HEADER_LEN);
 
 		var resource = new HttpResource()
 		{
 			Response      = response,
 			Stream        = stream,
-			SuppliedType  = GetSuppliedType(response, out bool b),
+			SuppliedType  = suppliedType,
 			CheckBugFlag  = b,
 			ResolvedTypes = new List<HttpType>(),
 			Header        = header,
-			ComputedType  = HttpScanner.IsBinaryResource(header),
-			Url           = u
+			ComputedType  = HttpType.IsBinaryResource(header),
+
+			IsFile = isFile,
+			IsUri  = isUri,
+
+			Url = u,
 		};
-		
 		// resource.Resolve(true);
 
 		return resource;
@@ -106,7 +127,7 @@ public sealed class HttpResource : IDisposable
 			// todo ...
 		}
 
-		List<HttpType> rg = HttpType.All.Where(t => HttpScanner.CheckPattern(Header, t))
+		List<HttpType> rg = HttpType.All.Where(t => HttpType.CheckPattern(Header, t))
 		                            .ToList();
 
 		if (runExtra) {
@@ -123,7 +144,7 @@ public sealed class HttpResource : IDisposable
 			rg.Add(type);
 		}
 
-		ResolvedTypes = rg.DistinctBy(x=>x.Type).ToList();
+		ResolvedTypes = rg.DistinctBy(x => x.Type).ToList();
 
 		return rg;
 	}

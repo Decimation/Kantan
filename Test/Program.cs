@@ -25,7 +25,6 @@ using Flurl.Util;
 using Kantan.Cli;
 using Kantan.Cli.Controls;
 using Kantan.Collections;
-using Kantan.Internal;
 using Kantan.Model;
 using Kantan.Net;
 using Kantan.Net.Adapters;
@@ -91,35 +90,10 @@ public static class Program
 
 		// var u = CliAdapters.gallery_dl_resolve("https://kemono.party/patreon/user/3332300/post/65227512");
 		// Console.WriteLine(u);
-
-		/*
-		 * image/png
-text/html
-0.8617613
-text/html
-0.4304751
-image/png
-1.6637436
-image/jpeg
-0.3022393
-text/html
-0.711541
-text/html
-0.4215932
-image/jpeg
-0.9666091
-text/html
-0.4441395
-text/html
-0.1990817
-
-0.0896905
-image/png
-1.3038885
-		 */
-
+		
 		// KantanNetInit.Close();
-		foreach (string s in _rg.Union(_rg1)) {
+		
+		/*foreach (string s in _rg.Union(_rg1)) {
 			var now = Stopwatch.GetTimestamp();
 			var o   = await HttpResource.GetAsync(s);
 			o?.Resolve(true);
@@ -127,7 +101,11 @@ image/png
 			var diff = TimeSpan.FromTicks(Stopwatch.GetTimestamp() - now);
 			Console.WriteLine(diff.TotalSeconds);
 
-		}
+		}*/
+
+		Console.WriteLine(Strings.GetWrappedWordsWidth(u2,Console.BufferWidth).QuickJoin("\n"));
+		Console.WriteLine();
+		Console.WriteLine(Strings.GetWrappedWordsTab(u2).QuickJoin().QuickJoin(">"));
 
 	}
 }

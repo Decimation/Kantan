@@ -7,7 +7,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Kantan.Text;
-using static Kantan.Internal.Common;
 using Map = System.Collections.Generic.Dictionary<object, object>;
 
 // ReSharper disable SuggestVarOrType_Elsewhere
@@ -59,7 +58,7 @@ public static class EnumerableHelper
 	public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source)
 	{
 		// return source.OrderBy(x => Guid.NewGuid());
-		return source.OrderBy(x => RandomInstance.Next());
+		return source.OrderBy(x => KantanInit.RandomInstance.Next());
 	}
 
 	public static IList<T> Shuffle<T>(this IList<T> list)
@@ -69,7 +68,7 @@ public static class EnumerableHelper
 
 		while (n > 1) {
 			n--;
-			int k = RandomInstance.Next(n + 1);
+			int k = KantanInit.RandomInstance.Next(n + 1);
 
 			(cpy[k], cpy[n]) = (cpy[n], cpy[k]);
 		}
@@ -84,7 +83,7 @@ public static class EnumerableHelper
 	/// <returns>A random element</returns>
 	public static T TakeRandom<T>(this IList<T> list)
 	{
-		int i = RandomInstance.Next(list.Count);
+		int i = KantanInit.RandomInstance.Next(list.Count);
 
 		return list[i];
 	}

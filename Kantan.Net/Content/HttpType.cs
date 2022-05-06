@@ -1,5 +1,7 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using Kantan.Diagnostics;
 
 // ReSharper disable InconsistentNaming
 
@@ -101,4 +103,82 @@ public readonly struct HttpType
 	public const string MT_MODEL       = "model";
 
 	#endregion
+
+	public const int RSRC_HEADER_LEN = 1445;
+
+	/// <remarks>
+	///     <a href="https://mimesniff.spec.whatwg.org/#sniffing-a-mislabeled-binary-resource">7.2</a>
+	/// </remarks>
+	public static string IsBinaryResource(byte[] input)
+	{
+		int l = input.Length;
+
+		byte[] seq1a = { 0xFE, 0xFF };
+		byte[] seq1b = { 0xFF, 0xFE };
+		byte[] seq2  = { 0xEF, 0xBB, 0xBF };
+
+		switch (l) {
+			case >= 2 when input.SequenceEqual(seq1a) || input.SequenceEqual(seq1b):
+				return HttpType.MT_TEXT_PLAIN;
+			case >= 3 when input.SequenceEqual(seq2):
+				return HttpType.MT_TEXT_PLAIN;
+
+		}
+
+		if (!input.Any(IsBinaryDataByte)) {
+			return HttpType.MT_TEXT_PLAIN;
+		}
+
+		return HttpType.MT_APPLICATION_OCTET_STREAM;
+	}
+
+	/// <remarks>
+	///     <a href="https://mimesniff.spec.whatwg.org/#terminology">3</a>
+	/// </remarks>
+	public static bool IsBinaryDataByte(byte b)
+	{
+		return b is >= 0x00 and <= 0x08 or 0x0B or >= 0x0E and <= 0x1A or >= 0x1C and <= 0x1F;
+	}
+
+	public static bool CheckPattern(byte[] input, HttpType s, ISet<byte> ignored = null)
+		=> CheckPattern(input, s.Pattern, s.Mask, ignored);
+
+	/// <remarks>
+	///     <a href="https://mimesniff.spec.whatwg.org/#matching-a-mime-type-pattern">6</a>
+	/// </remarks>
+	public static bool CheckPattern(byte[] input, byte[] pattern, byte[] mask, ISet<byte> ignored = null)
+	{
+		Require.Assert(pattern.Length == mask.Length);
+
+		ignored ??= Enumerable.Empty<byte>().ToHashSet();
+
+		if (input.Length < pattern.Length) {
+			return false;
+		}
+
+		int s = 0;
+
+		while (s < input.Length) {
+			if (!ignored.Contains(input[s])) {
+				break;
+			}
+
+			s++;
+		}
+
+		int p = 0;
+
+		while (p < pattern.Length) {
+			int md = input[s] & mask[p];
+
+			if (md != pattern[p]) {
+				return false;
+			}
+
+			s++;
+			p++;
+		}
+
+		return true;
+	}
 }

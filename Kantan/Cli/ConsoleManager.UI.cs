@@ -2,7 +2,6 @@
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
-using static Kantan.Internal.Common;
 
 // ReSharper disable InconsistentNaming
 
