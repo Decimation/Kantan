@@ -2,7 +2,7 @@
 
 // ReSharper disable UnusedMember.Global
 
-namespace Kantan.Net;
+namespace Kantan.Net.Utilities;
 
 public static class SerializationHelper
 {

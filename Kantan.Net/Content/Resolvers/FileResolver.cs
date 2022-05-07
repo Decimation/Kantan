@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,10 +14,7 @@ namespace Kantan.Net.Content.Resolvers
 	{
 		#region Implementation of IDisposable
 
-		public void Dispose()
-		{
-			
-		}
+		public void Dispose() { }
 
 		#endregion
 
@@ -26,10 +24,9 @@ namespace Kantan.Net.Content.Resolvers
 		{
 			// IFlurlResponse res = await url.GetAsync();
 
-			try
-			{
+			try {
 
-				byte[] hdr = new Byte[0xFF];
+				var hdr = new byte[0xFF];
 				m.Read(hdr, 0, hdr.Length);
 
 				string s = Path.GetTempFileName();
@@ -41,14 +38,37 @@ namespace Kantan.Net.Content.Resolvers
 
 				var args = $"{s} -i";
 
-				var output = ProcessHelper.GetProcessOutput(Resources.EXE_FILE, args);
+				var proc1 = new Process()
+				{
+					StartInfo =
+					{
+						FileName  = Resources.EXE_FILE,
+						Arguments = args,
+
+						RedirectStandardInput  = false,
+						RedirectStandardOutput = true,
+						RedirectStandardError  = true,
+
+						UseShellExecute = false,
+						// WindowStyle     = ProcessWindowStyle.Hidden,
+					},
+
+					EnableRaisingEvents = true,
+				};
+				using Process proc = proc1;
+
+				proc.Start();
+
+				var sz = proc.StandardOutput.ReadToEnd();
+
+				proc.WaitForExit();
+				var output = (string) sz;
 
 				File.Delete(s);
 
 				return output;
 			}
-			catch (Exception)
-			{
+			catch (Exception) {
 				return null;
 			}
 		}

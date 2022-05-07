@@ -27,7 +27,6 @@ using Kantan.Cli.Controls;
 using Kantan.Collections;
 using Kantan.Model;
 using Kantan.Net;
-using Kantan.Net.Adapters;
 using Kantan.Net.Content;
 using Kantan.Net.Content.Resolvers;
 using Kantan.Net.Properties;
@@ -68,7 +67,8 @@ public static class Program
 	private static string[] _rg = new[]
 	{
 		@"http://www.zerochan.net/2750747",
-		@"https://kemono.party/patreon/user/3332300/post/65227512"
+		@"https://kemono.party/patreon/user/3332300/post/65227512",
+		@"https://i.pximg.net/img-master/img/2022/05/01/19/44/39/98022741_p0_master1200.jpg"
 	};
 
 	private static async Task Main(string[] args)
@@ -90,22 +90,30 @@ public static class Program
 
 		// var u = CliAdapters.gallery_dl_resolve("https://kemono.party/patreon/user/3332300/post/65227512");
 		// Console.WriteLine(u);
-		
+
 		// KantanNetInit.Close();
-		
-		/*foreach (string s in _rg.Union(_rg1)) {
+
+		foreach (string s in _rg.Union(_rg1)) {
+			Console.WriteLine(s);
+
 			var now = Stopwatch.GetTimestamp();
 			var o   = await HttpResource.GetAsync(s);
 			o?.Resolve(true);
+
+			if (o is not { }) {
+				Console.WriteLine($"failed");
+				continue;
+			}
+
 			Console.WriteLine(o);
+			Console.WriteLine(o.NoSniffFlag);
+			
 			var diff = TimeSpan.FromTicks(Stopwatch.GetTimestamp() - now);
 			Console.WriteLine(diff.TotalSeconds);
 
-		}*/
 
-		Console.WriteLine(Strings.GetWrappedWordsWidth(u2,Console.BufferWidth).QuickJoin("\n"));
-		Console.WriteLine();
-		Console.WriteLine(Strings.GetWrappedWordsTab(u2).QuickJoin().QuickJoin(">"));
+		}
+
 
 	}
 }

@@ -119,17 +119,17 @@ public readonly struct HttpType
 
 		switch (l) {
 			case >= 2 when input.SequenceEqual(seq1a) || input.SequenceEqual(seq1b):
-				return HttpType.MT_TEXT_PLAIN;
+				return MT_TEXT_PLAIN;
 			case >= 3 when input.SequenceEqual(seq2):
-				return HttpType.MT_TEXT_PLAIN;
+				return MT_TEXT_PLAIN;
 
 		}
 
 		if (!input.Any(IsBinaryDataByte)) {
-			return HttpType.MT_TEXT_PLAIN;
+			return MT_TEXT_PLAIN;
 		}
 
-		return HttpType.MT_APPLICATION_OCTET_STREAM;
+		return MT_APPLICATION_OCTET_STREAM;
 	}
 
 	/// <remarks>

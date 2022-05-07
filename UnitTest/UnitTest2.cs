@@ -35,7 +35,7 @@ public class HttpResourceTests
 
 		Assert.AreEqual(b, task.Result.IsFile);
 		Assert.AreEqual(b1, task.Result.IsUri);
-		Assert.True(task.Result.IsBinary);
+		Assert.True(task.Result.IsBinaryType);
 
 	}
 }

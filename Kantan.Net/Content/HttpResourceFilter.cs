@@ -151,7 +151,7 @@ public class HttpResourceFilter
 			return rsrc;
 		}));
 
-		hr = hr.Where(x => x is { IsBinary: true }
+		hr = hr.Where(x => x is { IsBinaryType: true }
 			       /*&& x.Stream.Length >= filter.MinimumSize
 			       && filter.TypeBlacklist.Contains(x.ComputedType)*/)
 		       .ToArray();

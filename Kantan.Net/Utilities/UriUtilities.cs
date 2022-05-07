@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Web;
 
 // ReSharper disable InconsistentNaming
@@ -179,26 +182,82 @@ public static class UriUtilities
 		return filename;
 	}
 
-	public static Uri GetHostUri(this Uri u)
-	{
-		return new UriBuilder(u.Host).Uri;
-	}
-
-	public static string GetHostComponent(this Uri u)
-	{
-		return u.GetComponents(UriComponents.NormalizedHost, UriFormat.Unescaped);
-	}
-
-	public static string StripScheme(this Uri uri)
-	{
-		return uri.Host + uri.PathAndQuery + uri.Fragment;
-	}
-
 	public static bool IsUri(string uriName, out Uri uriResult)
 	{
 		bool result = Uri.TryCreate(uriName, UriKind.Absolute, out uriResult)
 		              && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
 
 		return result;
+	}
+
+	public static Uri GetHostUri(this Uri u)
+	{
+		return new UriBuilder(u.Host).Uri;
+	}
+
+	public static string GetHostComponent(this Uri u) => u.GetComponents(UriComponents.NormalizedHost, UriFormat.Unescaped);
+
+	public static string StripScheme(this Uri uri) => uri.Host + uri.PathAndQuery + uri.Fragment;
+
+	public static Uri AddQuery(this Uri uri, string name, string value)
+	{
+		var collection = HttpUtility.ParseQueryString(uri.Query);
+
+		collection.Remove(name);
+		collection.Add(name, value);
+
+		var ub = new UriBuilder(uri);
+
+		// this code block is taken from httpValueCollection.ToString() method
+		// and modified so it encodes strings with HttpUtility.UrlEncode
+		if (collection.Count == 0) {
+			ub.Query = String.Empty;
+		}
+		else {
+			var sb = new StringBuilder();
+
+			for (int i = 0; i < collection.Count; i++) {
+				string text = collection.GetKey(i);
+
+				text = HttpUtility.UrlEncode(text);
+
+				string   val    = (text != null) ? (text + "=") : string.Empty;
+				string[] values = collection.GetValues(i);
+
+				if (sb.Length > 0)
+					sb.Append('&');
+
+				if (values == null || values.Length == 0)
+					sb.Append(val);
+				else {
+					if (values.Length == 1) {
+						sb.Append(val);
+						sb.Append(HttpUtility.UrlEncode(values[0]));
+					}
+					else {
+						for (int j = 0; j < values.Length; j++) {
+							if (j > 0)
+								sb.Append('&');
+
+							sb.Append(val);
+							sb.Append(HttpUtility.UrlEncode(values[j]));
+						}
+					}
+				}
+			}
+
+			ub.Query = sb.ToString();
+		}
+
+		return ub.Uri;
+	}
+
+	public static string ToQueryString(this NameValueCollection nvc)
+	{
+		var array = (from key in nvc.AllKeys
+		             from value in nvc.GetValues(key)
+		             select $"{HttpUtility.UrlEncode(key)}={HttpUtility.UrlEncode(value)}"
+		            ).ToArray();
+		return '?' + String.Join('&', array);
 	}
 }

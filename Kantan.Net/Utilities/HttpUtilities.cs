@@ -159,68 +159,6 @@ public static class HttpUtilities
 		return dir;
 	}
 
-	public static string ToQueryString(this NameValueCollection nvc)
-	{
-		var array = (from key in nvc.AllKeys
-		             from value in nvc.GetValues(key)
-		             select $"{HttpUtility.UrlEncode(key)}={HttpUtility.UrlEncode(value)}"
-		            ).ToArray();
-		return '?' + String.Join('&', array);
-	}
-
-	public static Uri AddQuery(this Uri uri, string name, string value)
-	{
-		var collection = HttpUtility.ParseQueryString(uri.Query);
-
-		collection.Remove(name);
-		collection.Add(name, value);
-
-		var ub = new UriBuilder(uri);
-
-		// this code block is taken from httpValueCollection.ToString() method
-		// and modified so it encodes strings with HttpUtility.UrlEncode
-		if (collection.Count == 0) {
-			ub.Query = String.Empty;
-		}
-		else {
-			var sb = new StringBuilder();
-
-			for (int i = 0; i < collection.Count; i++) {
-				string text = collection.GetKey(i);
-
-				text = HttpUtility.UrlEncode(text);
-
-				string   val    = (text != null) ? (text + "=") : string.Empty;
-				string[] values = collection.GetValues(i);
-
-				if (sb.Length > 0)
-					sb.Append('&');
-
-				if (values == null || values.Length == 0)
-					sb.Append(val);
-				else {
-					if (values.Length == 1) {
-						sb.Append(val);
-						sb.Append(HttpUtility.UrlEncode(values[0]));
-					}
-					else {
-						for (int j = 0; j < values.Length; j++) {
-							if (j > 0)
-								sb.Append('&');
-
-							sb.Append(val);
-							sb.Append(HttpUtility.UrlEncode(values[j]));
-						}
-					}
-				}
-			}
-
-			ub.Query = sb.ToString();
-		}
-
-		return ub.Uri;
-	}
-
 	public static IHtmlDocument GetHtmlDocument(this HttpResponseMessage r)
 	{
 		Task<string> task = r.Content.ReadAsStringAsync();

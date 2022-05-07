@@ -43,7 +43,7 @@ public sealed class HttpResource : IDisposable
 
 	public string Url { get; init; }
 
-	public bool IsBinary => ComputedType == HttpType.MT_APPLICATION_OCTET_STREAM;
+	public bool IsBinaryType => ComputedType == HttpType.MT_APPLICATION_OCTET_STREAM;
 
 	public bool IsFile { get; init; }
 
@@ -51,10 +51,7 @@ public sealed class HttpResource : IDisposable
 	[MemberNotNullWhen(true, nameof(SuppliedType))]
 	public bool IsUri { get; init; }
 
-	public static explicit operator bool(HttpResource h)
-	{
-		return /*h !=null&&*/ (h.IsFile || h.IsUri);
-	}
+	public bool IsBinary => (IsFile || IsUri) && IsBinaryType;
 
 	public HttpResource() { }
 
@@ -64,9 +61,10 @@ public sealed class HttpResource : IDisposable
 
 		IFlurlResponse response = null;
 
-		Stream stream       = Stream.Null;
+		Stream stream;
 		string suppliedType = null;
-		bool   b            = false;
+
+		bool checkBug = false, noSniff = false;
 
 		bool isFile = File.Exists(u),
 		     isUri  = UriUtilities.IsUri(u, out var uu);
@@ -92,21 +90,24 @@ public sealed class HttpResource : IDisposable
 				return null;
 			}
 
-			suppliedType = GetSuppliedType(response, out b);
+			suppliedType = GetSuppliedType(response, out checkBug);
 			stream       = await response.GetStreamAsync();
+
+			noSniff = response.Headers.TryGetFirst("X-Content-Type-Options", out var x) && x == "nosniff";
 		}
 		else {
 			return null;
 		}
 
-		var header = await StreamHelper.ReadHeaderAsync(stream, HttpType.RSRC_HEADER_LEN);
+		var header = await stream.ReadHeaderAsync(HttpType.RSRC_HEADER_LEN);
 
 		var resource = new HttpResource()
 		{
 			Response      = response,
 			Stream        = stream,
 			SuppliedType  = suppliedType,
-			CheckBugFlag  = b,
+			CheckBugFlag  = checkBug,
+			NoSniffFlag   = noSniff,
 			ResolvedTypes = new List<HttpType>(),
 			Header        = header,
 			ComputedType  = HttpType.IsBinaryResource(header),
@@ -116,19 +117,24 @@ public sealed class HttpResource : IDisposable
 
 			Url = u,
 		};
+
 		// resource.Resolve(true);
+		if (resource.ComputedType == HttpType.MT_APPLICATION_OCTET_STREAM) {
+			// resource.Resolve(true);
+			//todo...
+		}
 
 		return resource;
 	}
 
 	public List<HttpType> Resolve(bool runExtra = false, IHttpTypeResolver extraResolver = null)
 	{
-		if (IsBinary) {
+		if (IsBinaryType) {
 			// todo ...
 		}
 
-		List<HttpType> rg = HttpType.All.Where(t => HttpType.CheckPattern(Header, t))
-		                            .ToList();
+		var rg = HttpType.All.Where(t => HttpType.CheckPattern(Header, t))
+		                 .ToList();
 
 		if (runExtra) {
 
@@ -173,7 +179,8 @@ public sealed class HttpResource : IDisposable
 
 	public override string ToString()
 	{
-		return $"{Url}:: supplied: {SuppliedType} | computed: {ComputedType} | resolved: {ResolvedTypes.QuickJoin()}";
+		return
+			$"{Url} ({IsBinaryType}) :: supplied: {SuppliedType} | computed: {ComputedType} | resolved: {ResolvedTypes.QuickJoin()}";
 	}
 
 	public void Dispose()
