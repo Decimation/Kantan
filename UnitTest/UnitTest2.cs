@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
+using Kantan.Files;
 using Kantan.Net;
 using Kantan.Net.Content;
 using Kantan.Net.Utilities;

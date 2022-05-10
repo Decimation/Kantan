@@ -287,7 +287,26 @@ public static class HttpUtilities
 
 		return v?.Result;
 	}
+	[CanBeNull]
+	public static string Download(Uri src, string path)
+	{
+		string    filename = UriUtilities.NormalizeFilename(src);
+		string    combine  = Path.Combine(path, filename);
+		using var wc       = new WebClient();
 
+		Debug.WriteLine($"{nameof(HttpUtilities)}: Downloading {src} to {combine} ...");
+
+		try
+		{
+			wc.DownloadFile(src.ToString(), combine);
+			return combine;
+		}
+		catch (Exception e)
+		{
+			Debug.WriteLine($"{nameof(HttpUtilities)}: {e.Message}");
+			return null;
+		}
+	}
 	public static void OpenUrl(string url)
 	{
 		// https://stackoverflow.com/questions/4580263/how-to-open-in-default-browser-in-c-sharp

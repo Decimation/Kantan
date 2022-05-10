@@ -61,15 +61,6 @@ namespace Kantan.Net.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to file.exe.
-        /// </summary>
-        internal static string EXE_FILE {
-            get {
-                return ResourceManager.GetString("EXE_FILE", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to gallery-dl.exe.
         /// </summary>
         internal static string EXE_GALLERYDL {
@@ -120,16 +111,6 @@ namespace Kantan.Net.Properties {
         internal static string KV_Media_SW {
             get {
                 return ResourceManager.GetString("KV_Media_SW", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] magic {
-            get {
-                object obj = ResourceManager.GetObject("magic", resourceCulture);
-                return ((byte[])(obj));
             }
         }
         

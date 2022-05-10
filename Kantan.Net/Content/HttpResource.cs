@@ -11,7 +11,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Flurl.Http;
-using Kantan.Net.Content.Resolvers;
+using Kantan.Files;
 using Kantan.Net.Utilities;
 using Kantan.Text;
 using Kantan.Utilities;
@@ -128,7 +128,7 @@ public sealed class HttpResource : IDisposable
 			// resource.Resolve(true);
 			//todo...
 
-			var rg = resource.ScanHeader();
+			var rg = FileType.Resolve(resource.Header);
 			resource.ResolvedTypes.AddRange(rg);
 
 
@@ -138,12 +138,6 @@ public sealed class HttpResource : IDisposable
 		}
 
 		return resource;
-	}
-
-	public List<FileType> ScanHeader()
-	{
-		return FileType.All.Where(t => FileType.CheckPattern(Header, t))
-		               .DistinctBy(x => x.Type).ToList();
 	}
 
 	public List<FileType> Resolve(bool runExtra = false, IFileTypeResolver extraResolver = null)

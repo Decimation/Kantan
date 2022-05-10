@@ -28,7 +28,6 @@ using Kantan.Collections;
 using Kantan.Model;
 using Kantan.Net;
 using Kantan.Net.Content;
-using Kantan.Net.Content.Resolvers;
 using Kantan.Net.Properties;
 using Kantan.Text;
 using Kantan.Utilities;
@@ -42,7 +41,7 @@ using HttpMethod = System.Net.Http.HttpMethod;
 // ReSharper disable UnusedMember.Local
 
 // ReSharper disable UnusedParameter.Local
-#pragma warning disable IDE0060, CS1998, IDE0051,CS0169,4014,CS0649,IDE0044,CS0612
+#pragma warning disable IDE0060, CS1998, IDE0051,CS0169,4014,CS0649,IDE0044,CS0612,CS0219, CS0169
 
 namespace Test;
 

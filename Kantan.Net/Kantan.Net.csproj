@@ -37,6 +37,11 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='TestDebug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Content\HttpResource.cs~RF299da50.TMP\**" />
+    <EmbeddedResource Remove="Content\HttpResource.cs~RF299da50.TMP\**" />
+    <None Remove="Content\HttpResource.cs~RF299da50.TMP\**" />
+  </ItemGroup>
  
   <ItemGroup>
     <PackageReference Include="AngleSharp" Version="0.16.1" />

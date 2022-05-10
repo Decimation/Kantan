@@ -9,6 +9,7 @@ using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Flurl.Http;
 using JetBrains.Annotations;
+using Kantan.Files;
 using Kantan.Net.Utilities;
 
 #endregion
@@ -41,6 +42,7 @@ public class HttpResourceFilter
 		{
 			"image/svg+xml"
 		},
+		UrlBlacklist = { "pbs.twimg.com" },
 		DomainFilterMap = new()
 		{
 			[new string[] { "www.deviantart.com" }]              = ("images-wixmp", true),
@@ -51,10 +53,13 @@ public class HttpResourceFilter
 		DiscreteType = FileType.MT_IMAGE
 	};
 
-	public static HttpResourceFilter Default { get; internal set; } = Media;
+	public List<string> UrlBlacklist { get; init; } = new();
 
-	protected bool Filter(string s)
+	public static HttpResourceFilter Default      { get; internal set; } = Media;
+
+	public bool Filter(string s)
 	{
+		// return UrlBlacklist.Contains(s);
 		foreach (var (k, v) in DomainFilterMap) {
 			foreach (string s1 in k) {
 				if (s.Contains(s1)) {
@@ -72,13 +77,13 @@ public class HttpResourceFilter
 		return true;
 	}
 
-	protected List<string> GetAttributeValues(IHtmlDocument document)
+	public List<string> GetAttributeValues(IHtmlDocument document)
 	{
 		return SelectorAttributeMap.SelectMany(k => document.QuerySelectorAttributes(k.Key, k.Value))
 		               .ToList();
 	}
 
-	protected List<string> RefineUrls(List<string> urls)
+	public List<string> RefineUrls(List<string> urls)
 	{
 		for (int i = urls.Count - 1; i >= 0; i--) {
 			if (urls[i] is null) {
@@ -141,6 +146,7 @@ public class HttpResourceFilter
 	public async Task<HttpResource[]> ScanAsync(string url)
 	{
 		var urls = await ExtractUrls(url);
+		
 
 		var hr = await Task.WhenAll(urls.Select(async Task<HttpResource>(s1) =>
 		{
