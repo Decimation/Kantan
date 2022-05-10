@@ -19,19 +19,19 @@ public class HttpResourceFilter
 {
 	public int? MinimumSize { get; init; } = -1;
 
-	[VP(nameof(HttpType))]
+	[VP(nameof(FileType))]
 	public string DiscreteType { get; init; }
 
-	[VP(nameof(HttpType))]
+	[VP(nameof(FileType))]
 	public List<string> TypeBlacklist { get; init; } = new();
 
-	public Dictionary<string[], (string, bool)> FilterMap { get; init; } = new();
+	public Dictionary<string[], (string, bool)> DomainFilterMap { get; init; } = new();
 
-	public Dictionary<string, string> ParseMap { get; init; } = new();
+	public Dictionary<string, string> SelectorAttributeMap { get; init; } = new();
 
 	public static readonly HttpResourceFilter Media = new()
 	{
-		ParseMap = new Dictionary<string, string>()
+		SelectorAttributeMap = new Dictionary<string, string>()
 		{
 			["img"] = "src",
 			["a"]   = "href"
@@ -41,21 +41,21 @@ public class HttpResourceFilter
 		{
 			"image/svg+xml"
 		},
-		FilterMap = new()
+		DomainFilterMap = new()
 		{
 			[new string[] { "www.deviantart.com" }]              = ("images-wixmp", true),
 			[new[] { "twitter.com", "pbs.twimg.com" }]           = ("profile_banners", false),
 			[new[] { "https://pbs.twimg.com/profile_banners/" }] = (null, false),
 			[new[] { ".svg" }]                                   = (null, false)
 		},
-		DiscreteType = HttpType.MT_IMAGE
+		DiscreteType = FileType.MT_IMAGE
 	};
 
 	public static HttpResourceFilter Default { get; internal set; } = Media;
 
-	public bool Filter(string s)
+	protected bool Filter(string s)
 	{
-		foreach (var (k, v) in FilterMap) {
+		foreach (var (k, v) in DomainFilterMap) {
 			foreach (string s1 in k) {
 				if (s.Contains(s1)) {
 					if (v.Item1 == null) {
@@ -72,9 +72,14 @@ public class HttpResourceFilter
 		return true;
 	}
 
-	public List<string> Refine(List<string> urls)
+	protected List<string> GetAttributeValues(IHtmlDocument document)
 	{
+		return SelectorAttributeMap.SelectMany(k => document.QuerySelectorAttributes(k.Key, k.Value))
+		               .ToList();
+	}
 
+	protected List<string> RefineUrls(List<string> urls)
+	{
 		for (int i = urls.Count - 1; i >= 0; i--) {
 			if (urls[i] is null) {
 				urls.RemoveAt(i);
@@ -102,13 +107,7 @@ public class HttpResourceFilter
 		return urls;
 	}
 
-	public List<string> Parse(IHtmlDocument document)
-	{
-		return ParseMap.SelectMany(k => document.QuerySelectorAttributes(k.Key, k.Value))
-		               .ToList();
-	}
-
-	public async Task<List<string>> Extract(string s)
+	public async Task<List<string>> ExtractUrls(string s)
 	{
 		// filter = new MediaImageFilter();
 
@@ -127,9 +126,9 @@ public class HttpResourceFilter
 
 		var parser = new HtmlParser();
 		var doc    = parser.ParseDocument(r);
-		urls = Parse(doc);
+		urls = GetAttributeValues(doc);
 
-		urls = Refine(urls)
+		urls = RefineUrls(urls)
 		       .Where(x => x != null)
 		       // .DistinctBy(x => UriUtilities.GetHostUri(new Uri(x)))
 		       .Distinct()
@@ -141,11 +140,11 @@ public class HttpResourceFilter
 
 	public async Task<HttpResource[]> ScanAsync(string url)
 	{
-		var urls = await Extract(url);
+		var urls = await ExtractUrls(url);
 
 		var hr = await Task.WhenAll(urls.Select(async Task<HttpResource>(s1) =>
 		{
-			HttpResource rsrc = await HttpResource.GetAsync(s1);
+			var rsrc = await HttpResource.GetAsync(s1);
 			rsrc?.Resolve();
 
 			return rsrc;

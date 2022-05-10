@@ -39,15 +39,15 @@ public sealed class HttpResource : IDisposable
 
 	public string ComputedType { get; private set; }
 
-	public List<HttpType> ResolvedTypes { get; private set; }
+	public List<FileType> ResolvedTypes { get; private set; }
 
 	public string Url { get; init; }
 
-	public bool IsBinaryType => ComputedType == HttpType.MT_APPLICATION_OCTET_STREAM;
+	public bool IsBinaryType => ComputedType == FileType.MT_APPLICATION_OCTET_STREAM;
 
 	public bool IsFile { get; init; }
 
-	[MemberNotNullWhen(true, nameof(Response))]
+	[MNNW(true, nameof(Response))]
 	[MemberNotNullWhen(true, nameof(SuppliedType))]
 	public bool IsUri { get; init; }
 
@@ -55,7 +55,9 @@ public sealed class HttpResource : IDisposable
 
 	public HttpResource() { }
 
-	public static async Task<HttpResource> GetAsync(string u)
+	public bool Resolved { get; private set; }
+
+	public static async Task<HttpResource> GetAsync(string u, bool auto = false)
 	{
 		//todo: error handling
 
@@ -93,13 +95,14 @@ public sealed class HttpResource : IDisposable
 			suppliedType = GetSuppliedType(response, out checkBug);
 			stream       = await response.GetStreamAsync();
 
-			noSniff = response.Headers.TryGetFirst("X-Content-Type-Options", out var x) && x == "nosniff";
+			noSniff = response.Headers.TryGetFirst("X-Content-Type-Options", out var x)
+			          && x == "nosniff";
 		}
 		else {
 			return null;
 		}
 
-		var header = await stream.ReadHeaderAsync(HttpType.RSRC_HEADER_LEN);
+		var header = await stream.ReadHeaderAsync(FileType.RSRC_HEADER_LEN);
 
 		var resource = new HttpResource()
 		{
@@ -108,51 +111,70 @@ public sealed class HttpResource : IDisposable
 			SuppliedType  = suppliedType,
 			CheckBugFlag  = checkBug,
 			NoSniffFlag   = noSniff,
-			ResolvedTypes = new List<HttpType>(),
+			ResolvedTypes = new List<FileType>(),
 			Header        = header,
-			ComputedType  = HttpType.IsBinaryResource(header),
+			ComputedType  = FileType.IsBinaryResource(header),
 
 			IsFile = isFile,
 			IsUri  = isUri,
+
+			Resolved = false,
 
 			Url = u,
 		};
 
 		// resource.Resolve(true);
-		if (resource.ComputedType == HttpType.MT_APPLICATION_OCTET_STREAM) {
+		if (resource.ComputedType == FileType.MT_APPLICATION_OCTET_STREAM) {
 			// resource.Resolve(true);
 			//todo...
+
+			var rg = resource.ScanHeader();
+			resource.ResolvedTypes.AddRange(rg);
+
+
+			if (auto) {
+				resource.Resolve();
+			}
 		}
 
 		return resource;
 	}
 
-	public List<HttpType> Resolve(bool runExtra = false, IHttpTypeResolver extraResolver = null)
+	public List<FileType> ScanHeader()
 	{
+		return FileType.All.Where(t => FileType.CheckPattern(Header, t))
+		               .DistinctBy(x => x.Type).ToList();
+	}
+
+	public List<FileType> Resolve(bool runExtra = false, IFileTypeResolver extraResolver = null)
+	{
+
+		if (Resolved) {
+			return ResolvedTypes;
+		}
+
 		if (IsBinaryType) {
 			// todo ...
 		}
 
-		var rg = HttpType.All.Where(t => HttpType.CheckPattern(Header, t))
-		                 .ToList();
 
 		if (runExtra) {
 
-			extraResolver ??= IHttpTypeResolver.Default;
+			extraResolver ??= IFileTypeResolver.Default;
 
 			string rx = extraResolver.Resolve(Stream);
 
-			var type = new HttpType()
+			var type = new FileType()
 			{
 				Type = rx
 			};
 
-			rg.Add(type);
+			ResolvedTypes.Add(type);
 		}
 
-		ResolvedTypes = rg.DistinctBy(x => x.Type).ToList();
+		Resolved = true;
 
-		return rg;
+		return ResolvedTypes;
 	}
 
 	/// <remarks>
@@ -165,10 +187,10 @@ public sealed class HttpResource : IDisposable
 		const string CONTENT_TYPE_HEADER = "Content-Type";
 
 		if (r.Headers.TryGetFirst(CONTENT_TYPE_HEADER, out string st))
-			c = st is HttpType.MT_TEXT_PLAIN
-				    or $"{HttpType.MT_TEXT_PLAIN} charset=ISO-8859-1"
-				    or $"{HttpType.MT_TEXT_PLAIN} charset=iso-8859-1"
-				    or $"{HttpType.MT_TEXT_PLAIN} charset=UTF-8";
+			c = st is FileType.MT_TEXT_PLAIN
+				    or $"{FileType.MT_TEXT_PLAIN} charset=ISO-8859-1"
+				    or $"{FileType.MT_TEXT_PLAIN} charset=iso-8859-1"
+				    or $"{FileType.MT_TEXT_PLAIN} charset=UTF-8";
 
 		// Skip 3
 		// Skip 4

@@ -11,7 +11,7 @@ using Kantan.Utilities;
 
 namespace Kantan.Net.Content.Resolvers;
 
-public sealed class MagicResolver : IHttpTypeResolver
+public sealed class MagicResolver : IFileTypeResolver
 {
 	public const MagicOpenFlags MagicMimeFlags =
 		MagicOpenFlags.MAGIC_ERROR |
@@ -57,7 +57,7 @@ public sealed class MagicResolver : IHttpTypeResolver
 	public string Resolve(Stream stream)
 	{
 		var buf = (stream).ReadHeader();
-		// var buf1 = stream.ReadHeaderAsync(HttpType.RSRC_HEADER_LEN);
+		// var buf1 = stream.ReadHeaderAsync(FileType.RSRC_HEADER_LEN);
 		// buf1.Wait();
 		// var buf  = buf1.Result;
 

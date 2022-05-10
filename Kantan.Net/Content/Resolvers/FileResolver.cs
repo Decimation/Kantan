@@ -10,7 +10,7 @@ using Kantan.Utilities;
 
 namespace Kantan.Net.Content.Resolvers
 {
-	public class FileResolver : IHttpTypeResolver
+	public class FileResolver : IFileTypeResolver
 	{
 		#region Implementation of IDisposable
 
@@ -18,7 +18,7 @@ namespace Kantan.Net.Content.Resolvers
 
 		#endregion
 
-		#region Implementation of IHttpTypeResolver
+		#region Implementation of IFileTypeResolver
 
 		public string Resolve(Stream m)
 		{

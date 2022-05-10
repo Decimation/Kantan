@@ -18,7 +18,7 @@ public class MimeTests2
 	{
 		var png = await HttpResource.GetAsync(png1);
 
-		Assert.True(png.Resolve().Contains(HttpType.png));
+		Assert.True(png.Resolve().Contains(FileType.png));
 	}
 }
 

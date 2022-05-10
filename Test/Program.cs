@@ -97,9 +97,9 @@ public static class Program
 			Console.WriteLine(s);
 
 			var now = Stopwatch.GetTimestamp();
-			var o   = await HttpResource.GetAsync(s);
+			var o   = await HttpResource.GetAsync(s, true);
 			o?.Resolve(true);
-
+			
 			if (o is not { }) {
 				Console.WriteLine($"failed");
 				continue;
@@ -110,8 +110,6 @@ public static class Program
 			
 			var diff = TimeSpan.FromTicks(Stopwatch.GetTimestamp() - now);
 			Console.WriteLine(diff.TotalSeconds);
-
-
 		}
 
 

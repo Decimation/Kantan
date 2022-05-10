@@ -1,4 +1,5 @@
-﻿global using UT = System.Runtime.InteropServices.UnmanagedType;
+﻿global using MNNW = System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute;
+global using UT = System.Runtime.InteropServices.UnmanagedType;
 global using MA = System.Runtime.InteropServices.MarshalAsAttribute;
 global using KNI = Kantan.Net.KantanNetInit;
 global using MURV = JetBrains.Annotations.MustUseReturnValueAttribute;
@@ -52,7 +53,7 @@ public static class KantanNetInit
 
 	public static void Close()
 	{
-		IHttpTypeResolver.Default.Dispose();
+		IFileTypeResolver.Default.Dispose();
 		HttpUtilities.Client.Dispose();
 		LoggerFactory.Dispose();
 		MagicResolver.Instance.Dispose();

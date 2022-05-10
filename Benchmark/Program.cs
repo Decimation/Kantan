@@ -168,7 +168,7 @@ public class Benchmarks6
 	[Benchmark]
 	public void b()
 	{
-		var x1 = HttpResourceFilter.Default.Extract(
+		var x1 = HttpResourceFilter.Default.ExtractUrls(
 			@"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png");
 		x1.Wait();
 		var x = x1.Result;

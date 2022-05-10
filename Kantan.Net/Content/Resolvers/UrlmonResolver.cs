@@ -8,12 +8,12 @@ using Kantan.Utilities;
 
 namespace Kantan.Net.Content.Resolvers;
 
-public sealed class UrlmonResolver : IHttpTypeResolver
+public sealed class UrlmonResolver : IFileTypeResolver
 {
 	public string Resolve(Stream stream)
 	{
 		var buf = (stream).ReadHeader();
-		// var buf = stream.ReadHeaderAsync(HttpType.RSRC_HEADER_LEN);
+		// var buf = stream.ReadHeaderAsync(FileType.RSRC_HEADER_LEN);
 
 		return ResolveFromData(buf);
 	}

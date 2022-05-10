@@ -8,7 +8,7 @@ using Kantan.Diagnostics;
 namespace Kantan.Net.Content;
 
 /// <remarks><a href="https://mimesniff.spec.whatwg.org/#matching-an-image-type-pattern">6.1</a></remarks>
-public readonly struct HttpType
+public readonly struct FileType
 {
 	public byte[] Mask { get; init; }
 
@@ -29,42 +29,42 @@ public readonly struct HttpType
 
 	#region
 
-	public static readonly HttpType gif = new()
+	public static readonly FileType gif = new()
 	{
 		Pattern = new byte[] { 0x47, 0x49, 0x46, 0x38, 0x37, 0x61, },
 		Mask    = new byte[] { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, },
 		Type    = "image/gif"
 	};
 
-	public static readonly HttpType gif2 = new()
+	public static readonly FileType gif2 = new()
 	{
 		Pattern = new byte[] { 0x47, 0x49, 0x46, 0x38, 0x39, 0x61, },
 		Mask    = new byte[] { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, },
 		Type    = "image/gif"
 	};
 
-	public static readonly HttpType webp = new()
+	public static readonly FileType webp = new()
 	{
 		Pattern = new byte[] { 0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50, 0x56, 0x50, },
 		Mask    = new byte[] { 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, },
 		Type    = "image/webp"
 	};
 
-	public static readonly HttpType png = new()
+	public static readonly FileType png = new()
 	{
 		Pattern = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, },
 		Mask    = new byte[] { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, },
 		Type    = "image/png"
 	};
 
-	public static readonly HttpType jpg = new()
+	public static readonly FileType jpg = new()
 	{
 		Pattern = new byte[] { 0xFF, 0xD8, 0xFF },
 		Mask    = new byte[] { 0xFF, 0xFF, 0xFF },
 		Type    = "image/png"
 	};
 
-	public static readonly HttpType bmp = new()
+	public static readonly FileType bmp = new()
 	{
 		Pattern = new byte[] { 0x42, 0x4D },
 		Mask    = new byte[] { 0xFF, 0xFF },
@@ -73,15 +73,15 @@ public readonly struct HttpType
 
 	#endregion
 
-	static HttpType()
+	static FileType()
 	{
-		All = typeof(HttpType)
+		All = typeof(FileType)
 		      .GetFields(BindingFlags.Static | BindingFlags.Public)
-		      .Where(f => f.FieldType == typeof(HttpType))
-		      .Select(x => (HttpType) x.GetValue(null)).ToArray();
+		      .Where(f => f.FieldType == typeof(FileType))
+		      .Select(x => (FileType) x.GetValue(null)).ToArray();
 	}
 
-	public static HttpType[] All { get; }
+	public static FileType[] All { get; }
 
 	public override string ToString()
 	{
@@ -90,7 +90,7 @@ public readonly struct HttpType
 		return Type;
 	}
 
-	#region 
+	#region
 
 	public const string MT_TEXT_PLAIN               = $"{MT_TEXT}/plain";
 	public const string MT_APPLICATION_OCTET_STREAM = $"{MT_APPLICATION}/octet-stream";
@@ -111,18 +111,15 @@ public readonly struct HttpType
 	/// </remarks>
 	public static string IsBinaryResource(byte[] input)
 	{
-		int l = input.Length;
-
 		byte[] seq1a = { 0xFE, 0xFF };
 		byte[] seq1b = { 0xFF, 0xFE };
 		byte[] seq2  = { 0xEF, 0xBB, 0xBF };
 
-		switch (l) {
-			case >= 2 when input.SequenceEqual(seq1a) || input.SequenceEqual(seq1b):
+		switch (input) {
+			case { Length: >= 2 } when input.SequenceEqual(seq1a) || input.SequenceEqual(seq1b):
 				return MT_TEXT_PLAIN;
-			case >= 3 when input.SequenceEqual(seq2):
+			case { Length: >= 3 } when input.SequenceEqual(seq2):
 				return MT_TEXT_PLAIN;
-
 		}
 
 		if (!input.Any(IsBinaryDataByte)) {
@@ -140,7 +137,7 @@ public readonly struct HttpType
 		return b is >= 0x00 and <= 0x08 or 0x0B or >= 0x0E and <= 0x1A or >= 0x1C and <= 0x1F;
 	}
 
-	public static bool CheckPattern(byte[] input, HttpType s, ISet<byte> ignored = null)
+	public static bool CheckPattern(byte[] input, FileType s, ISet<byte> ignored = null)
 		=> CheckPattern(input, s.Pattern, s.Mask, ignored);
 
 	/// <remarks>

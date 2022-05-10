@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
@@ -58,11 +57,11 @@ public static class HttpUtilities
 			Redirects =
 			{
 				AllowSecureToInsecure = true,
-				Enabled               = true 
+				Enabled               = true
 			},
-			
+
 		},
-		
+
 	};
 
 	static HttpUtilities()
