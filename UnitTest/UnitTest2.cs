@@ -4,9 +4,36 @@ using Kantan.Files;
 using Kantan.Net;
 using Kantan.Net.Content;
 using Kantan.Net.Utilities;
+using Kantan.Threading;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using NUnit.Framework;
 
 namespace UnitTest;
+
+[TestFixture]
+public class Tests3
+{
+	[Test]
+	[TestCase(@"C:\Users\Deci\Pictures\NSFW\17EA29A6-8966-4801-A508-AC89FABE714D.png", "image/png")]
+	[TestCase(@"https://data5.kemono.party/data/cd/ef/cdef8267d679a9ee1869d5e657f81f7e971f0f401925594fb76c8ff8393db7bd.png?f=Yelan2.png","image/png")]
+	public void Test1(string s, string s2)
+	{
+		Assert.True(HttpResource.GetAsync(s).Result.ResolvedTypes.Select(x => x.Type).Contains(s2));
+	}
+
+	[Test]
+	// [TestCase(@"https://kemono.party/patreon/user/587897/post/64451923","image/png")]
+	public void Test2(string s,string s2)
+	{
+		var result = HttpResourceFilter.Default.ScanAsync(s).Result;
+
+		foreach (HttpResource httpResource in result) {
+			httpResource.Resolve();
+		}
+
+		Assert.True(result.Any(x=>x.ResolvedTypes.Select(x=>x.Type).Contains(s2)));
+	}
+}
 
 [TestFixture]
 public class MimeTests2

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 
@@ -22,8 +23,8 @@ public static partial class ConsoleManager
 				// var buffer = new InputRecord[1];
 
 				// var buffer = ArrayPool<InputRecord>.Shared.Rent(1);
-				const int i = 1;
-				var buffer  = stackalloc InputRecord[i];
+				const int i      = 1;
+				var       buffer = stackalloc InputRecord[i];
 
 				if (n == 0) {
 					return false;
@@ -165,7 +166,7 @@ public static partial class ConsoleManager
 		int    charsRead = 0;
 
 		if (!Win32.ReadConsoleOutputCharacter(StdOut, buff, nChars, new Coord((ushort) x, (ushort) y),
-		                                                     ref charsRead)) {
+		                                      ref charsRead)) {
 			throw new Win32Exception();
 		}
 
@@ -278,7 +279,7 @@ public static partial class ConsoleManager
 			// var record=ArrayPool<InputRecord>.Shared.Rent(1);
 
 			const int i      = 1;
-			var record = stackalloc InputRecord[i];
+			var       record = stackalloc InputRecord[i];
 
 			if (!Win32.ReadConsoleInput(StdIn, record, (uint) i, out uint n)) {
 				throw new Win32Exception();
@@ -314,7 +315,7 @@ public static partial class ConsoleManager
 
 		mode |= ConsoleModes.ENABLE_MOUSE_INPUT;
 		mode &= ~ConsoleModes.ENABLE_QUICK_EDIT_MODE;
-		mode |= ConsoleModes.ENABLE_EXTENDED_FLAGS; 
+		mode |= ConsoleModes.ENABLE_EXTENDED_FLAGS;
 		mode |= ConsoleModes.ENABLE_VIRTUAL_TERMINAL_PROCESSING;
 
 		if (!Win32.SetConsoleMode(StdIn, mode)) {
@@ -336,6 +337,21 @@ public static partial class ConsoleManager
 		var newTop = increment + Console.WindowTop;
 
 		return SetWindowPosition(0, newTop);
+	}
+
+	///<remarks>Technically this reads the input buffer but has the same behavior as clearing it (?)</remarks>
+	/// <a href="https://stackoverflow.com/questions/3769770/clear-console-buffer">See</a>
+	public static ConsoleKeyInfo[] ClearInputBuffer()
+	{
+		var rg = new List<ConsoleKeyInfo>();
+
+		while (Console.KeyAvailable) {
+			rg.Add(Console.ReadKey(false)); // skips previous input chars
+		}
+
+		rg.Add(Console.ReadKey(true)); // reads a char
+
+		return rg.ToArray();
 	}
 
 	public static ConsoleCharAttribute HighlightAttribute { get; set; } =

@@ -168,6 +168,7 @@ public readonly struct FileType
 	}
 
 
+	
 	public static IEnumerable<FileType> Resolve(byte[] h)
 	{
 		return All.Where(t => CheckPattern(h, t))

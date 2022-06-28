@@ -22,6 +22,7 @@ using AngleSharp.Io.Network;
 using Flurl.Http;
 using Flurl.Http.Configuration;
 using Flurl.Util;
+using JetBrains.Annotations;
 using Kantan.Cli;
 using Kantan.Cli.Controls;
 using Kantan.Collections;
@@ -40,14 +41,13 @@ using HttpMethod = System.Net.Http.HttpMethod;
 
 // ReSharper disable UnusedMember.Local
 
-// ReSharper disable UnusedParameter.Local
 #pragma warning disable IDE0060, CS1998, IDE0051,CS0169,4014,CS0649,IDE0044,CS0612,CS0219, CS0169
 
 namespace Test;
 
 using System;
 
-public static class Program
+public static partial class Program
 {
 	private static string[] _rg1 = new[]
 	{
@@ -73,6 +73,67 @@ public static class Program
 	private static async Task Main(string[] args)
 	{
 
+
+		await ConsoleTest();
+	await	 ConsoleTest3(CancellationToken.None);
+
+
+	}
+
+	public static Dictionary<MemberInfo, object> Dump(object obj, [CanBeNull] Func<MemberInfo, object> getValue = null)
+	{
+		var members = obj.GetType().GetMembers(BindingFlags.Instance | BindingFlags.Default | BindingFlags.GetField |
+		                                       BindingFlags.GetProperty | BindingFlags.Public |
+		                                       BindingFlags.NonPublic);
+
+		getValue ??= m =>
+		{
+			object v;
+
+			switch (m.MemberType) {
+				case MemberTypes.Field:
+					v = ((FieldInfo) m).GetValue(obj);
+					break;
+
+				case MemberTypes.Property:
+					v = ((PropertyInfo) m).GetValue(obj);
+					break;
+
+				default:
+					return null;
+			}
+
+			return v;
+		};
+
+		var map = new Dictionary<MemberInfo, object>();
+
+		foreach (var m in members) {
+			try {
+				object v;
+				v = getValue(m);
+
+				if (v is not { }) {
+					continue;
+				}
+
+				map.Add(m, v);
+			}
+			catch (Exception e) { }
+
+		}
+
+
+		return map;
+	}
+
+	public static async Task Test2()
+	{
+		Console.WriteLine(await HttpResource.GetAsync(_rg[0], true));
+	}
+
+	private static async Task Test1()
+	{
 		// var v = await Kantan.Net.Content.HttpScanner.ScanAsync(_rg[0], HttpResourceFilter.Default);
 
 		/*
@@ -98,7 +159,7 @@ public static class Program
 			var now = Stopwatch.GetTimestamp();
 			var o   = await HttpResource.GetAsync(s, true);
 			o?.Resolve(true);
-			
+
 			if (o is not { }) {
 				Console.WriteLine($"failed");
 				continue;
@@ -106,11 +167,9 @@ public static class Program
 
 			Console.WriteLine(o);
 			Console.WriteLine(o.NoSniffFlag);
-			
+
 			var diff = TimeSpan.FromTicks(Stopwatch.GetTimestamp() - now);
 			Console.WriteLine(diff.TotalSeconds);
 		}
-
-
 	}
 }

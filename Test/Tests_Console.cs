@@ -18,7 +18,7 @@ public enum MyEnum1
 	c = 1 << 2
 }
 
-public class Tests_Console
+public static partial class Program
 {
 	private static void ConsoleTest4()
 	{
@@ -57,7 +57,7 @@ public class Tests_Console
 		}
 	}
 
-	private static async Task ConsoleTest()
+	public static async Task ConsoleTest()
 	{
 		var dialog = new ConsoleDialog()
 		{
@@ -112,7 +112,7 @@ public class Tests_Console
 
 	}
 
-	private static async Task ConsoleTest3(CancellationToken c)
+	public static async Task ConsoleTest3(CancellationToken c)
 	{
 		var dialog = new ConsoleDialog()
 		{
@@ -121,6 +121,7 @@ public class Tests_Console
 				[ConsoleKey.F1] = () =>
 				{
 					Console.WriteLine("g");
+					Thread.Sleep(TimeSpan.FromSeconds(1));
 
 				},
 			},
@@ -136,7 +137,7 @@ public class Tests_Console
 
 	}
 
-	private static async Task ConsoleTest2()
+	public static async Task ConsoleTest2()
 	{
 		var dialog = new ConsoleDialog()
 		{

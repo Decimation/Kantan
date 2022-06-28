@@ -172,10 +172,16 @@ public class ConsoleDialog
 		ConsoleManager.Init();
 
 		m_optionPositions.Clear();
+		bool skipDisplay = false;
 
 		do {
 
-			Display(output);
+			if (!skipDisplay) {
+				Display(output);
+			}
+			else {
+				skipDisplay = false;
+			}
 
 			var token = c ?? CancellationToken.None;
 
@@ -203,19 +209,28 @@ public class ConsoleDialog
 			}
 
 			// Handle special keys
-
-			if (cki.Key is <= ConsoleKey.F12 and >= ConsoleKey.F1) {
-				int i = cki.Key - ConsoleKey.F1;
-
-				if (Functions is { } && Functions.ContainsKey(cki.Key)) {
-					Action function = Functions[cki.Key];
-					function();
-				}
-			}
+			
 
 			switch (cki.Key) {
 				case NC_GLOBAL_REFRESH_KEY:
 					Refresh();
+					break;
+				case <= ConsoleKey.F12 and >= ConsoleKey.F1:
+					int i = cki.Key - ConsoleKey.F1;
+
+					if (Functions is { } && Functions.ContainsKey(cki.Key))
+					{
+						Action function = Functions[cki.Key];
+						function();
+					}
+					break;
+				case >= ConsoleKey.VolumeMute and <= ConsoleKey.MediaPlay:
+					Debug.WriteLine($"Ignoring key {cki.Key}");
+					skipDisplay = true;
+					// continue;
+					break;
+				default:
+					// skipDisplay = true;
 					break;
 			}
 
@@ -223,6 +238,7 @@ public class ConsoleDialog
 			char keyChar = (char) (int) cki.Key;
 
 			if (!Char.IsLetterOrDigit(keyChar)) {
+				// skipDisplay = true;
 				continue;
 			}
 
