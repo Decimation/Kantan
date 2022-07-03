@@ -75,7 +75,7 @@ public static partial class Program
 
 
 		await ConsoleTest();
-	await	 ConsoleTest3(CancellationToken.None);
+		await ConsoleTest3(CancellationToken.None);
 
 
 	}
@@ -129,7 +129,7 @@ public static partial class Program
 
 	public static async Task Test2()
 	{
-		Console.WriteLine(await HttpResource.GetAsync(_rg[0], true));
+		Console.WriteLine(await HttpResourceHandle.GetAsync(_rg[0], true));
 	}
 
 	private static async Task Test1()
@@ -139,7 +139,7 @@ public static partial class Program
 		/*
 		foreach (var a in _rg) {
 			foreach (var aa in await HttpScanner.ScanAsync(a)) {
-				Console.WriteLine(aa.Url);
+				Console.WriteLine(aa.Value);
 			}
 		}*/
 
@@ -157,7 +157,7 @@ public static partial class Program
 			Console.WriteLine(s);
 
 			var now = Stopwatch.GetTimestamp();
-			var o   = await HttpResource.GetAsync(s, true);
+			var o   = await ResourceHandle.GetAsync(s, true) as HttpResourceHandle;
 			o?.Resolve(true);
 
 			if (o is not { }) {

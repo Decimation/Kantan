@@ -18,21 +18,21 @@ public class Tests3
 	[TestCase(@"https://data5.kemono.party/data/cd/ef/cdef8267d679a9ee1869d5e657f81f7e971f0f401925594fb76c8ff8393db7bd.png?f=Yelan2.png","image/png")]
 	public void Test1(string s, string s2)
 	{
-		Assert.True(HttpResource.GetAsync(s).Result.ResolvedTypes.Select(x => x.Type).Contains(s2));
+		Assert.True(HttpResourceHandle.GetAsync(s).Result.ResolvedTypes.Select(x => x.Type).Contains(s2));
 	}
 
-	[Test]
-	// [TestCase(@"https://kemono.party/patreon/user/587897/post/64451923","image/png")]
-	public void Test2(string s,string s2)
+	/*[Test]
+	[TestCase(@"https://kemono.party/patreon/user/587897/post/64451923","image/png")]
+	public async Task Test2(string s,string s2)
 	{
-		var result = HttpResourceFilter.Default.ScanAsync(s).Result;
+		var result = await HttpResourceFilter.Default.ScanAsync(s);
 
-		foreach (HttpResource httpResource in result) {
+		foreach (HttpResourceHandle httpResource in result) {
 			httpResource.Resolve();
 		}
 
 		Assert.True(result.Any(x=>x.ResolvedTypes.Select(x=>x.Type).Contains(s2)));
-	}
+	}*/
 }
 
 [TestFixture]
@@ -44,7 +44,7 @@ public class MimeTests2
 		"https://data19.kemono.party/data/1e/90/1e90c71e9bedc2998289ca175e2dcc6580bbbc3d3c698cdbb0f427f0a0d364b7.png?f=Bianca%20bunny%201-3.png")]
 	public async Task Test1(string png1)
 	{
-		var png = await HttpResource.GetAsync(png1);
+		var png = await HttpResourceHandle.GetAsync(png1);
 
 		Assert.True(png.Resolve().Contains(FileType.png));
 	}
@@ -58,7 +58,7 @@ public class HttpResourceTests
 	[TestCase("http://s1.zerochan.net/atago.(azur.lane).600.2750747.jpg", false, true)]
 	public void test1(string s, bool b, bool b1)
 	{
-		var task = HttpResource.GetAsync(s);
+		var task = HttpResourceHandle.GetAsync(s);
 		task.Wait();
 
 		Assert.AreEqual(b, task.Result.IsFile);
@@ -77,10 +77,10 @@ public class MimeTypeTests
 	public async Task Test1(string u, string s)
 	{
 		// var binaryUris = MediaSniffer.Scan(u, new HttpMediaResourceFilter());
-		// Assert.True(binaryUris.Select(x => x.Url.ToString()).ToList().Contains(s));
+		// Assert.True(binaryUris.Select(x => x.Value.ToString()).ToList().Contains(s));
 
 		Assert.Contains(
-			s, (await HttpResourceFilter.Media.ScanAsync(u)).Select(x => x.Url).ToList());
+			s, (await HttpResourceFilter.Media.ScanAsync(u)).Select(x => x.Value).ToList());
 
 	}
 }

@@ -171,7 +171,7 @@ public class Benchmarks6
 			@"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png");
 		x1.Wait();
 		var x = x1.Result;
-		Task.WhenAll(x.Select(async Task<HttpResource>(y) => { return await HttpResource.GetAsync(y); })).Wait();
+		Task.WhenAll(x.Select(async Task<HttpResourceHandle>(y) => { return await HttpResourceHandle.GetAsync(y); })).Wait();
 
 	}
 }

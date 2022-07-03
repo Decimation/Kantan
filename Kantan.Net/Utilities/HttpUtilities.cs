@@ -15,6 +15,7 @@ using AngleSharp.Html.Parser;
 using Flurl.Http;
 using JetBrains.Annotations;
 using Kantan.Diagnostics;
+using Kantan.Files;
 
 #pragma warning disable CS0168, IDE0051
 #pragma warning disable IDE0060
@@ -357,4 +358,51 @@ public static class HttpUtilities
 	private const int IS_REDIRECT  = 2;
 
 	#endregion
+
+	/// <remarks>
+	///     <a href="https://mimesniff.spec.whatwg.org/#supplied-mime-type-detection-algorithm">5.1</a>
+	/// </remarks>
+	public static string GetSuppliedType(this IFlurlResponse r, out bool c)
+	{
+		c = false;
+
+		const string CONTENT_TYPE_HEADER = "Content-Type";
+		
+		if (r.Headers.TryGetFirst(CONTENT_TYPE_HEADER, out string st))
+			c = st is FileType.MT_TEXT_PLAIN
+				    or $"{FileType.MT_TEXT_PLAIN} charset=ISO-8859-1"
+				    or $"{FileType.MT_TEXT_PLAIN} charset=iso-8859-1"
+				    or $"{FileType.MT_TEXT_PLAIN} charset=UTF-8";
+
+		// Skip 3
+		// Skip 4
+		// todo 5
+
+		return st;
+	}
+
+	public static async Task<IFlurlResponse> TryGetResponseAsync(string u)
+	{
+		IFlurlResponse response = null;
+
+		try {
+			response = await u.WithClient(HttpUtilities.Client)
+			                  .AllowAnyHttpStatus()
+			                  .WithTimeout(HttpUtilities.Timeout)
+			                  .GetAsync();
+
+		}
+		catch (Exception e) {
+			Debug.WriteLine($"{e.Message}");
+
+		}
+
+		if (response == null) {
+			return null;
+		}
+
+		
+
+		return response;
+	}
 }

@@ -35,6 +35,7 @@ public class HttpResourceFilter
 		SelectorAttributeMap = new Dictionary<string, string>()
 		{
 			["img"] = "src",
+			["img"] = "data-src",
 			["a"]   = "href"
 		},
 		MinimumSize = 50_000,
@@ -55,7 +56,7 @@ public class HttpResourceFilter
 
 	public List<string> UrlBlacklist { get; init; } = new();
 
-	public static HttpResourceFilter Default      { get; internal set; } = Media;
+	public static HttpResourceFilter Default { get; internal set; } = Media;
 
 	public bool Filter(string s)
 	{
@@ -80,7 +81,7 @@ public class HttpResourceFilter
 	public List<string> GetAttributeValues(IHtmlDocument document)
 	{
 		return SelectorAttributeMap.SelectMany(k => document.QuerySelectorAttributes(k.Key, k.Value))
-		               .ToList();
+		                           .ToList();
 	}
 
 	public List<string> RefineUrls(List<string> urls)
@@ -93,12 +94,14 @@ public class HttpResourceFilter
 
 			if (UriUtilities.IsUri(urls[i], out var u2)) {
 				urls[i] = UriUtilities.NormalizeUrl(u2);
+
 			}
 			else {
 				urls.RemoveAt(i);
 				continue;
 			}
 
+			
 			if (!Filter(urls[i])) {
 				/*KantanNetInit.LoggerFactory.CreateLogger<HttpScanner>()
 					  .LogDebug(message: $"removing {u2}");*/
@@ -131,7 +134,25 @@ public class HttpResourceFilter
 
 		var parser = new HtmlParser();
 		var doc    = parser.ParseDocument(r);
+
 		urls = GetAttributeValues(doc);
+
+		/*foreach (var kv in SelectorAttributeMap)
+		{
+			var b = doc.QuerySelectorAttributes(kv.Key, kv.Value).ToArray();
+			if (kv.Value == "data-src")
+			{
+				for (int i = 0; i < b.Length; i++)
+				{
+					b[i] = $"{s}{b[i]}";
+				}
+
+
+			}
+			urls.AddRange(b);
+		}*/
+
+
 
 		urls = RefineUrls(urls)
 		       .Where(x => x != null)
@@ -143,14 +164,14 @@ public class HttpResourceFilter
 	}
 
 
-	public async Task<HttpResource[]> ScanAsync(string url)
+	public async Task<HttpResourceHandle[]> ScanAsync(string url)
 	{
 		var urls = await ExtractUrls(url);
-		
 
-		var hr = await Task.WhenAll(urls.Select(async Task<HttpResource>(s1) =>
+
+		var hr = await Task.WhenAll(urls.Select(async Task<HttpResourceHandle>(s1) =>
 		{
-			var rsrc = await HttpResource.GetAsync(s1);
+			var rsrc = await ResourceHandle.GetAsync(s1) as HttpResourceHandle;
 			rsrc?.Resolve();
 
 			return rsrc;
