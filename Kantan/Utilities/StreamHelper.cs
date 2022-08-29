@@ -47,6 +47,7 @@ public static class StreamHelper
 		ms.Position = 0;
 
 		var buffer = new byte[i];
+
 		int read   = ms.Read(buffer);
 
 		return buffer;
@@ -55,7 +56,7 @@ public static class StreamHelper
 	/// <remarks>
 	///     <a href="https://mimesniff.spec.whatwg.org/#reading-the-resource-header">5.2</a>
 	/// </remarks>
-	public static async Task<byte[]> ReadHeaderAsync(this Stream m, int l1)
+	public static async Task<byte[]> ReadHeaderAsync(this Stream m, int l1 = 256)
 	{
 		int d = checked((int) m.Length);
 		int l = d >= l1 ? l1 : d;

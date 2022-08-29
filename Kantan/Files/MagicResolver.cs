@@ -14,7 +14,6 @@ namespace Kantan.Files;
  * Adapted from https://github.com/hey-red/Mime
  */
 
-
 public sealed class MagicResolver : IFileTypeResolver
 {
 	public const MagicOpenFlags MagicMimeFlags =
@@ -27,7 +26,6 @@ public sealed class MagicResolver : IFileTypeResolver
 	public IntPtr Magic { get; }
 
 	public static readonly MagicResolver Instance;
-
 
 	static MagicResolver()
 	{
@@ -57,20 +55,24 @@ public sealed class MagicResolver : IFileTypeResolver
 		return mgc;
 	}
 
+	#region Implementation of IFileTypeResolver
 
-	public string Resolve(Stream stream, IFileTypeResolver.FileTypeStyle f = IFileTypeResolver.FileTypeStyle.Mime)
+	public string Resolve(byte[] rg)
 	{
-		if (f != IFileTypeResolver.FileTypeStyle.Mime) {
-			throw new ArgumentOutOfRangeException(nameof(f));
-		}
-
-		var buf = (stream).ReadHeader();
 		// var buf1 = stream.ReadHeaderAsync(FileType.RSRC_HEADER_LEN);
 		// buf1.Wait();
 		// var buf  = buf1.Result;
 
-		var sz = MagicNative.magic_buffer(Magic, buf, buf.Length);
+		var sz = MagicNative.magic_buffer(Magic, rg, rg.Length);
 		return Marshal.PtrToStringAnsi(sz);
+	}
+
+	#endregion
+
+	public string Resolve(Stream stream)
+	{
+		var buf = (stream).ReadHeader();
+		return Resolve(buf);
 	}
 
 	public void Dispose()
@@ -78,4 +80,3 @@ public sealed class MagicResolver : IFileTypeResolver
 		MagicNative.magic_close(Magic);
 	}
 }
-

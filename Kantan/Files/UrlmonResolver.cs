@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Kantan.Diagnostics;
 using Kantan.Utilities;
 
@@ -8,21 +9,18 @@ namespace Kantan.Files;
 
 public sealed class UrlmonResolver : IFileTypeResolver
 {
-	public string Resolve(Stream stream, IFileTypeResolver.FileTypeStyle f = IFileTypeResolver.FileTypeStyle.Mime)
+	public string Resolve(byte[] buf)
 	{
-		if (f!= IFileTypeResolver.FileTypeStyle.Mime) {
-			throw new ArgumentOutOfRangeException(nameof(f));
-		}
-
-		var buf = (stream).ReadHeader();
-		// var buf = stream.ReadHeaderAsync(FileType.RSRC_HEADER_LEN);
-
 		return ResolveFromData(buf);
 	}
 
+	#region Implementation of IFileTypeResolver
+
+	#endregion
+
 	public void Dispose() { }
 
-	private static string ResolveFromData(byte[] dataBytes, string mimeProposed = null)
+	public static string ResolveFromData(byte[] dataBytes, string mimeProposed = null)
 	{
 		//https://stackoverflow.com/questions/2826808/how-to-identify-the-extension-type-of-the-file-using-c/2826884#2826884
 		//https://stackoverflow.com/questions/18358548/urlmon-dll-findmimefromdata-works-perfectly-on-64bit-desktop-console-but-gener

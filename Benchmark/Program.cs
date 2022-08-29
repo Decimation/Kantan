@@ -167,11 +167,11 @@ public class Benchmarks6
 	[Benchmark]
 	public void b()
 	{
-		var x1 = HttpResourceFilter.Default.ExtractUrls(
+		var x1 = HttpResourceSniffer.Default.ExtractUrls(
 			@"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png");
 		x1.Wait();
 		var x = x1.Result;
-		Task.WhenAll(x.Select(async Task<HttpResourceHandle>(y) => { return await HttpResourceHandle.GetAsync(y); })).Wait();
+		Task.WhenAll(x.Select(async Task<HttpResourceHandle>(y) => { return await ResourceHandle.GetAsync(y) as HttpResourceHandle; })).Wait();
 
 	}
 }

@@ -26,6 +26,7 @@ using JetBrains.Annotations;
 using Kantan.Cli;
 using Kantan.Cli.Controls;
 using Kantan.Collections;
+using Kantan.Files;
 using Kantan.Model;
 using Kantan.Net;
 using Kantan.Net.Content;
@@ -73,10 +74,13 @@ public static partial class Program
 	private static async Task Main(string[] args)
 	{
 
-
-		await ConsoleTest();
-		await ConsoleTest3(CancellationToken.None);
-
+		foreach (string s in _rg1) {
+			var r = await ResourceHandle.GetAsync(s);
+			Console.WriteLine(r);
+			r.Resolve();
+			Console.WriteLine(r.ResolvedTypes.QuickJoin());
+			r.Dispose();
+		}
 
 	}
 
@@ -123,7 +127,6 @@ public static partial class Program
 
 		}
 
-
 		return map;
 	}
 
@@ -134,7 +137,7 @@ public static partial class Program
 
 	private static async Task Test1()
 	{
-		// var v = await Kantan.Net.Content.HttpScanner.ScanAsync(_rg[0], HttpResourceFilter.Default);
+		// var v = await Kantan.Net.Content.HttpScanner.ScanAsync(_rg[0], HttpResourceSniffer.Default);
 
 		/*
 		foreach (var a in _rg) {

@@ -15,8 +15,8 @@ using Kantan.Net.Utilities;
 #endregion
 
 namespace Kantan.Net.Content;
-
-public class HttpResourceFilter
+[Obsolete]
+public class HttpResourceSniffer
 {
 	public int? MinimumSize { get; init; } = -1;
 
@@ -30,7 +30,7 @@ public class HttpResourceFilter
 
 	public Dictionary<string, string> SelectorAttributeMap { get; init; } = new();
 
-	public static readonly HttpResourceFilter Media = new()
+	public static readonly HttpResourceSniffer Media = new()
 	{
 		SelectorAttributeMap = new Dictionary<string, string>()
 		{
@@ -56,7 +56,7 @@ public class HttpResourceFilter
 
 	public List<string> UrlBlacklist { get; init; } = new();
 
-	public static HttpResourceFilter Default { get; internal set; } = Media;
+	public static HttpResourceSniffer Default { get; internal set; } = Media;
 
 	public bool Filter(string s)
 	{
@@ -101,7 +101,6 @@ public class HttpResourceFilter
 				continue;
 			}
 
-			
 			if (!Filter(urls[i])) {
 				/*KantanNetInit.LoggerFactory.CreateLogger<HttpScanner>()
 					  .LogDebug(message: $"removing {u2}");*/
@@ -128,7 +127,7 @@ public class HttpResourceFilter
 			           .GetStringAsync();
 		}
 		catch (Exception e) {
-			Debug.WriteLine($"{nameof(HttpResourceFilter)}: {e.Message}");
+			Debug.WriteLine($"{nameof(HttpResourceSniffer)}: {e.Message}");
 			return Enumerable.Empty<string>() as List<string>;
 		}
 
@@ -147,12 +146,9 @@ public class HttpResourceFilter
 					b[i] = $"{s}{b[i]}";
 				}
 
-
 			}
 			urls.AddRange(b);
 		}*/
-
-
 
 		urls = RefineUrls(urls)
 		       .Where(x => x != null)
@@ -163,11 +159,9 @@ public class HttpResourceFilter
 		return urls;
 	}
 
-
 	public async Task<HttpResourceHandle[]> ScanAsync(string url)
 	{
 		var urls = await ExtractUrls(url);
-
 
 		var hr = await Task.WhenAll(urls.Select(async Task<HttpResourceHandle>(s1) =>
 		{

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Kantan.Files
 {
@@ -8,7 +9,12 @@ namespace Kantan.Files
 	{
 		public void Dispose() { }
 
-		public string Resolve(Stream m, IFileTypeResolver.FileTypeStyle f = IFileTypeResolver.FileTypeStyle.Mime)
+		public string Resolve(byte[] rg)
+		{
+			return ResolveAsync(new MemoryStream(rg)).Result; //todo
+		}
+
+		public async Task<string> ResolveAsync(Stream m)
 		{
 
 			// IFlurlResponse res = await url.GetAsync();
@@ -16,11 +22,11 @@ namespace Kantan.Files
 			try {
 
 				var hdr = new byte[0xFF];
-				m.Read(hdr, 0, hdr.Length);
+				var i2  = await m.ReadAsync(hdr, 0, hdr.Length);
 
 				string s = Path.GetTempFileName();
 
-				File.WriteAllBytes(s, hdr);
+				await File.WriteAllBytesAsync(s, hdr);
 
 				//@"C:\msys64\usr\bin\file.exe"
 				// var name   = SearchInPath("file.exe");
@@ -46,13 +52,14 @@ namespace Kantan.Files
 
 					EnableRaisingEvents = true,
 				};
+
 				using Process proc = proc1;
 
 				proc.Start();
 
-				var sz = proc.StandardOutput.ReadToEnd();
+				var sz = await proc.StandardOutput.ReadToEndAsync();
 
-				proc.WaitForExit();
+				await proc.WaitForExitAsync();
 				var output = (string) sz;
 
 				File.Delete(s);

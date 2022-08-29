@@ -1,7 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Kantan.Diagnostics;
+using Kantan.Utilities;
 
 // ReSharper disable InconsistentNaming
 
@@ -167,8 +170,16 @@ public readonly struct FileType
 		return true;
 	}
 
+	public static IEnumerable<FileType> Resolve(Stream s)
+	{
+		return Resolve(s.ReadHeader());
+	}
 
-	
+	public static async Task<IEnumerable<FileType>> ResolveAsync(Stream s)
+	{
+		return Resolve(await s.ReadHeaderAsync());
+	}
+
 	public static IEnumerable<FileType> Resolve(byte[] h)
 	{
 		return All.Where(t => CheckPattern(h, t))

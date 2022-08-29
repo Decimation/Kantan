@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
+using Flurl.Http;
 using Kantan.Files;
 using Kantan.Net;
 using Kantan.Net.Content;
@@ -15,7 +16,9 @@ public class Tests3
 {
 	[Test]
 	[TestCase(@"C:\Users\Deci\Pictures\NSFW\17EA29A6-8966-4801-A508-AC89FABE714D.png", "image/png")]
-	[TestCase(@"https://data5.kemono.party/data/cd/ef/cdef8267d679a9ee1869d5e657f81f7e971f0f401925594fb76c8ff8393db7bd.png?f=Yelan2.png","image/png")]
+	[TestCase(
+		@"https://data5.kemono.party/data/cd/ef/cdef8267d679a9ee1869d5e657f81f7e971f0f401925594fb76c8ff8393db7bd.png?f=Yelan2.png",
+		"image/png")]
 	public void Test1(string s, string s2)
 	{
 		Assert.True(HttpResourceHandle.GetAsync(s).Result.ResolvedTypes.Select(x => x.Type).Contains(s2));
@@ -25,7 +28,7 @@ public class Tests3
 	[TestCase(@"https://kemono.party/patreon/user/587897/post/64451923","image/png")]
 	public async Task Test2(string s,string s2)
 	{
-		var result = await HttpResourceFilter.Default.ScanAsync(s);
+		var result = await HttpResourceSniffer.Default.ScanAsync(s);
 
 		foreach (HttpResourceHandle httpResource in result) {
 			httpResource.Resolve();
@@ -72,7 +75,7 @@ public class HttpResourceTests
 public class MimeTypeTests
 {
 	[Test]
-	[TestCase("https://www.zerochan.net/2750747", "http://s1.zerochan.net/atago.(azur.lane).600.2750747.jpg")]
+	// [TestCase("https://www.zerochan.net/2750747", "http://s1.zerochan.net/atago.(azur.lane).600.2750747.jpg")]
 	[TestCase("https://www.zerochan.net/2750747", "http://static.zerochan.net/atago.(azur.lane).full.2750747.png")]
 	public async Task Test1(string u, string s)
 	{
@@ -80,7 +83,7 @@ public class MimeTypeTests
 		// Assert.True(binaryUris.Select(x => x.Value.ToString()).ToList().Contains(s));
 
 		Assert.Contains(
-			s, (await HttpResourceFilter.Media.ScanAsync(u)).Select(x => x.Value).ToList());
+			s, (await HttpResourceSniffer.Media.ScanAsync(u)).Select(x => x.Value).ToList());
 
 	}
 }
@@ -157,5 +160,39 @@ public class NetworkTests
 	public void UrlUtilTest(string a, string b)
 	{
 		Assert.True(UriUtilities.UrlEqual(a, b));
+	}
+}
+
+[TestFixture]
+public class Tests4
+{
+	[Test]
+	[TestCase("https://i.imgur.com/QtCausw.png", "image/jpeg")]
+	[TestCase("http://static.zerochan.net/atago.(azur.lane).full.2750747.png", "image/png")]
+	public async Task Test1(string s, string type)
+	{
+		var t  = await s.GetAsync();
+		var tt = await t.GetResolvedMediaType(IFileTypeResolver.Default);
+		Assert.AreEqual(type, tt);
+	}
+
+	[Test]
+	[TestCase("https://i.imgur.com/QtCausw.png", "image/jpeg")]
+	[TestCase("http://static.zerochan.net/atago.(azur.lane).full.2750747.png", "image/png")]
+	public async Task Test2(string s, string type)
+	{
+		var t  = await s.GetAsync();
+		var tt = await t.GetResolvedMediaType(new MagicResolver());
+		Assert.AreEqual(type, tt);
+	}
+
+	[Test]
+	[TestCase("https://i.imgur.com/QtCausw.png", "image/jpeg")]
+	[TestCase("http://static.zerochan.net/atago.(azur.lane).full.2750747.png", "image/png")]
+	public async Task Test3(string s, string type)
+	{
+		var t  = await s.GetAsync();
+		var tt = await t.GetResolvedMediaType(new FileResolver());
+		Assert.AreEqual(type, tt);
 	}
 }

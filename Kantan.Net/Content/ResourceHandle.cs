@@ -12,6 +12,7 @@ using Kantan.Utilities;
 
 namespace Kantan.Net.Content
 {
+	[Obsolete]
 	public abstract class ResourceHandle : IDisposable
 	{
 		public Stream Stream { get; protected set; }
@@ -50,12 +51,11 @@ namespace Kantan.Net.Content
 				// todo ...
 			}
 
-
 			if (runExtra) {
 
 				extraResolver ??= IFileTypeResolver.Default;
 
-				string rx = extraResolver.Resolve(Stream);
+				string rx = extraResolver.Resolve(Stream.ReadHeader()); //todo
 
 				var type = new FileType()
 				{
@@ -76,21 +76,16 @@ namespace Kantan.Net.Content
 
 		#endregion
 
-		
-
 		public static async Task<ResourceHandle> GetAsync(string u, bool auto = false)
 		{
 			//todo: error handling
-
 
 			Stream stream;
 
 			ResourceHandle resource = null;
 
-
 			bool isFile = File.Exists(u),
 			     isUri  = UriUtilities.IsUri(u, out var uu);
-
 
 			if (isFile) {
 				stream = File.OpenRead(u);
@@ -98,22 +93,19 @@ namespace Kantan.Net.Content
 				resource = new FileResourceHandle()
 				{
 					Stream = stream,
-				
-					
 				};
 			}
 			else if (isUri) {
-				var response = (await HttpUtilities.TryGetResponseAsync(u)) as IFlurlResponse;
+				var response = (await HttpUtilities.TryGetResponseAsync(u));
 				stream = await response.GetStreamAsync();
 
 				resource = new HttpResourceHandle()
 				{
 					Response     = response,
-					SuppliedType = response.GetSuppliedType(out var cbf),
+					SuppliedType = response.GetSuppliedMediaType(out var cbf),
 					NoSniffFlag = response.Headers.TryGetFirst("X-Content-Type-Options", out var x)
 					              && x == "nosniff",
 				};
-
 
 			}
 			else {
@@ -140,14 +132,14 @@ namespace Kantan.Net.Content
 				var rg = FileType.Resolve(resource.Header);
 				resource.ResolvedTypes.AddRange(rg);
 
-
 				if (auto) {
 					resource.Resolve();
 				}
 			}
 
-
 			return resource;
 		}
+
+		// public static implicit operator string(ResourceHandle h) => h.Value;
 	}
 }

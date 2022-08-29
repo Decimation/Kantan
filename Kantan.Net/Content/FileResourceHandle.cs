@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Kantan.Net.Content
 {
+	[Obsolete]
 	public sealed class FileResourceHandle  : ResourceHandle
 	{
 		#region Overrides of ResourceHandle

@@ -23,6 +23,7 @@ namespace Kantan.Net.Content;
 /// <remarks>
 ///     <a href="https://mimesniff.spec.whatwg.org/#handling-a-resource">5</a>
 /// </remarks>
+[Obsolete]
 public sealed class HttpResourceHandle : ResourceHandle
 {
 	public bool CheckBugFlag { get; init; }
@@ -30,13 +31,6 @@ public sealed class HttpResourceHandle : ResourceHandle
 	public bool NoSniffFlag { get; init; }
 
 	public IFlurlResponse Response { get; init; }
-	
-
-	#region Overrides of ResourceHandle
-
-	
-
-	#endregion
 
 	public override string ToString()
 	{

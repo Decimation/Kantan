@@ -135,7 +135,4 @@
   <data name="KV_Media_SW" xml:space="preserve">
     <value>https://pbs.twimg.com/profile_banners/</value>
   </data>
-  <data name="MimeDatabaseUrl" xml:space="preserve">
-    <value>https://cdn.jsdelivr.net/gh/jshttp/mime-db@master/db.json</value>
-  </data>
 </root>

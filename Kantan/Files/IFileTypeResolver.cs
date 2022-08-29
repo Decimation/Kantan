@@ -1,18 +1,23 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
+using Kantan.Utilities;
 
 namespace Kantan.Files;
 
 public interface IFileTypeResolver : IDisposable
 {
-	public enum FileTypeStyle
+	public string Resolve(byte[] rg);
+
+	public async Task<string> ResolveAsync(Stream m)
 	{
-		None,
-		Mime,
-		Extension
+		return Resolve(await m.ReadHeaderAsync());
 	}
 
-	string Resolve(Stream m, FileTypeStyle f = FileTypeStyle.Mime);
+	public string Resolve(Stream m)
+	{
+		return Resolve(m.ReadHeader());
+	}
 
 	public static IFileTypeResolver Default { get; set; } = new UrlmonResolver(); //todo
 }

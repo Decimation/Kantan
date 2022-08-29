@@ -1,19 +1,15 @@
 ﻿using System;
-using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Flurl.Http;
-using JetBrains.Annotations;
 using Kantan.Diagnostics;
 using Kantan.Files;
 
@@ -86,7 +82,7 @@ public static class HttpUtilities
 
 	}
 
-	[CanBeNull]
+	[CBN]
 	public static string GetFinalRedirect(string url)
 	{
 		// https://stackoverflow.com/questions/704956/getting-the-redirected-url-from-the-original-url
@@ -116,7 +112,7 @@ public static class HttpUtilities
 					case HttpStatusCode.MovedPermanently:
 					case HttpStatusCode.RedirectKeepVerb:
 					case HttpStatusCode.RedirectMethod:
-						newUrl = (string) resp.Content.Headers.ContentLocation?.ToString();
+						newUrl = resp.Content.Headers.ContentLocation?.ToString();
 
 						if (newUrl == null)
 							return url;
@@ -263,7 +259,7 @@ public static class HttpUtilities
 			response = await f.SendAsync(method, cancellationToken: token.Value);
 		}
 		catch (Exception x) {
-			Debug.WriteLine($"{nameof(GetHttpResponseAsync)}: {x}", LogCategories.C_VERBOSE);
+			Debug.WriteLine($"{x}", nameof(GetHttpResponseAsync));
 
 		}
 
@@ -288,7 +284,26 @@ public static class HttpUtilities
 
 		return v?.Result;
 	}
-	[CanBeNull]
+
+	public static async Task<IFlurlResponse> TryGetResponseAsync(string u)
+	{
+		//todo: wtf
+		IFlurlResponse response = null;
+
+		try {
+			response = await u.WithClient(Client)
+			                  .AllowAnyHttpStatus()
+			                  .WithTimeout(Timeout)
+			                  .GetAsync();
+		}
+		catch (Exception e) {
+			Debug.WriteLine($"{e.Message}", nameof(HttpUtilities));
+		}
+
+		return response;
+	}
+
+	[CBN]
 	public static string Download(Uri src, string path)
 	{
 		string    filename = UriUtilities.NormalizeFilename(src);
@@ -297,17 +312,16 @@ public static class HttpUtilities
 
 		Debug.WriteLine($"{nameof(HttpUtilities)}: Downloading {src} to {combine} ...");
 
-		try
-		{
+		try {
 			wc.DownloadFile(src.ToString(), combine);
 			return combine;
 		}
-		catch (Exception e)
-		{
-			Debug.WriteLine($"{nameof(HttpUtilities)}: {e.Message}");
+		catch (Exception e) {
+			Debug.WriteLine($"{e.Message}", nameof(GetHttpResponseAsync));
 			return null;
 		}
 	}
+
 	public static void OpenUrl(string url)
 	{
 		// https://stackoverflow.com/questions/4580263/how-to-open-in-default-browser-in-c-sharp
@@ -359,15 +373,27 @@ public static class HttpUtilities
 
 	#endregion
 
+	#region Media types
+
+	public static async Task<string> GetResolvedMediaType(this IFlurlResponse r, IFileTypeResolver resolver = null)
+	{
+		resolver ??= IFileTypeResolver.Default;
+
+		var rg = await r.GetBytesAsync();
+		var t  = resolver.Resolve(rg);
+
+		return t;
+	}
+
 	/// <remarks>
 	///     <a href="https://mimesniff.spec.whatwg.org/#supplied-mime-type-detection-algorithm">5.1</a>
 	/// </remarks>
-	public static string GetSuppliedType(this IFlurlResponse r, out bool c)
+	public static string GetSuppliedMediaType(this IFlurlResponse r, out bool c)
 	{
 		c = false;
 
 		const string CONTENT_TYPE_HEADER = "Content-Type";
-		
+
 		if (r.Headers.TryGetFirst(CONTENT_TYPE_HEADER, out string st))
 			c = st is FileType.MT_TEXT_PLAIN
 				    or $"{FileType.MT_TEXT_PLAIN} charset=ISO-8859-1"
@@ -381,28 +407,5 @@ public static class HttpUtilities
 		return st;
 	}
 
-	public static async Task<IFlurlResponse> TryGetResponseAsync(string u)
-	{
-		IFlurlResponse response = null;
-
-		try {
-			response = await u.WithClient(HttpUtilities.Client)
-			                  .AllowAnyHttpStatus()
-			                  .WithTimeout(HttpUtilities.Timeout)
-			                  .GetAsync();
-
-		}
-		catch (Exception e) {
-			Debug.WriteLine($"{e.Message}");
-
-		}
-
-		if (response == null) {
-			return null;
-		}
-
-		
-
-		return response;
-	}
+	#endregion
 }

@@ -113,14 +113,5 @@ namespace Kantan.Net.Properties {
                 return ResourceManager.GetString("KV_Media_SW", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to https://cdn.jsdelivr.net/gh/jshttp/mime-db@master/db.json.
-        /// </summary>
-        internal static string MimeDatabaseUrl {
-            get {
-                return ResourceManager.GetString("MimeDatabaseUrl", resourceCulture);
-            }
-        }
     }
 }

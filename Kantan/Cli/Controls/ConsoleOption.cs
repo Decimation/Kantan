@@ -66,11 +66,11 @@ public class ConsoleOption : IMap
 	public Dictionary<string, object> Data { get; set; }
 
 	[MaybeNull]
-	public Func<ConsoleOption,string> UpdateOption { get; set; }
+	public Func<ConsoleOption, string> UpdateOption { get; set; }
 
 	public void Update()
 	{
-		Name = UpdateOption(this);
+		Name = UpdateOption?.Invoke(this);
 	}
 
 	[Pure]
@@ -129,11 +129,11 @@ public class ConsoleOption : IMap
 		string name = Name;
 
 		if (Color.HasValue) {
-			name = name.AddColor(Color.Value);
+			name = name?.AddColor(Color.Value);
 		}
 
 		if (ColorBG.HasValue) {
-			name = name.AddColorBG(ColorBG.Value);
+			name = name?.AddColorBG(ColorBG.Value);
 		}
 
 		sb.Append($"[{c}]: ");
