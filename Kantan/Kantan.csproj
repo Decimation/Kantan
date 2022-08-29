@@ -63,7 +63,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Files\" />
+    <Folder Include="FileTypes\Impl\" />
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>

@@ -11,7 +11,7 @@ using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Flurl.Http;
 using Kantan.Diagnostics;
-using Kantan.Files;
+using Kantan.FileTypes;
 
 #pragma warning disable CS0168, IDE0051
 #pragma warning disable IDE0060

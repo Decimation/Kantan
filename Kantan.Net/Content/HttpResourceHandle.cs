@@ -11,7 +11,6 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Flurl.Http;
-using Kantan.Files;
 using Kantan.Net.Utilities;
 using Kantan.Text;
 using Kantan.Utilities;

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+
 // ReSharper disable InconsistentNaming
 
-namespace Kantan.Files;
+namespace Kantan.FileTypes;
 
 public static class MagicNative
 {

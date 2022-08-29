@@ -1,14 +1,16 @@
 ﻿#region
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Kantan.Utilities;
 
 #endregion
 
-namespace Kantan.Files;
+namespace Kantan.FileTypes;
 
 /*
  * Adapted from https://github.com/hey-red/Mime
@@ -38,7 +40,6 @@ public sealed class MagicResolver : IFileTypeResolver
 
 		Magic = MagicNative.magic_open(MagicMimeFlags);
 		var rd = MagicNative.magic_load(Magic, mgc);
-
 	}
 
 	private static string GetMagicFile()
@@ -57,19 +58,20 @@ public sealed class MagicResolver : IFileTypeResolver
 
 	#region Implementation of IFileTypeResolver
 
-	public string Resolve(byte[] rg)
+	public IEnumerable<FileType> Resolve(byte[] rg)
 	{
 		// var buf1 = stream.ReadHeaderAsync(FileType.RSRC_HEADER_LEN);
 		// buf1.Wait();
 		// var buf  = buf1.Result;
 
 		var sz = MagicNative.magic_buffer(Magic, rg, rg.Length);
-		return Marshal.PtrToStringAnsi(sz);
+		var s  = Marshal.PtrToStringAnsi(sz);
+		return new[] { new FileType() { Type = s } };
 	}
 
 	#endregion
 
-	public string Resolve(Stream stream)
+	public IEnumerable<FileType> Resolve(Stream stream)
 	{
 		var buf = (stream).ReadHeader();
 		return Resolve(buf);

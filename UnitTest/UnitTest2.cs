@@ -1,7 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Flurl.Http;
-using Kantan.Files;
+using Kantan.FileTypes;
 using Kantan.Net;
 using Kantan.Net.Content;
 using Kantan.Net.Utilities;

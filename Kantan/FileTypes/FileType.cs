@@ -8,7 +8,7 @@ using Kantan.Utilities;
 
 // ReSharper disable InconsistentNaming
 
-namespace Kantan.Files;
+namespace Kantan.FileTypes;
 
 /// <remarks><a href="https://mimesniff.spec.whatwg.org/#matching-an-image-type-pattern">6.1</a></remarks>
 public readonly struct FileType

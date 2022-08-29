@@ -9,7 +9,7 @@ using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Flurl.Http;
 using JetBrains.Annotations;
-using Kantan.Files;
+using Kantan.FileTypes;
 using Kantan.Net.Utilities;
 
 #endregion

@@ -4,18 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Kantan.Net.Content
+namespace Kantan.Net.Content;
+
+[Obsolete]
+public sealed class FileResourceHandle  : ResourceHandle
 {
-	[Obsolete]
-	public sealed class FileResourceHandle  : ResourceHandle
+	#region Overrides of ResourceHandle
+
+	public override void Dispose()
 	{
-		#region Overrides of ResourceHandle
-
-		public override void Dispose()
-		{
 			
-		}
-
-		#endregion
 	}
+
+	#endregion
 }

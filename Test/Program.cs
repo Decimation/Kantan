@@ -23,10 +23,11 @@ using Flurl.Http;
 using Flurl.Http.Configuration;
 using Flurl.Util;
 using JetBrains.Annotations;
+using Kantan;
 using Kantan.Cli;
 using Kantan.Cli.Controls;
 using Kantan.Collections;
-using Kantan.Files;
+using Kantan.FileTypes;
 using Kantan.Model;
 using Kantan.Net;
 using Kantan.Net.Content;
@@ -68,18 +69,15 @@ public static partial class Program
 	{
 		@"http://www.zerochan.net/2750747",
 		@"https://kemono.party/patreon/user/3332300/post/65227512",
-		@"https://i.pximg.net/img-master/img/2022/05/01/19/44/39/98022741_p0_master1200.jpg"
+		@"https://i.pximg.net/img-master/img/2022/05/01/19/44/39/98022741_p0_master1200.jpg",
+		"C:\\Users\\Deci\\Pictures\\Test Images\\Test1.jpg"
 	};
 
 	private static async Task Main(string[] args)
 	{
+		foreach (string s in _rg) {
 
-		foreach (string s in _rg1) {
-			var r = await ResourceHandle.GetAsync(s);
-			Console.WriteLine(r);
-			r.Resolve();
-			Console.WriteLine(r.ResolvedTypes.QuickJoin());
-			r.Dispose();
+			Console.WriteLine(new FastResolver().ResolveAsync(s));
 		}
 
 	}

@@ -7,28 +7,27 @@ using System.Text;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 
-namespace Kantan.Utilities
+namespace Kantan.Utilities;
+
+public static class FileSystemHelper
 {
-	public static class FileSystemHelper
+	public static string SearchInPath(string s)
 	{
-		public static string SearchInPath(string s)
-		{
-			var variable = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Machine);
+		var variable = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Machine);
 
-			string[] path = variable.Split(';');
+		string[] path = variable.Split(';');
 
-			foreach (string directory in path) {
-				if (Directory.Exists(directory)) {
-					foreach (string file in Directory.EnumerateFiles(directory)) {
-						if (Path.GetFileName(file) == s) {
-							//rg.Add(file);
-							return file;
-						}
+		foreach (string directory in path) {
+			if (Directory.Exists(directory)) {
+				foreach (string file in Directory.EnumerateFiles(directory)) {
+					if (Path.GetFileName(file) == s) {
+						//rg.Add(file);
+						return file;
 					}
 				}
 			}
-
-			return null;
 		}
+
+		return null;
 	}
 }
