@@ -19,6 +19,7 @@ using Kantan.FileTypes;
 using Kantan.Net.Properties;
 using Kantan.Net.Utilities;
 using Microsoft.Extensions.Logging;
+using Kantan.FileTypes.Impl;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable JoinDeclarationAndInitializer

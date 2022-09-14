@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -11,15 +12,15 @@ using Kantan.Utilities;
 namespace Kantan.FileTypes;
 
 /// <remarks><a href="https://mimesniff.spec.whatwg.org/#matching-an-image-type-pattern">6.1</a></remarks>
-public readonly struct FileType
+public readonly struct FileType : IEquatable<FileType>
 {
 	public byte[] Mask { get; init; }
 
 	public byte[] Pattern { get; init; }
 
-	public string Type { get; init; }
+	public string MediaType { get; init; }
 
-	public bool IsPartial => Mask is null && Pattern is null && Type is not null;
+	public bool IsPartial => Mask is null && Pattern is null && MediaType is not null;
 
 	/*public HttpTypeSignature()
 	{
@@ -34,48 +35,50 @@ public readonly struct FileType
 
 	public static readonly FileType gif = new()
 	{
-		Pattern = new byte[] { 0x47, 0x49, 0x46, 0x38, 0x37, 0x61, },
-		Mask    = new byte[] { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, },
-		Type    = "image/gif"
+		Pattern   = new byte[] { 0x47, 0x49, 0x46, 0x38, 0x37, 0x61, },
+		Mask      = new byte[] { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, },
+		MediaType = "image/gif"
 	};
 
 	public static readonly FileType gif2 = new()
 	{
-		Pattern = new byte[] { 0x47, 0x49, 0x46, 0x38, 0x39, 0x61, },
-		Mask    = new byte[] { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, },
-		Type    = "image/gif"
+		Pattern   = new byte[] { 0x47, 0x49, 0x46, 0x38, 0x39, 0x61, },
+		Mask      = new byte[] { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, },
+		MediaType = "image/gif",
 	};
 
 	public static readonly FileType webp = new()
 	{
-		Pattern = new byte[] { 0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50, 0x56, 0x50, },
-		Mask    = new byte[] { 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, },
-		Type    = "image/webp"
+		Pattern   = new byte[] { 0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50, 0x56, 0x50, },
+		Mask      = new byte[] { 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, },
+		MediaType = "image/webp"
 	};
 
 	public static readonly FileType png = new()
 	{
-		Pattern = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, },
-		Mask    = new byte[] { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, },
-		Type    = "image/png"
+		Pattern   = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, },
+		Mask      = new byte[] { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, },
+		MediaType = "image/png"
 	};
 
 	public static readonly FileType jpg = new()
 	{
-		Pattern = new byte[] { 0xFF, 0xD8, 0xFF },
-		Mask    = new byte[] { 0xFF, 0xFF, 0xFF },
-		Type    = "image/png"
+		Pattern   = new byte[] { 0xFF, 0xD8, 0xFF },
+		Mask      = new byte[] { 0xFF, 0xFF, 0xFF },
+		MediaType = "image/jpeg"
 	};
 
 	public static readonly FileType bmp = new()
 	{
-		Pattern = new byte[] { 0x42, 0x4D },
-		Mask    = new byte[] { 0xFF, 0xFF },
-		Type    = "image/bmp",
+		Pattern   = new byte[] { 0x42, 0x4D },
+		Mask      = new byte[] { 0xFF, 0xFF },
+		MediaType = "image/bmp",
 
 	};
 
 	#endregion
+
+	public bool IsType(string p) => IsType(p, MediaType);
 
 	static FileType()
 	{
@@ -87,13 +90,6 @@ public readonly struct FileType
 	}
 
 	public static readonly FileType[] All;
-
-	public override string ToString()
-	{
-		/*return $"{nameof(Type)}: {Type} | " +
-		       $"{nameof(IsPartial)}: {IsPartial}";*/
-		return Type;
-	}
 
 	public const int RSRC_HEADER_LEN = 1445;
 
@@ -183,7 +179,46 @@ public readonly struct FileType
 	public static IEnumerable<FileType> Resolve(byte[] h)
 	{
 		return All.Where(t => CheckPattern(h, t))
-		          .DistinctBy(x => x.Type);
+		          .DistinctBy(x => x.MediaType);
+	}
+
+	public static bool IsType(string p, string mt)
+	{
+		return mt?.Split('/').FirstOrDefault()?.ToLower() == p.ToLower();
+	}
+
+	#region Overrides of ValueType
+
+	#region Equality members
+
+	public bool Equals(FileType other)
+	{
+		return MediaType == other.MediaType;
+	}
+
+	public override bool Equals(object obj)
+	{
+		return obj is FileType other && Equals(other);
+	}
+
+	public override int GetHashCode()
+	{
+		return (MediaType != null ? MediaType.GetHashCode() : 0);
+	}
+
+	public static bool operator ==(FileType left, FileType right) => left.Equals(right);
+
+	public static bool operator !=(FileType left, FileType right) => !left.Equals(right);
+
+	#endregion
+
+	#endregion
+
+	public override string ToString()
+	{
+		/*return $"{nameof(Type)}: {Type} | " +
+		       $"{nameof(IsPartial)}: {IsPartial}";*/
+		return MediaType;
 	}
 
 	#region

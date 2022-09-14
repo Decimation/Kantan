@@ -1,9 +1,11 @@
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Flurl.Http;
 using Kantan.FileTypes;
+using Kantan.FileTypes.Impl;
 using Kantan.Net;
-using Kantan.Net.Content;
 using Kantan.Net.Utilities;
 using Kantan.Threading;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -15,13 +17,12 @@ namespace UnitTest;
 public class Tests3
 {
 	[Test]
-	[TestCase(@"C:\Users\Deci\Pictures\NSFW\17EA29A6-8966-4801-A508-AC89FABE714D.png", "image/png")]
-	[TestCase(
-		@"https://data5.kemono.party/data/cd/ef/cdef8267d679a9ee1869d5e657f81f7e971f0f401925594fb76c8ff8393db7bd.png?f=Yelan2.png",
-		"image/png")]
-	public void Test1(string s, string s2)
+	[TestCase(@"C:\Users\Deci\Pictures\NSFW\17EA29A6-8966-4801-A508-AC89FABE714D.png")]
+	public async Task Test1(string s)
 	{
-		Assert.True(HttpResourceHandle.GetAsync(s).Result.ResolvedTypes.Select(x => x.Type).Contains(s2));
+		var stream = File.OpenRead(s);
+		var task   = await IFileTypeResolver.Default.ResolveAsync(stream);
+		Assert.True(task.Any(x => x.IsType(FileType.MT_IMAGE)));
 	}
 
 	/*[Test]
@@ -39,52 +40,24 @@ public class Tests3
 }
 
 [TestFixture]
-public class MimeTests2
-{
-	[Test]
-	[TestCase("https://kemono.party/data/45/a0/45a04a55cdc142ee78f6f00452886bc4b336d9f35d3d851f5044852a7e26b5da.png")]
-	[TestCase(
-		"https://data19.kemono.party/data/1e/90/1e90c71e9bedc2998289ca175e2dcc6580bbbc3d3c698cdbb0f427f0a0d364b7.png?f=Bianca%20bunny%201-3.png")]
-	public async Task Test1(string png1)
-	{
-		var png = await HttpResourceHandle.GetAsync(png1);
-
-		Assert.True(png.Resolve().Contains(FileType.png));
-	}
-}
-
-[TestFixture]
-public class HttpResourceTests
-{
-	[Test]
-	[TestCase(@"C:\Users\Deci\Pictures\NSFW\17EA29A6-8966-4801-A508-AC89FABE714D.png", true, false)]
-	[TestCase("http://s1.zerochan.net/atago.(azur.lane).600.2750747.jpg", false, true)]
-	public void test1(string s, bool b, bool b1)
-	{
-		var task = HttpResourceHandle.GetAsync(s);
-		task.Wait();
-
-		Assert.AreEqual(b, task.Result.IsFile);
-		Assert.AreEqual(b1, task.Result.IsUri);
-		Assert.True(task.Result.IsBinaryType);
-
-	}
-}
-
-[TestFixture]
 public class MimeTypeTests
 {
 	[Test]
-	// [TestCase("https://www.zerochan.net/2750747", "http://s1.zerochan.net/atago.(azur.lane).600.2750747.jpg")]
-	[TestCase("https://www.zerochan.net/2750747", "http://static.zerochan.net/atago.(azur.lane).full.2750747.png")]
-	public async Task Test1(string u, string s)
+	[TestCase("http://s1.zerochan.net/atago.(azur.lane).600.2750747.jpg")]
+	// [TestCase("https://www.zerochan.net/2750747", "http://static.zerochan.net/atago.(azur.lane).full.2750747.png")]
+	// [TestCase(@"C:\Users\Deci\Pictures\NSFW\17EA29A6-8966-4801-A508-AC89FABE714D.png", true, false)]
+	// [TestCase("http://s1.zerochan.net/atago.(azur.lane).600.2750747.jpg", false, true)]
+	[TestCase("https://kemono.party/data/45/a0/45a04a55cdc142ee78f6f00452886bc4b336d9f35d3d851f5044852a7e26b5da.png")]
+	[TestCase(
+		"https://data19.kemono.party/data/1e/90/1e90c71e9bedc2998289ca175e2dcc6580bbbc3d3c698cdbb0f427f0a0d364b7.png?f=Bianca%20bunny%201-3.png")]
+	public async Task Test1(string u)
 	{
 		// var binaryUris = MediaSniffer.Scan(u, new HttpMediaResourceFilter());
 		// Assert.True(binaryUris.Select(x => x.Value.ToString()).ToList().Contains(s));
 
-		Assert.Contains(
-			s, (await HttpResourceSniffer.Media.ScanAsync(u)).Select(x => x.Value).ToList());
-
+		var stream = await u.GetStreamAsync();
+		var ft     = await IFileTypeResolver.Default.ResolveAsync(stream);
+		Assert.True(ft.Any(f => f.IsType(FileType.MT_IMAGE)));
 	}
 }
 
@@ -92,7 +65,7 @@ public class MimeTypeTests
 public class NetworkTests
 {
 	[Test]
-	public void GraphQLTest()
+	public async Task GraphQLTest()
 	{
 		var g = new GraphQLClient("https://graphql.anilist.co/");
 
@@ -107,7 +80,7 @@ public class NetworkTests
 				}
 			}";
 
-		dynamic execute = g.Execute(query);
+		dynamic execute = await g.ExecuteAsync(query);
 
 		Assert.True(execute.data.Media.title.english.ToString().Contains("Cowboy Bebop"));
 	}
@@ -172,8 +145,8 @@ public class Tests4
 	public async Task Test1(string s, string type)
 	{
 		var t  = await s.GetAsync();
-		var tt = await t.GetResolvedMediaType(IFileTypeResolver.Default);
-		Assert.AreEqual(type, tt);
+		var tt = await (IFileTypeResolver.Default.ResolveAsync(await t.GetStreamAsync()));
+		Assert.Contains(new FileType() { MediaType = type }, tt.ToList());
 	}
 
 	[Test]
@@ -182,8 +155,9 @@ public class Tests4
 	public async Task Test2(string s, string type)
 	{
 		var t  = await s.GetAsync();
-		var tt = await t.GetResolvedMediaType(new MagicResolver());
-		Assert.AreEqual(type, tt);
+		var tt = await (MagicResolver.Instance as IFileTypeResolver).ResolveAsync(await t.GetStreamAsync());
+		Assert.Contains(new FileType() { MediaType = type }, tt.ToList());
+
 	}
 
 	[Test]
@@ -192,7 +166,7 @@ public class Tests4
 	public async Task Test3(string s, string type)
 	{
 		var t  = await s.GetAsync();
-		var tt = await t.GetResolvedMediaType(new FileResolver());
-		Assert.AreEqual(type, tt);
+		var tt = await (FastResolver.Instance as IFileTypeResolver).ResolveAsync(await t.GetStreamAsync());
+		Assert.Contains(new FileType() { MediaType = type }, tt.ToList());
 	}
 }

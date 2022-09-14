@@ -10,7 +10,6 @@ using Kantan.Collections;
 using Kantan.Diagnostics;
 using Kantan.Model;
 using Kantan.Net;
-using Kantan.Net.Content;
 using Kantan.Net.Utilities;
 using Kantan.Numeric;
 using Kantan.Text;
@@ -27,7 +26,6 @@ using NUnit.Framework;
 #pragma warning disable 649, IDE0059, IDE0060, CS0612
 
 namespace UnitTest;
-
 
 [TestFixture]
 public class EnumerableTests

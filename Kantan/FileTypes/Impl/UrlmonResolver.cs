@@ -1,22 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
+using System.Runtime.Versioning;
 using Kantan.Diagnostics;
 
-namespace Kantan.FileTypes;
+namespace Kantan.FileTypes.Impl;
 
 public sealed class UrlmonResolver : IFileTypeResolver
 {
 	public IEnumerable<FileType> Resolve(byte[] buf)
 	{
 		var data = ResolveFromData(buf);
-		return new []{new FileType() { Type = data}};
+		return new []{new FileType() { MediaType = data}};
 	}
 
 	private UrlmonResolver() { }
 
-	public static readonly UrlmonResolver Value = new();
+	public static readonly UrlmonResolver Instance = new();
 
 	#region Implementation of IFileTypeResolver
 

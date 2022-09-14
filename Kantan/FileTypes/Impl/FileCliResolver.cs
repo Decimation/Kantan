@@ -4,9 +4,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Kantan.FileTypes;
+namespace Kantan.FileTypes.Impl;
 
-public sealed class FileResolver : IFileTypeResolver
+public sealed class FileCliResolver : IFileTypeResolver
 {
 	public void Dispose() { }
 
@@ -15,22 +15,23 @@ public sealed class FileResolver : IFileTypeResolver
 		return ResolveAsync(new MemoryStream(rg)).Result; //todo
 	}
 
-	private FileResolver()
+	private FileCliResolver()
 	{
 
 	}
 
-	public static readonly FileResolver Value = new();
+	public static readonly FileCliResolver Instance = new();
 
 	public async Task<IEnumerable<FileType>> ResolveAsync(Stream m)
 	{
 
 		// IFlurlResponse res = await url.GetAsync();
 
-		try {
+		try
+		{
 
 			var hdr = new byte[0xFF];
-			var i2  = await m.ReadAsync(hdr, 0, hdr.Length);
+			var i2 = await m.ReadAsync(hdr, 0, hdr.Length);
 
 			string s = Path.GetTempFileName();
 
@@ -68,13 +69,14 @@ public sealed class FileResolver : IFileTypeResolver
 			var sz = await proc.StandardOutput.ReadToEndAsync();
 
 			await proc.WaitForExitAsync();
-			var output = (string) sz;
+			var output = sz;
 
 			File.Delete(s);
 
-			return new []{ new FileType() { Type = output}};
+			return new[] { new FileType() { MediaType = output } };
 		}
-		catch (Exception) {
+		catch (Exception)
+		{
 			return null;
 		}
 	}

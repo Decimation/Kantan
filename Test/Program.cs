@@ -30,7 +30,6 @@ using Kantan.Collections;
 using Kantan.FileTypes;
 using Kantan.Model;
 using Kantan.Net;
-using Kantan.Net.Content;
 using Kantan.Net.Properties;
 using Kantan.Text;
 using Kantan.Utilities;
@@ -68,8 +67,9 @@ public static partial class Program
 	private static string[] _rg = new[]
 	{
 		@"http://www.zerochan.net/2750747",
+		@"https://i.imgur.com/QtCausw.png",
 		@"https://kemono.party/patreon/user/3332300/post/65227512",
-		@"https://i.pximg.net/img-master/img/2022/05/01/19/44/39/98022741_p0_master1200.jpg",
+		// @"https://i.pximg.net/img-master/img/2022/05/01/19/44/39/98022741_p0_master1200.jpg",
 		"C:\\Users\\Deci\\Pictures\\Test Images\\Test1.jpg"
 	};
 
@@ -77,7 +77,8 @@ public static partial class Program
 	{
 		foreach (string s in _rg) {
 
-			Console.WriteLine(new FastResolver().ResolveAsync(s));
+			var x = IFileTypeResolver.Default.Resolve(await s.GetStreamAsync());
+			Console.WriteLine(x.QuickJoin());
 		}
 
 	}
@@ -128,11 +129,6 @@ public static partial class Program
 		return map;
 	}
 
-	public static async Task Test2()
-	{
-		Console.WriteLine(await HttpResourceHandle.GetAsync(_rg[0], true));
-	}
-
 	private static async Task Test1()
 	{
 		// var v = await Kantan.Net.Content.HttpScanner.ScanAsync(_rg[0], HttpResourceSniffer.Default);
@@ -154,7 +150,7 @@ public static partial class Program
 
 		// KantanNetInit.Close();
 
-		foreach (string s in _rg.Union(_rg1)) {
+		/*foreach (string s in _rg.Union(_rg1)) {
 			Console.WriteLine(s);
 
 			var now = Stopwatch.GetTimestamp();
@@ -171,6 +167,6 @@ public static partial class Program
 
 			var diff = TimeSpan.FromTicks(Stopwatch.GetTimestamp() - now);
 			Console.WriteLine(diff.TotalSeconds);
-		}
+		}*/
 	}
 }

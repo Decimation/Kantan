@@ -27,13 +27,11 @@ public class GraphQLClient : IDisposable
 	 * Adapted from https://github.com/latheesan-k/simple-graphql-client
 	 */
 
-
 	/*
 	 * Adapted from https://github.com/latheesan-k/simple-graphql-client
 	 */
 
-
-	public HttpClient Client { get; private set; }
+	public FlurlClient Client { get; }
 
 	public string Endpoint { get; }
 
@@ -41,30 +39,36 @@ public class GraphQLClient : IDisposable
 	{
 		Endpoint = endpoint;
 
-		Client = new HttpClient()
+		Client = new FlurlClient()
 		{
-			BaseAddress = new Uri(Endpoint),
+			BaseUrl = Endpoint,
+			Settings =
+				{ }
 		};
 
 	}
 
-	public dynamic Execute(string query, object variables = null, Dictionary<string, string> additionalHeaders = null,
-	                       int timeout = -1)
+	public async Task<dynamic> ExecuteAsync(string query, object variables = null,
+	                                        Dictionary<string, string> additionalHeaders = null,
+	                                        int timeout = -1)
 	{
-		Client = new HttpClient()
+
+		var t = timeout == -1 ? Timeout.InfiniteTimeSpan : TimeSpan.FromMilliseconds(timeout);
+
+		var r = new FlurlRequest()
 		{
-			BaseAddress = new Uri(Endpoint),
+			Settings =
+			{
+				Timeout = t
+			},
+			Client = Client,
+			Url    = Endpoint,
+			Verb   = HttpMethod.Post
 		};
-
-		Client.Timeout = timeout == -1 ? Timeout.InfiniteTimeSpan : TimeSpan.FromMilliseconds(timeout);
-
-		var request = new HttpRequestMessage(HttpMethod.Post, "/")
-			{ };
-
 
 		if (additionalHeaders is { Count: > 0 }) {
 			foreach ((string key, string value) in additionalHeaders) {
-				request.Headers.Add(key, value);
+				r.Headers.Add(key, value);
 			}
 		}
 
@@ -74,16 +78,13 @@ public class GraphQLClient : IDisposable
 			variables = variables
 		};
 
-		request.Content = new StringContent(JsonConvert.SerializeObject(obj), Encoding.UTF8,
-		                                    "application/json");
+		var c = new StringContent(JsonConvert.SerializeObject(obj), Encoding.UTF8,
+		                          "application/json");
 
+		var response = await r.PostAsync(content: c);
+		var task     = await response.GetStringAsync();
 
-		var response = Client.Send(request);
-		var task     = response.Content.ReadAsStringAsync();
-		task.Wait(Client.Timeout);
-
-
-		return JObject.Parse(task.Result);
+		return JObject.Parse(task);
 	}
 
 	public void Dispose()

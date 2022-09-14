@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
@@ -375,7 +376,7 @@ public static class HttpUtilities
 
 	#region Media types
 
-	public static async Task<string> GetResolvedMediaType(this IFlurlResponse r, IFileTypeResolver resolver = null)
+	/*public static async Task<IEnumerable<FileType>> GetResolvedMediaType(this IFlurlResponse r, IFileTypeResolver resolver = null)
 	{
 		resolver ??= IFileTypeResolver.Default;
 
@@ -383,12 +384,12 @@ public static class HttpUtilities
 		var t  = resolver.Resolve(rg);
 
 		return t;
-	}
+	}*/
 
 	/// <remarks>
 	///     <a href="https://mimesniff.spec.whatwg.org/#supplied-mime-type-detection-algorithm">5.1</a>
 	/// </remarks>
-	public static string GetSuppliedMediaType(this IFlurlResponse r, out bool c)
+	public static FileType GetSuppliedMediaType(this IFlurlResponse r, out bool c)
 	{
 		c = false;
 
@@ -404,7 +405,7 @@ public static class HttpUtilities
 		// Skip 4
 		// todo 5
 
-		return st;
+		return new FileType() { MediaType = st};
 	}
 
 	#endregion
