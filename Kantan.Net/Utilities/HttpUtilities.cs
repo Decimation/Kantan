@@ -12,7 +12,6 @@ using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Flurl.Http;
 using Kantan.Diagnostics;
-using Kantan.FileTypes;
 
 #pragma warning disable CS0168, IDE0051
 #pragma warning disable IDE0060
@@ -385,28 +384,6 @@ public static class HttpUtilities
 
 		return t;
 	}*/
-
-	/// <remarks>
-	///     <a href="https://mimesniff.spec.whatwg.org/#supplied-mime-type-detection-algorithm">5.1</a>
-	/// </remarks>
-	public static FileType GetSuppliedMediaType(this IFlurlResponse r, out bool c)
-	{
-		c = false;
-
-		const string CONTENT_TYPE_HEADER = "Content-Type";
-
-		if (r.Headers.TryGetFirst(CONTENT_TYPE_HEADER, out string st))
-			c = st is FileType.MT_TEXT_PLAIN
-				    or $"{FileType.MT_TEXT_PLAIN} charset=ISO-8859-1"
-				    or $"{FileType.MT_TEXT_PLAIN} charset=iso-8859-1"
-				    or $"{FileType.MT_TEXT_PLAIN} charset=UTF-8";
-
-		// Skip 3
-		// Skip 4
-		// todo 5
-
-		return new FileType() { MediaType = st};
-	}
 
 	#endregion
 }

@@ -9,7 +9,6 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using Kantan.Collections;
 using Kantan.Net;
-using Kantan.Net.Content;
 using Kantan.Numeric;
 using Kantan.Threading;
 using Kantan.Utilities;
@@ -164,16 +163,6 @@ public class Benchmarks6
 
 	}*/
 
-	[Benchmark]
-	public void b()
-	{
-		var x1 = HttpResourceSniffer.Default.ExtractUrls(
-			@"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png");
-		x1.Wait();
-		var x = x1.Result;
-		Task.WhenAll(x.Select(async Task<HttpResourceHandle>(y) => { return await ResourceHandle.GetAsync(y) as HttpResourceHandle; })).Wait();
-
-	}
 }
 
 public static class Program

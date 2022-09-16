@@ -15,12 +15,9 @@ using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
-using Kantan.FileTypes;
 using Kantan.Net.Properties;
 using Kantan.Net.Utilities;
 using Microsoft.Extensions.Logging;
-using Kantan.FileTypes.Impl;
-
 // ReSharper disable InconsistentNaming
 // ReSharper disable JoinDeclarationAndInitializer
 // ReSharper disable ConditionIsAlwaysTrueOrFalse
@@ -54,10 +51,8 @@ public static class KantanNetInit
 
 	public static void Close()
 	{
-		IFileTypeResolver.Default.Dispose();
 		HttpUtilities.Client.Dispose();
 		LoggerFactory.Dispose();
-		MagicResolver.Instance.Dispose();
 		//todo...
 	}
 }

@@ -27,7 +27,6 @@ using Kantan;
 using Kantan.Cli;
 using Kantan.Cli.Controls;
 using Kantan.Collections;
-using Kantan.FileTypes;
 using Kantan.Model;
 using Kantan.Net;
 using Kantan.Net.Properties;
@@ -75,11 +74,6 @@ public static partial class Program
 
 	private static async Task Main(string[] args)
 	{
-		foreach (string s in _rg) {
-
-			var x = IFileTypeResolver.Default.Resolve(await s.GetStreamAsync());
-			Console.WriteLine(x.QuickJoin());
-		}
 
 	}
 
