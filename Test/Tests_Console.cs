@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Kantan.Cli;
-using Kantan.Cli.Controls;
+using Kantan.Console.Cli;
+using Kantan.Console.Cli.Controls;
 using Kantan.Text;
 
 namespace Test;
@@ -57,7 +57,7 @@ public static partial class Program
 		}
 	}
 
-	public static async Task ConsoleTest()
+	/*public static async Task ConsoleTest()
 	{
 		var dialog = new ConsoleDialog()
 		{
@@ -110,7 +110,7 @@ public static partial class Program
 
 		Console.WriteLine(r.Result);
 
-	}
+	}*/
 
 	public static async Task ConsoleTest3(CancellationToken c)
 	{

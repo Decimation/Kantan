@@ -24,8 +24,6 @@ using Flurl.Http.Configuration;
 using Flurl.Util;
 using JetBrains.Annotations;
 using Kantan;
-using Kantan.Cli;
-using Kantan.Cli.Controls;
 using Kantan.Collections;
 using Kantan.Model;
 using Kantan.Net;

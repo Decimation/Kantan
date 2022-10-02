@@ -6,7 +6,6 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using Kantan.Cli;
 using Kantan.Utilities;
 
 // ReSharper disable UnusedVariable
@@ -29,11 +28,9 @@ public static class Pastel
 	private const string FORMAT_STRING_CONTENT = "{4}";
 	private const string FORMAT_STRING_END     = ANSI_RESET;
 
-
 	private const string ANSI_RESET     = "\x1b[0m";
 	private const string ANSI_UNDERLINE = "\x1b[4m";
 	private const string ANSI_NEGATIVE  = "\x1b[7m";
-
 
 	public static bool Enabled { get; set; }
 
@@ -41,14 +38,12 @@ public static class Pastel
 	                                                              + FORMAT_STRING_CONTENT
 	                                                              + FORMAT_STRING_END;
 
-
 	private static readonly ReadOnlyDictionary<ColorPlane, string> PlaneFormatModifiers =
 		new(new Dictionary<ColorPlane, string>
 		{
 			[ColorPlane.Foreground] = "38",
 			[ColorPlane.Background] = "48"
 		});
-
 
 	private static readonly Regex CloseNestedPastelStringRegex1 =
 		new($"({FORMAT_STRING_END.Replace("[", @"\[")})+", RegexOptions.Compiled);
@@ -69,7 +64,6 @@ public static class Pastel
 					$"(?:{FORMAT_STRING_END.Replace("[", @"\[")})(?!{String.Format(FORMAT_STRING_START.Replace("[", @"\["), PlaneFormatModifiers[ColorPlane.Background])})(?!$)",
 					RegexOptions.Compiled)
 		});
-
 
 	private static readonly Func<string, int> ParseHexColor =
 		hc => Int32.Parse(hc.Replace("#", ""), NumberStyles.HexNumber);
@@ -95,7 +89,6 @@ public static class Pastel
 
 	private static readonly HexColorFormatFunction BackgroundHexColorFormat =
 		(i, c) => ColorHexFormat(i, c, ColorPlane.Background);
-
 
 	private static readonly ReadOnlyDictionary<bool, ReadOnlyDictionary<ColorPlane, ColorFormatFunction>>
 		ColorFormatFunctions
@@ -134,23 +127,19 @@ public static class Pastel
 					})
 			});
 
-
 	static Pastel()
 	{
 
-		if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+		/*if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
 			var iStdOut = ConsoleManager.Win32.GetStdHandle(ConsoleManager.StandardHandle.STD_OUTPUT_HANDLE);
-
 
 			bool enable = ConsoleManager.Win32.GetConsoleMode(iStdOut, out var outConsoleMode)
 			              && ConsoleManager.Win32.SetConsoleMode(
 				              iStdOut, outConsoleMode | ConsoleManager.ConsoleModes.ENABLE_VIRTUAL_TERMINAL_PROCESSING);
-		}
-
+		}*/
 
 		Enabled = Environment.GetEnvironmentVariable("NO_COLOR") == null;
 	}
-
 
 	private static string CloseNestedPastelStrings(string input, Color color, ColorPlane colorPlane)
 	{
@@ -195,7 +184,6 @@ public static class Pastel
 	{
 		return HexColorFormatFunctions[Enabled][ColorPlane.Foreground](input, hexColor);
 	}
-
 
 	/// <summary>
 	///     Returns a string wrapped in an ANSI background color code using the specified color.

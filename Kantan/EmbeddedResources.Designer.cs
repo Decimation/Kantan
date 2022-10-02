@@ -59,33 +59,5 @@ namespace Kantan {
                 resourceCulture = value;
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to file.exe.
-        /// </summary>
-        internal static string EXE_FILE {
-            get {
-                return ResourceManager.GetString("EXE_FILE", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to magic.mgc.
-        /// </summary>
-        internal static string F_MAGIC {
-            get {
-                return ResourceManager.GetString("F_MAGIC", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] magic {
-            get {
-                object obj = ResourceManager.GetObject("magic", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
     }
 }

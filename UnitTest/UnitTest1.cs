@@ -5,7 +5,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.Unicode;
 using System.Threading.Tasks;
-using Kantan.Cli;
 using Kantan.Collections;
 using Kantan.Diagnostics;
 using Kantan.Model;

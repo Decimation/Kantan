@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Kantan.Console\Kantan.Console.csproj" />
     <ProjectReference Include="..\Kantan.Net\Kantan.Net.csproj" />
     <ProjectReference Include="..\Kantan\Kantan.csproj" />
   </ItemGroup>

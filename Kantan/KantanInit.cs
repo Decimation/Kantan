@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 [assembly: InternalsVisibleTo("Novus")]
 [assembly: InternalsVisibleTo("Kantan.Net")]
+[assembly: InternalsVisibleTo("Kantan.Console")]
 [assembly: InternalsVisibleTo("Test")]
 
 // ReSharper disable InconsistentNaming
