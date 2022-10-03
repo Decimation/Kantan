@@ -402,6 +402,27 @@ public static partial class ConsoleManager
 		[MA(UT.ByValArray, SizeConst = 16)]
 		public COLORREF[] ColorTable;
 	}
+
+	internal static unsafe ConsoleStatus ExchangeStatus(ConsoleStatus s, ref ConsoleStatus t)
+	{
+		var ptr    = (int*) Unsafe.AsPointer(ref t);
+		var status = (ConsoleStatus) Interlocked.Exchange(ref Unsafe.AsRef<int>(ptr), (int) s);
+
+		return status;
+	}
+
+	internal enum ConsoleStatus
+	{
+		/// <summary>
+		///     Signals to reload interface
+		/// </summary>
+		Refresh,
+
+		/// <summary>
+		///     Signals to continue displaying current interface
+		/// </summary>
+		Ok,
+	}
 }
 
 [DebuggerDisplay("{X}, {Y}")]

@@ -2,6 +2,9 @@
 // ReSharper disable InconsistentNaming
 
 // ReSharper disable UnusedMember.Global
+
+using Kantan.Console.Cli.Controls;
+
 #pragma warning disable CA2211, CA1416
 namespace Kantan.Console.Cli;
 
@@ -582,4 +585,9 @@ public static partial class ConsoleManager
 
 		#endregion
 	}
+
+	/// <summary>
+	///     <see cref="ConsoleDialog.Refresh" />
+	/// </summary>
+	public const ConsoleKey NC_GLOBAL_REFRESH_KEY = ConsoleKey.F5;
 }

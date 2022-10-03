@@ -339,4 +339,9 @@ public static partial class ConsoleManager
 	}
 
 	#endregion
+
+	/// <summary>
+	///     Exits <see cref="ConsoleDialog.ReadInput" />
+	/// </summary>
+	public const ConsoleKey NC_GLOBAL_EXIT_KEY = ConsoleKey.Escape;
 }

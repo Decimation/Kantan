@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.ComponentModel;
+using System.Text;
 
 // ReSharper disable InconsistentNaming
 
@@ -351,4 +352,48 @@ public static partial class ConsoleManager
 
 	public static ConsoleCharAttribute HighlightAttribute { get; set; } =
 		new(ConsoleColor.Black, ConsoleColor.White);
+
+	/// <summary>
+	///     Determines whether the console buffer contains a file directory that was
+	///     input via drag-and-drop.
+	/// </summary>
+	/// <param name="cki">First character in the buffer</param>
+	/// <returns>A valid file directory if the buffer contains one; otherwise, <c>null</c></returns>
+	/// <remarks>
+	///     This is done heuristically by checking if the first character <paramref name="cki" /> is either a quote or the
+	///     primary disk letter. If so, then the rest of the buffer is read until the current sequence is a
+	/// string resembling a valid file path.
+	/// </remarks>
+	internal static string TryReadFile(ConsoleKeyInfo cki)
+	{
+		const char QUOTE = '\"';
+
+		var sb = new StringBuilder();
+
+		char keyChar = cki.KeyChar;
+
+		var driveLetters = DriveInfo.GetDrives().Select(x => x.Name.First()).ToArray();
+
+		if (keyChar == QUOTE || driveLetters.Any(e => e == keyChar)) {
+			sb.Append(keyChar);
+
+			do {
+				ConsoleKeyInfo cki2 = ConsoleManager.ReadKey(true);
+
+				if (cki2.Key == NC_GLOBAL_EXIT_KEY) {
+					return null;
+				}
+
+				keyChar = cki2.KeyChar;
+				sb.Append(keyChar);
+
+				if (File.Exists(sb.ToString())) {
+					break;
+				}
+			} while (keyChar != QUOTE);
+
+		}
+
+		return sb.ToString().Trim(QUOTE);
+	}
 }

@@ -1,10 +1,12 @@
 ﻿#nullable disable
 using System.Diagnostics.CodeAnalysis;
-using System.Drawing;
 using System.Text;
 using JetBrains.Annotations;
 using Kantan.Model;
 using Kantan.Text;
+using Spectre.Console;
+using Spectre.Console.Rendering;
+using Color = System.Drawing.Color;
 
 // ReSharper disable SuggestVarOrType_DeconstructionDeclarations
 
@@ -43,11 +45,7 @@ public class ConsoleOption : IMap
 		set => Functions[NC_FN_MAIN] = value;
 	}
 
-	public virtual Color? Color { get; set; }
-
-	public virtual Color? ColorBG { get; set; }
-
-	public virtual Color? ColorAlt { get; set; }
+	public virtual IRenderable Renderable { get; set; }
 
 	public Dictionary<ConsoleModifiers, ConsoleOptionFunction> Functions { get; init; } = new()
 	{
@@ -60,6 +58,7 @@ public class ConsoleOption : IMap
 	[MaybeNull]
 	public Func<ConsoleOption, string> UpdateOption { get; set; }
 
+	public Style Style { get; set; }
 	public void Update()
 	{
 		Name = UpdateOption?.Invoke(this);
@@ -78,7 +77,6 @@ public class ConsoleOption : IMap
 					sb.Append(option.GetDataString());
 					break;
 				default:
-					sb.Append(key, value, nameColor: ColorAlt);
 					break;
 			}
 
@@ -119,15 +117,7 @@ public class ConsoleOption : IMap
 		char c  = GetDisplayOptionFromIndex(i);
 
 		string name = Name;
-
-		if (Color.HasValue) {
-			name = name?.AddColor(Color.Value);
-		}
-
-		if (ColorBG.HasValue) {
-			name = name?.AddColorBG(ColorBG.Value);
-		}
-
+		
 		sb.Append($"[{c}]: ");
 
 		if (name != null) {

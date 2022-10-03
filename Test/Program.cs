@@ -25,12 +25,16 @@ using Flurl.Util;
 using JetBrains.Annotations;
 using Kantan;
 using Kantan.Collections;
+using Kantan.Console;
+using Kantan.Console.Cli;
+using Kantan.Console.Cli.Controls;
 using Kantan.Model;
 using Kantan.Net;
 using Kantan.Net.Properties;
 using Kantan.Text;
 using Kantan.Utilities;
 using Microsoft.VisualBasic.CompilerServices;
+using Spectre.Console;
 using HttpMethod = System.Net.Http.HttpMethod;
 
 // ReSharper disable InconsistentNaming
@@ -72,6 +76,25 @@ public static partial class Program
 
 	private static async Task Main(string[] args)
 	{
+		Action<ConsoleOutputResult> action = (d) =>
+		{
+			AnsiConsole.Clear();
+			AnsiConsole.Write(d.ToString());
+			return;
+		};
+
+		QConsole.Options.Add(new ConsoleOption()
+		{
+			Name = "foo", Functions =
+			{
+				[0] = () =>
+				{
+					Console.WriteLine("bar");
+					return null;
+				}
+			}
+		});
+		await QConsole.ReadInputAsync(display: action);
 
 	}
 

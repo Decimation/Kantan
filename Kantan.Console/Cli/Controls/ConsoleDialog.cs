@@ -113,10 +113,10 @@ public class ConsoleDialog
 	/// <summary>
 	///     Interface status
 	/// </summary>
-	private ConsoleStatus m_status;
+	private ConsoleManager.ConsoleStatus m_status;
 
 	private static readonly string SelectMultiplePrompt =
-		$"Press {NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.";
+		$"Press {ConsoleManager.NC_GLOBAL_EXIT_KEY.ToString().AddHighlight()} to save selected values.";
 
 	/// <summary>
 	///     Handles user input and options
@@ -125,7 +125,7 @@ public class ConsoleDialog
 	/// <list type="number">
 	/// <item><description><see cref="ConsoleOption.Function" /> returns a non-<c>null</c> value</description></item>
 	/// <item><description>A file path is dragged-and-dropped</description></item>
-	/// <item><description><see cref="NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
+	/// <item><description><see cref="ConsoleManager.NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
 	/// </list>
 	/// </remarks>
 	public ConsoleOutputResult ReadInput()
@@ -142,7 +142,7 @@ public class ConsoleDialog
 	/// <list type="number">
 	/// <item><description><see cref="ConsoleOption.Function" /> returns a non-<c>null</c> value</description></item>
 	/// <item><description>A file path is dragged-and-dropped</description></item>
-	/// <item><description><see cref="NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
+	/// <item><description><see cref="ConsoleManager.NC_GLOBAL_EXIT_KEY"/> is pressed</description></item>
 	/// </list>
 	/// </remarks>
 	public async Task<ConsoleOutputResult> ReadInputAsync(CancellationToken? c = null)
@@ -200,7 +200,7 @@ public class ConsoleDialog
 			// Handle special keys
 
 			switch (cki.Key) {
-				case NC_GLOBAL_REFRESH_KEY:
+				case ConsoleManager.NC_GLOBAL_REFRESH_KEY:
 					Refresh();
 					break;
 				case <= ConsoleKey.F12 and >= ConsoleKey.F1:
@@ -259,7 +259,7 @@ public class ConsoleDialog
 				}
 			}
 
-		} while (cki.Key != NC_GLOBAL_EXIT_KEY);
+		} while (cki.Key != ConsoleManager.NC_GLOBAL_EXIT_KEY);
 
 		_Return:
 		return output;
@@ -273,7 +273,7 @@ public class ConsoleDialog
 		int prevCount = Options.Count;
 
 		while (!ConsoleManager.InputAvailable) {
-			bool refresh      = ExchangeStatus(ConsoleStatus.Ok) == ConsoleStatus.Refresh;
+			bool refresh      = ConsoleManager.ExchangeStatus(ConsoleManager.ConsoleStatus.Ok, ref m_status) == ConsoleManager.ConsoleStatus.Refresh;
 			int  currentCount = Options.Count;
 
 			// Refresh buffer if collection was updated
@@ -301,7 +301,7 @@ public class ConsoleDialog
 				// Key was read
 
 				cki = ir.ToConsoleKeyInfo();
-				string dragAndDropFile = TryReadFile(cki);
+				string dragAndDropFile = ConsoleManager.TryReadFile(cki);
 
 				if (!String.IsNullOrWhiteSpace(dragAndDropFile)) {
 
@@ -378,14 +378,6 @@ public class ConsoleDialog
 		else {
 			output.Key = cki;
 		}
-	}
-
-	private unsafe ConsoleStatus ExchangeStatus(ConsoleStatus s)
-	{
-		var ptr    = (int*) Unsafe.AsPointer(ref m_status);
-		var status = (ConsoleStatus) Interlocked.Exchange(ref Unsafe.AsRef<int>(ptr), (int) s);
-
-		return status;
 	}
 
 	private static void HighlightClick(ushort y, ushort x)
@@ -477,63 +469,9 @@ public class ConsoleDialog
 		}
 	}
 
-	/// <summary>
-	///     Exits <see cref="ReadInput" />
-	/// </summary>
-	public const ConsoleKey NC_GLOBAL_EXIT_KEY = ConsoleKey.Escape;
-
-	/// <summary>
-	///     <see cref="Refresh" />
-	/// </summary>
-	public const ConsoleKey NC_GLOBAL_REFRESH_KEY = ConsoleKey.F5;
-
-	/// <summary>
-	///     Determines whether the console buffer contains a file directory that was
-	///     input via drag-and-drop.
-	/// </summary>
-	/// <param name="cki">First character in the buffer</param>
-	/// <returns>A valid file directory if the buffer contains one; otherwise, <c>null</c></returns>
-	/// <remarks>
-	///     This is done heuristically by checking if the first character <paramref name="cki" /> is either a quote or the
-	///     primary disk letter. If so, then the rest of the buffer is read until the current sequence is a
-	/// string resembling a valid file path.
-	/// </remarks>
-	private static string TryReadFile(ConsoleKeyInfo cki)
-	{
-		const char QUOTE = '\"';
-
-		var sb = new StringBuilder();
-
-		char keyChar = cki.KeyChar;
-
-		var driveLetters = DriveInfo.GetDrives().Select(x => x.Name.First()).ToArray();
-
-		if (keyChar == QUOTE || driveLetters.Any(e => e == keyChar)) {
-			sb.Append(keyChar);
-
-			do {
-				ConsoleKeyInfo cki2 = ConsoleManager.ReadKey(true);
-
-				if (cki2.Key == NC_GLOBAL_EXIT_KEY) {
-					return null;
-				}
-
-				keyChar = cki2.KeyChar;
-				sb.Append(keyChar);
-
-				if (File.Exists(sb.ToString())) {
-					break;
-				}
-			} while (keyChar != QUOTE);
-
-		}
-
-		return sb.ToString().Trim(QUOTE);
-	}
-
 	public void Refresh()
 	{
-		ExchangeStatus(ConsoleStatus.Refresh);
+		ConsoleManager.ExchangeStatus(ConsoleManager.ConsoleStatus.Refresh, ref m_status);
 	}
 
 	private void EnsureDescription()
@@ -592,18 +530,5 @@ public class ConsoleDialog
 		hashCode.Add(Subtitle?.GetHashCode());
 
 		return hashCode.ToHashCode();
-	}
-
-	private enum ConsoleStatus
-	{
-		/// <summary>
-		///     Signals to reload interface
-		/// </summary>
-		Refresh,
-
-		/// <summary>
-		///     Signals to continue displaying current interface
-		/// </summary>
-		Ok,
 	}
 }
