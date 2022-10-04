@@ -35,6 +35,7 @@ using Kantan.Text;
 using Kantan.Utilities;
 using Microsoft.VisualBasic.CompilerServices;
 using Spectre.Console;
+using Spectre.Console.Rendering;
 using HttpMethod = System.Net.Http.HttpMethod;
 
 // ReSharper disable InconsistentNaming
@@ -76,26 +77,21 @@ public static partial class Program
 
 	private static async Task Main(string[] args)
 	{
-		Action<ConsoleOutputResult> action = (d) =>
-		{
-			AnsiConsole.Clear();
-			AnsiConsole.Write(d.ToString());
-			return;
-		};
+		var t = new Table()
+			{ };
+		t.AddColumns("butt", "waifu", "1");
+		t.AddRow(String.Empty, "g", "foo");
+		t.AddRow(String.Empty, "g", "bar");
+		t.AddRow(String.Empty, "g", "1");
+		AnsiConsole.Write(t);
 
-		QConsole.Options.Add(new ConsoleOption()
-		{
-			Name = "foo", Functions =
-			{
-				[0] = () =>
-				{
-					Console.WriteLine("bar");
-					return null;
-				}
-			}
-		});
-		await QConsole.ReadInputAsync(display: action);
+		foreach (TableRow tableRow in t.Rows) {
+			Console.WriteLine(((Markup)tableRow[0]).Length==0);
+		}
 
+		Console.WriteLine(t.IsColumnEmpty(0));
+		t = t.RemoveEmpty();
+		AnsiConsole.Write(t);
 	}
 
 	public static Dictionary<MemberInfo, object> Dump(object obj, [CanBeNull] Func<MemberInfo, object> getValue = null)

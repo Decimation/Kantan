@@ -15,21 +15,35 @@ public static class WidgetHelper
 		return new Spectre.Console.Text(s, st);
 	}
 
+	public static bool IsColumnEmpty(this Table t, int i)
+	{
+		var re1 = t.Rows.All((r) =>
+		{
+			return r[i] switch
+			{
+				Markup m => m.Length == 0,
+
+				Spectre.Console.Text t => t.Length == 0,
+				_                      => false
+			};
+		});
+
+		return re1;
+	}
+
+	public static Table RemoveEmpty(this Table t)
+	{
+		for (int i = 0; i < t.Columns.Count; i++) {
+			if (t.IsColumnEmpty(i)) {
+				t = t.RemoveColumn(i);
+			}
+		}
+
+		return t;
+	}
 	public static Table RemoveColumn(this Table t, int i)
 	{
-		var t2 = new Table()
-		{
-			Title         = t.Title,
-			Alignment     = t.Alignment,
-			Border        = t.Border,
-			BorderStyle   = t.BorderStyle,
-			Caption       = t.Caption,
-			Expand        = t.Expand,
-			ShowFooters   = t.ShowFooters,
-			ShowHeaders   = t.ShowHeaders,
-			UseSafeBorder = t.UseSafeBorder,
-			Width         = t.Width,
-		};
+		Table t2 = t.Copy();
 
 		for (int j = 0; j < t.Columns.Count; j++) {
 			if (j == i) {
@@ -49,6 +63,25 @@ public static class WidgetHelper
 			// var re2=r.GetEnumerator();
 			t2.AddRow(rr);
 		}
+
+		return t2;
+	}
+
+	public static Table Copy(this Table t)
+	{
+		var t2 = new Table()
+		{
+			Title         = t.Title,
+			Alignment     = t.Alignment,
+			Border        = t.Border,
+			BorderStyle   = t.BorderStyle,
+			Caption       = t.Caption,
+			Expand        = t.Expand,
+			ShowFooters   = t.ShowFooters,
+			ShowHeaders   = t.ShowHeaders,
+			UseSafeBorder = t.UseSafeBorder,
+			Width         = t.Width,
+		};
 
 		return t2;
 	}
