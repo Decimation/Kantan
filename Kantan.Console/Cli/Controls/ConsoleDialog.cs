@@ -206,11 +206,11 @@ public class ConsoleDialog
 				case <= ConsoleKey.F12 and >= ConsoleKey.F1:
 					int i = cki.Key - ConsoleKey.F1;
 
-					if (Functions is { } && Functions.ContainsKey(cki.Key))
-					{
+					if (Functions is { } && Functions.ContainsKey(cki.Key)) {
 						Action function = Functions[cki.Key];
 						function();
 					}
+
 					break;
 				case >= ConsoleKey.VolumeMute and <= ConsoleKey.MediaPlay:
 					Debug.WriteLine($"Ignoring key {cki.Key}");
@@ -273,8 +273,10 @@ public class ConsoleDialog
 		int prevCount = Options.Count;
 
 		while (!ConsoleManager.InputAvailable) {
-			bool refresh      = ConsoleManager.ExchangeStatus(ConsoleManager.ConsoleStatus.Ok, ref m_status) == ConsoleManager.ConsoleStatus.Refresh;
-			int  currentCount = Options.Count;
+			bool refresh = ConsoleManager.ExchangeStatus(ConsoleManager.ConsoleStatus.Ok, ref m_status) ==
+			               ConsoleManager.ConsoleStatus.Refresh;
+
+			int currentCount = Options.Count;
 
 			// Refresh buffer if collection was updated
 

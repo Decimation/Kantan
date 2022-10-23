@@ -4,8 +4,6 @@ using System.Text;
 using JetBrains.Annotations;
 using Kantan.Model;
 using Kantan.Text;
-using Spectre.Console;
-using Spectre.Console.Rendering;
 using Color = System.Drawing.Color;
 
 // ReSharper disable SuggestVarOrType_DeconstructionDeclarations
@@ -45,8 +43,6 @@ public class ConsoleOption : IMap
 		set => Functions[NC_FN_MAIN] = value;
 	}
 
-	public virtual IRenderable Renderable { get; set; }
-
 	public Dictionary<ConsoleModifiers, ConsoleOptionFunction> Functions { get; init; } = new()
 	{
 		//[0] = () => { return null; },
@@ -58,7 +54,6 @@ public class ConsoleOption : IMap
 	[MaybeNull]
 	public Func<ConsoleOption, string> UpdateOption { get; set; }
 
-	public Style Style { get; set; }
 	public void Update()
 	{
 		Name = UpdateOption?.Invoke(this);

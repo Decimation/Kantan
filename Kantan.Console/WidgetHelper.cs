@@ -1,4 +1,6 @@
-﻿global using Text = global::Spectre.Console.Text;
+﻿#if SPECTRE
+
+global using Text = global::Spectre.Console.Text;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -86,3 +88,4 @@ public static class WidgetHelper
 		return t2;
 	}
 }
+#endif

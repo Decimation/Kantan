@@ -1,6 +1,5 @@
 ﻿
 global using SConsole = global::System.Console;
-global using AConsole = Spectre.Console.AnsiConsole;
 using System;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
@@ -196,7 +195,7 @@ public static partial class ConsoleManager
 
 			if (isInvalid) {
 				errPrompt ??= "Invalid input";
-				AConsole.WriteLine(errPrompt.AddColor(ColorError));
+				SConsole.WriteLine(errPrompt.AddColor(ColorError));
 				Thread.Sleep(PauseTime);
 				//SConsole.Write(new string('\r',7));
 				/*ClearLastLine();
@@ -220,7 +219,7 @@ public static partial class ConsoleManager
 
 		char key = Char.ToUpper(ReadKey().KeyChar);
 
-		AConsole.WriteLine();
+		SConsole.WriteLine();
 
 		return key switch
 		{
@@ -238,8 +237,8 @@ public static partial class ConsoleManager
 
 	public static void WaitForInput()
 	{
-		AConsole.WriteLine();
-		AConsole.WriteLine("Press any key to continue...");
+		SConsole.WriteLine();
+		SConsole.WriteLine("Press any key to continue...");
 		ReadKey();
 	}
 
@@ -253,10 +252,10 @@ public static partial class ConsoleManager
 
 	#region Write
 
-	public static void Print(params object[] args) => AConsole.WriteLine(args.QuickJoin());
+	public static void Print(params object[] args) => SConsole.WriteLine(args.QuickJoin());
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static void NewLine() => AConsole.WriteLine();
+	public static void NewLine() => SConsole.WriteLine();
 
 	/// <summary>
 	///     Root write method.
@@ -267,10 +266,10 @@ public static partial class ConsoleManager
 		string fmt = String.Format(msg, args);
 
 		if (newLine) {
-			AConsole.WriteLine(fmt);
+			SConsole.WriteLine(fmt);
 		}
 		else {
-			AConsole.Write(fmt);
+			SConsole.Write(fmt);
 		}
 	}
 
@@ -291,7 +290,7 @@ public static partial class ConsoleManager
 	{
 		(int left, int top) = SConsole.GetCursorPosition();
 		ClearLine(newTop);
-		AConsole.WriteLine(s);
+		SConsole.WriteLine(s);
 		SConsole.SetCursorPosition(left, top);
 	}
 
@@ -301,7 +300,7 @@ public static partial class ConsoleManager
 
 	private static void ClearCurrentLineCR()
 	{
-		AConsole.Write("\r" + new string(' ', SConsole.WindowWidth - 1) + "\r");
+		SConsole.Write("\r" + new string(' ', SConsole.WindowWidth - 1) + "\r");
 	}
 
 	public static void ClearLine(int newTop, int? top = null)
@@ -311,7 +310,7 @@ public static partial class ConsoleManager
 		top ??= top1;
 
 		SConsole.SetCursorPosition(0, newTop);
-		AConsole.Write(new string(' ', SConsole.BufferWidth));
+		SConsole.Write(new string(' ', SConsole.BufferWidth));
 		SConsole.SetCursorPosition(left, top.Value);
 
 	}

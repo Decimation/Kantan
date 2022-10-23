@@ -34,8 +34,7 @@ using Kantan.Net.Properties;
 using Kantan.Text;
 using Kantan.Utilities;
 using Microsoft.VisualBasic.CompilerServices;
-using Spectre.Console;
-using Spectre.Console.Rendering;
+using Terminal.Gui;
 using HttpMethod = System.Net.Http.HttpMethod;
 
 // ReSharper disable InconsistentNaming
@@ -77,21 +76,42 @@ public static partial class Program
 
 	private static async Task Main(string[] args)
 	{
-		var t = new Table()
-			{ };
-		t.AddColumns("butt", "waifu", "1");
-		t.AddRow(String.Empty, "g", "foo");
-		t.AddRow(String.Empty, "g", "bar");
-		t.AddRow(String.Empty, "g", "1");
-		AnsiConsole.Write(t);
+		var  e = Enum.GetValues<test>();
+		
+		test t = test.a | test.b;
 
-		foreach (TableRow tableRow in t.Rows) {
-			Console.WriteLine(((Markup)tableRow[0]).Length==0);
-		}
+		var lv = new ListView(e)
+		{
+			X                       = 1,
+			Y                       = 1,
+			Width                   = 5,
+			Height                  = 5,
+			AllowsMarking           = true,
+			AllowsMultipleSelection = true
+		};
 
-		Console.WriteLine(t.IsColumnEmpty(0));
-		t = t.RemoveEmpty();
-		AnsiConsole.Write(t);
+		lv.OpenSelectedItem += eventArgs =>
+		{
+			var  objects = lv.Source.GetMarkedItems<object>();
+			test tt      = lv.Source.GetEnum(t);
+
+			Debug.WriteLine($"{eventArgs.Value} {eventArgs.Item} \n" +
+			                $"{objects.QuickJoin()} | {tt}", nameof(lv.OpenSelectedItem));
+
+		};
+
+		Application.Init();
+		Application.Top.Add(lv);
+		Application.Run();
+
+	}
+
+	[Flags]
+	public enum test
+	{
+		a = 1 << 0,
+		b = 1 << 1,
+		c = 1 << 2,
 	}
 
 	public static Dictionary<MemberInfo, object> Dump(object obj, [CanBeNull] Func<MemberInfo, object> getValue = null)

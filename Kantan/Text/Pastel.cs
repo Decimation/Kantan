@@ -26,17 +26,16 @@ public static class Pastel
 	private const string FORMAT_STRING_START   = "\u001b[{0};2;";
 	private const string FORMAT_STRING_COLOR   = "{1};{2};{3}m";
 	private const string FORMAT_STRING_CONTENT = "{4}";
-	private const string FORMAT_STRING_END     = ANSI_RESET;
 
-	private const string ANSI_RESET     = "\x1b[0m";
-	private const string ANSI_UNDERLINE = "\x1b[4m";
-	private const string ANSI_NEGATIVE  = "\x1b[7m";
+	private static readonly string Reset     = $"\x1b[{EmbeddedResources.Seq_Reset}m";
+	private static readonly string Underline = $"\x1b[{EmbeddedResources.Seq_Underline}m";
+	private static readonly string Negative  = $"\x1b[{EmbeddedResources.Seq_Negative}m";
 
 	public static bool Enabled { get; set; }
 
-	private const string FORMAT_STRING_FULL = FORMAT_STRING_START + FORMAT_STRING_COLOR
-	                                                              + FORMAT_STRING_CONTENT
-	                                                              + FORMAT_STRING_END;
+	private static readonly string FORMAT_STRING_FULL = FORMAT_STRING_START + FORMAT_STRING_COLOR
+	                                                                        + FORMAT_STRING_CONTENT
+	                                                                        + Reset;
 
 	private static readonly ReadOnlyDictionary<ColorPlane, string> PlaneFormatModifiers =
 		new(new Dictionary<ColorPlane, string>
@@ -46,10 +45,10 @@ public static class Pastel
 		});
 
 	private static readonly Regex CloseNestedPastelStringRegex1 =
-		new($"({FORMAT_STRING_END.Replace("[", @"\[")})+", RegexOptions.Compiled);
+		new($"({Reset.Replace("[", @"\[")})+", RegexOptions.Compiled);
 
 	private static readonly Regex CloseNestedPastelStringRegex2 = new(
-		$"(?<!^)(?<!{FORMAT_STRING_END.Replace("[", @"\[")})(?<!{String.Format($"{FORMAT_STRING_START.Replace("[", @"\[")}{FORMAT_STRING_COLOR}", new[] { $"(?:{PlaneFormatModifiers[ColorPlane.Foreground]}|{PlaneFormatModifiers[ColorPlane.Background]})" }.Concat(Enumerable.Repeat(@"\d{1,3}", 3)).Cast<object>().ToArray())})(?:{String.Format(FORMAT_STRING_START.Replace("[", @"\["), $"(?:{PlaneFormatModifiers[ColorPlane.Foreground]}|{PlaneFormatModifiers[ColorPlane.Background]})")})"
+		$"(?<!^)(?<!{Reset.Replace("[", @"\[")})(?<!{String.Format($"{FORMAT_STRING_START.Replace("[", @"\[")}{FORMAT_STRING_COLOR}", new[] { $"(?:{PlaneFormatModifiers[ColorPlane.Foreground]}|{PlaneFormatModifiers[ColorPlane.Background]})" }.Concat(Enumerable.Repeat(@"\d{1,3}", 3)).Cast<object>().ToArray())})(?:{String.Format(FORMAT_STRING_START.Replace("[", @"\["), $"(?:{PlaneFormatModifiers[ColorPlane.Foreground]}|{PlaneFormatModifiers[ColorPlane.Background]})")})"
 		, RegexOptions.Compiled);
 
 	private static readonly ReadOnlyDictionary<ColorPlane, Regex> CloseNestedPastelStringRegex3 =
@@ -57,11 +56,11 @@ public static class Pastel
 		{
 			[ColorPlane.Foreground] =
 				new(
-					$"(?:{FORMAT_STRING_END.Replace("[", @"\[")})(?!{String.Format(FORMAT_STRING_START.Replace("[", @"\["), PlaneFormatModifiers[ColorPlane.Foreground])})(?!$)",
+					$"(?:{Reset.Replace("[", @"\[")})(?!{String.Format(FORMAT_STRING_START.Replace("[", @"\["), PlaneFormatModifiers[ColorPlane.Foreground])})(?!$)",
 					RegexOptions.Compiled),
 			[ColorPlane.Background] =
 				new(
-					$"(?:{FORMAT_STRING_END.Replace("[", @"\[")})(?!{String.Format(FORMAT_STRING_START.Replace("[", @"\["), PlaneFormatModifiers[ColorPlane.Background])})(?!$)",
+					$"(?:{Reset.Replace("[", @"\[")})(?!{String.Format(FORMAT_STRING_START.Replace("[", @"\["), PlaneFormatModifiers[ColorPlane.Background])})(?!$)",
 					RegexOptions.Compiled)
 		});
 
@@ -143,9 +142,9 @@ public static class Pastel
 
 	private static string CloseNestedPastelStrings(string input, Color color, ColorPlane colorPlane)
 	{
-		string closedString = CloseNestedPastelStringRegex1.Replace(input, FORMAT_STRING_END);
+		string closedString = CloseNestedPastelStringRegex1.Replace(input, Reset);
 
-		closedString = CloseNestedPastelStringRegex2.Replace(closedString, $"{FORMAT_STRING_END}$0");
+		closedString = CloseNestedPastelStringRegex2.Replace(closedString, $"{Reset}$0");
 
 		closedString = CloseNestedPastelStringRegex3[colorPlane].Replace(closedString,
 		                                                                 $"$0{String.Format($"{FORMAT_STRING_START}" + $"{FORMAT_STRING_COLOR}", PlaneFormatModifiers[colorPlane], color.R, color.G, color.B)}");
@@ -207,12 +206,6 @@ public static class Pastel
 		return HexColorFormatFunctions[Enabled][ColorPlane.Background](input, hexColor);
 	}
 
-	public static string AddNegative(this string s)
-	{
-		s = $"{ANSI_NEGATIVE}{s}{ANSI_RESET}";
-		return s;
-	}
-
 	public static string AddHighlight(this string s, Color? c = null)
 	{
 		c ??= Console.BackgroundColor.ToColor();
@@ -220,17 +213,28 @@ public static class Pastel
 		return s.AddColorBG(f).AddColor(c.Value);
 	}
 
-	public static string AddUnderline(this string s)
+	public enum Decoration
 	{
-		//\x1b[36mTEST\x1b[0m
+		Underline,
+		Negative,
+		Bold
+	}
 
-		s = $"{ANSI_UNDERLINE}{s}{ANSI_RESET}";
-		return s;
+	public static string AddDecoration(this string s, Decoration d)
+	{
+		string? dec = d switch
+		{
+			Decoration.Underline => EmbeddedResources.Seq_Underline,
+			Decoration.Negative  => EmbeddedResources.Seq_Negative,
+			Decoration.Bold      => EmbeddedResources.Seq_Bold,
+			_                    => null,
+		};
+
+		return $"\x1b[{dec}m{s}{Reset}";
 	}
 
 	public static string Remove(string s)
 	{
 		return Regex.Replace(s, "(\x9B|\x1B\\[)[0-?]*[ -/]*[@-~]", String.Empty);
-
 	}
 }

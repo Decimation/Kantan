@@ -14,6 +14,7 @@ using System.Runtime.InteropServices;
 [assembly: InternalsVisibleTo("Test")]
 
 namespace Kantan.Console.Cli;
+#pragma warning disable 0162
 
 public static partial class ConsoleManager
 {

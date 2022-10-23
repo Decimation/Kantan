@@ -59,5 +59,41 @@ namespace Kantan {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 1.
+        /// </summary>
+        internal static string Seq_Bold {
+            get {
+                return ResourceManager.GetString("Seq_Bold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 7.
+        /// </summary>
+        internal static string Seq_Negative {
+            get {
+                return ResourceManager.GetString("Seq_Negative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 0.
+        /// </summary>
+        internal static string Seq_Reset {
+            get {
+                return ResourceManager.GetString("Seq_Reset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 4.
+        /// </summary>
+        internal static string Seq_Underline {
+            get {
+                return ResourceManager.GetString("Seq_Underline", resourceCulture);
+            }
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable 0162
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,6 +18,7 @@ public enum MyEnum1
 	b = 1 << 1,
 	c = 1 << 2
 }
+#pragma warning disable CS0162
 
 public static partial class Program
 {
