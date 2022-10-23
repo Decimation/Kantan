@@ -27,12 +27,14 @@ public static class EnumerableHelper
 	/// <summary>
 	/// Invokes <see cref="IEnumerator.MoveNext"/> then returns <see cref="IEnumerator.Current"/> if <c>non-null</c>; otherwise <c>default</c>
 	/// </summary>
-	public static T MoveAndGet<T>(this IEnumerator<T> t)
-	{
-		return t.MoveNext() ? t.Current : default;
+	public static T MoveAndGet<T>(this IEnumerator<T> t) 
+		=> t.MoveNext() ? t.Current : default;
 
-		// throw new Exception();
-	}
+	/// <summary>
+	/// Invokes <see cref="IEnumerator.MoveNext"/> then returns <see cref="IEnumerator.Current"/> if <c>non-null</c>; otherwise <c>default</c>
+	/// </summary>
+	public static object MoveAndGet(this IEnumerator t) 
+		=> t.MoveNext() ? t.Current : default;
 
 	/// <summary>
 	/// Determines whether <paramref name="list"/> ends with <paramref name="sequence"/>.
@@ -54,7 +56,6 @@ public static class EnumerableHelper
 	public static bool StartsWith<T>(this IList<T> list, IList<T> sequence)
 		=> list.Take(sequence.Count).SequenceEqual(sequence);
 
-	
 	public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source)
 	{
 		// return source.OrderBy(x => Guid.NewGuid());
@@ -72,6 +73,7 @@ public static class EnumerableHelper
 
 			(cpy[k], cpy[n]) = (cpy[n], cpy[k]);
 		}
+
 		return cpy;
 	}
 
@@ -144,14 +146,14 @@ public static class EnumerableHelper
 
 		return rg;
 	}
-	
+
 	public static IEnumerator<T> Cast<T>(this IEnumerator iterator)
 	{
 		while (iterator.MoveNext()) {
 			yield return (T) iterator.Current;
 		}
 	}
-	
+
 	public static IEnumerable<T> Difference<T>(this IEnumerable<T> a, IEnumerable<T> b) => b.Where(c => !a.Contains(c));
 
 	public static void Replace<T>(this List<T> list, Predicate<T> oldItemSelector, T newItem)
@@ -203,12 +205,12 @@ public static class EnumerableHelper
 
 	#region Dictionary
 
-	public static Dictionary<string, string> ReadCsv(string s)
+	public static Dictionary<string, string> ReadCsv(string s, char delim = ',')
 	{
 		var dic = new Dictionary<string, string>();
 
-		foreach (string s1 in s.Split('\n')) {
-			string[] split = s1.Split(',');
+		foreach (string s1 in s.Split(Environment.NewLine)) {
+			string[] split = s1.Split(delim);
 
 			dic.Add(split[0].RemoveNewLines(), split[1].RemoveNewLines());
 		}

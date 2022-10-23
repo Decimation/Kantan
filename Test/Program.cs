@@ -76,11 +76,11 @@ public static partial class Program
 
 	private static async Task Main(string[] args)
 	{
-		var  e = Enum.GetValues<test>();
-		
-		test t = test.a | test.b;
+		var e = Enum.GetValues<test>();
 
-		var lv = new ListView(e)
+		test t = test.all;
+
+		var lv = new ListView()
 		{
 			X                       = 1,
 			Y                       = 1,
@@ -109,9 +109,10 @@ public static partial class Program
 	[Flags]
 	public enum test
 	{
-		a = 1 << 0,
-		b = 1 << 1,
-		c = 1 << 2,
+		a   = 1 << 0,
+		b   = 1 << 1,
+		c   = 1 << 2,
+		all = a | b | c
 	}
 
 	public static Dictionary<MemberInfo, object> Dump(object obj, [CanBeNull] Func<MemberInfo, object> getValue = null)

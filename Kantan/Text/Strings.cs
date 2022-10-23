@@ -62,7 +62,6 @@ public static partial class Strings
 				yield return wrap;
 			}
 
-
 		}
 	}
 
@@ -90,29 +89,20 @@ public static partial class Strings
 		}
 	}
 
-
 	public static string RemoveNewLines(this string s) => s.Remove(LineControlCharacters);
 
-	public static string Remove(this string s, string[] rg)
-	{
-		return rg.Aggregate(s, (current, t) => current.Replace(t, string.Empty));
-	}
+	public static string Remove(this string s, string[] rg) => rg.Aggregate(s, (current, t) => current.Remove(t));
+
+	public static string Remove(this string s, string s2) => s.Replace(s2, string.Empty);
 
 	public static string SelectOnlyDigits(this string s) => s.SelectOnly(Char.IsDigit);
 
 	public static string StripControl(this string s) => s.SelectOnly(c => !Char.IsControl(c));
 
 	public static string SelectOnly(this string s, Func<char, bool> fn)
-	{
-		return s.Where(fn).Aggregate(String.Empty, (current, t) => current + t);
-	}
+		=> s.Where(fn).Aggregate(String.Empty, (current, t) => current + t);
 
-	public static string CleanString(this string s)
-	{
-		return s.Trim('\"');
-	}
-
-	public static string Truncate(this string value) => value.Truncate(100);
+	public static string CleanString(this string s) => s.Trim('\"');
 
 	public static string Truncate(this string value, int maxLength)
 	{
@@ -125,75 +115,6 @@ public static partial class Strings
 
 	[CBN]
 	public static string NormalizeNull([CBN] string str) => String.IsNullOrWhiteSpace(str) ? null : str;
-
-	public static int MeasureRows(string s)
-	{
-		var bufferWidth = Console.BufferWidth;
-		var windowWidth = Console.WindowWidth;
-
-		var nc = s.Count(Char.IsControl);
-
-		//var nc = s.Count(c => c=='\n'||c=='\r');
-		int nc1 = 0;
-
-		for (int i = 0; i < s.Length - 1; i++) {
-			switch (s[i]) {
-				case '\r' when s[i + 1] == '\n':
-				case '\n':
-					nc1++;
-					break;
-			}
-
-		}
-
-		// var nc1 = s.Count(c => c == '\n');
-
-		// var nc2 = Regex.Matches(s, Environment.NewLine).Count;
-		// var nc2x = s.Split(Environment.NewLine).Length;
-
-		var length = s.Length - nc;
-
-		// var length = s.Length - nc1;
-		// var length = s.Length;
-
-		var n = Math.DivRem(length, bufferWidth, out var rem);
-
-		//(s.Length % b)
-
-		if (rem > 0) {
-			n++;
-		}
-
-		n += nc1;
-		// n += nc2;
-
-		/*int l = s.Length;
-		int c = 1;
-		while (--l>0) {
-			if (s[l]=='\n') {
-				c++;
-			}
-			else if (l % bufferWidth == 0) {
-				c++;
-			}
-			
-		}
-
-		return c;*/
-
-		return n;
-	}
-
-	public static bool StringWraps(string s)
-	{
-		/*
-		 * Assuming buffer width equals window width
-		 *
-		 * If 'Wrap text output on resize' is ticked, this is true
-		 */
-
-		return s.Length >= Console.WindowWidth;
-	}
 
 	/// <summary>Convert a word that is formatted in pascal case to have splits (by space) at each upper case letter.</summary>
 	public static string SplitPascalCase(string convert)
@@ -276,34 +197,23 @@ public static partial class Strings
 	/// <summary>
 	///     Simulates Java substring function
 	/// </summary>
-	public static string JSubstring(this string s, int beginIndex)
-	{
-		return s[beginIndex..];
-	}
+	public static string JSubstring(this string s, int beginIndex) => s[beginIndex..];
 
 	/// <summary>
 	///     Simulates Java substring function
 	/// </summary>
 	public static string JSubstring(this string s, int beginIndex, int endIndex)
-	{
-		return s.Substring(beginIndex, endIndex - beginIndex + 1);
-	}
+		=> s.Substring(beginIndex, endIndex - beginIndex + 1);
 
 	/// <summary>
 	///     Simulates Java substring function
 	/// </summary>
-	public static string JSubstring(this string s, Range r)
-	{
-		return s.JSubstring(r.Start.Value, r.End.Value);
-	}
+	public static string JSubstring(this string s, Range r) => s.JSubstring(r.Start.Value, r.End.Value);
 
 	/// <summary>
 	///     Simulates Java substring function
 	/// </summary>
-	public static string JSubstring(this string s, Index i)
-	{
-		return s.JSubstring(i.Value);
-	}
+	public static string JSubstring(this string s, Index i) => s.JSubstring(i.Value);
 
 	/// <summary>
 	///     <returns>String value after [last] <paramref name="a" /></returns>
@@ -358,8 +268,6 @@ public static partial class Strings
 		return $"{new string(' ', count)}{str}";
 
 	}
-
-	public static string Center(string str) => Center(str, Console.BufferWidth);
 
 	#region Outline
 
@@ -432,9 +340,7 @@ public static partial class Strings
 
 	public static string FormatJoin<T>(this IEnumerable<T> values, string format, IFormatProvider provider = null,
 	                                   string delim = Constants.JOIN_COMMA) where T : IFormattable
-	{
-		return values.Select(v => v.ToString(format, provider)).QuickJoin(delim);
-	}
+		=> values.Select(v => v.ToString(format, provider)).QuickJoin(delim);
 
 	/// <summary>
 	///     Concatenates the strings returned by <paramref name="toString" />
@@ -448,19 +354,13 @@ public static partial class Strings
 	/// <typeparam name="T">Element type</typeparam>
 	public static string FuncJoin<T>(this IEnumerable<T> values, Func<T, string> toString,
 	                                 string delim = Constants.JOIN_COMMA)
-	{
-		return values.Select(toString).QuickJoin(delim);
-	}
+		=> values.Select(toString).QuickJoin(delim);
 
 	public static string QuickJoin<T>(this IEnumerable<T> enumerable, string delim = Constants.JOIN_COMMA)
-	{
-		return String.Join(delim, enumerable);
-	}
+		=> String.Join(delim, enumerable);
 
 	public static string QuickJoin(this IEnumerable enumerable, string delim = Constants.JOIN_COMMA)
-	{
-		return String.Join(delim, enumerable);
-	}
+		=> String.Join(delim, enumerable);
 
 	#endregion
 
@@ -472,12 +372,12 @@ public static partial class Strings
 	public static string EncodingConvert(Encoding src, Encoding dest, string str)
 		=> dest.GetString(Encoding.Convert(src, dest, src.GetBytes(str)));
 
-	public static string EncodingConvert(Encoding src, string str) => EncodingConvert(src, EncodingOEM, str);
+	public static string EncodingConvert(Encoding src, string str) 
+		=> EncodingConvert(src, EncodingOEM, str);
 
 	public static bool IsCharInRange(ushort c, UnicodeRange r)
-	{
-		return c < r.FirstCodePoint + r.Length && c >= r.FirstCodePoint;
-	}
+		=> c < r.FirstCodePoint + r.Length && c >= r.FirstCodePoint;
 
-	public static bool IsCharInRange(short c, UnicodeRange r) => IsCharInRange(c: unchecked((ushort) c), r);
+	public static bool IsCharInRange(short c, UnicodeRange r) 
+		=> IsCharInRange(c: unchecked((ushort) c), r);
 }

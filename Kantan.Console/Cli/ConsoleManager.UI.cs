@@ -4,6 +4,7 @@
 // ReSharper disable UnusedMember.Global
 
 using Kantan.Console.Cli.Controls;
+using Kantan.Text;
 
 #pragma warning disable CA2211, CA1416
 namespace Kantan.Console.Cli;
@@ -590,4 +591,6 @@ public static partial class ConsoleManager
 	///     <see cref="ConsoleDialog.Refresh" />
 	/// </summary>
 	public const ConsoleKey NC_GLOBAL_REFRESH_KEY = ConsoleKey.F5;
+
+	public static string Center(string str) => Strings.Center(str, SConsole.BufferWidth);
 }

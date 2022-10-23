@@ -343,4 +343,15 @@ public static partial class ConsoleManager
 	///     Exits <see cref="ConsoleDialog.ReadInput" />
 	/// </summary>
 	public const ConsoleKey NC_GLOBAL_EXIT_KEY = ConsoleKey.Escape;
+
+	public static bool StringWraps(string s)
+	{
+		/*
+		 * Assuming buffer width equals window width
+		 *
+		 * If 'Wrap text output on resize' is ticked, this is true
+		 */
+
+		return s.Length >= SConsole.WindowWidth;
+	}
 }

@@ -424,6 +424,64 @@ public static partial class ConsoleManager
 		/// </summary>
 		Ok,
 	}
+
+	public static int MeasureRows(string s)
+	{
+		var bufferWidth = SConsole.BufferWidth;
+		var windowWidth = SConsole.WindowWidth;
+
+		var nc = s.Count(Char.IsControl);
+
+		//var nc = s.Count(c => c=='\n'||c=='\r');
+		int nc1 = 0;
+
+		for (int i = 0; i < s.Length - 1; i++) {
+			switch (s[i]) {
+				case '\r' when s[i + 1] == '\n':
+				case '\n':
+					nc1++;
+					break;
+			}
+
+		}
+
+		// var nc1 = s.Count(c => c == '\n');
+
+		// var nc2 = Regex.Matches(s, Environment.NewLine).Count;
+		// var nc2x = s.Split(Environment.NewLine).Length;
+
+		var length = s.Length - nc;
+
+		// var length = s.Length - nc1;
+		// var length = s.Length;
+
+		var n = Math.DivRem(length, bufferWidth, out var rem);
+
+		//(s.Length % b)
+
+		if (rem > 0) {
+			n++;
+		}
+
+		n += nc1;
+		// n += nc2;
+
+		/*int l = s.Length;
+		int c = 1;
+		while (--l>0) {
+			if (s[l]=='\n') {
+				c++;
+			}
+			else if (l % bufferWidth == 0) {
+				c++;
+			}
+			
+		}
+
+		return c;*/
+
+		return n;
+	}
 }
 
 [DebuggerDisplay("{X}, {Y}")]
