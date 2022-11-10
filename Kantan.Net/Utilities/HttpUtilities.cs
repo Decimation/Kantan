@@ -8,10 +8,12 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Flurl.Http;
 using Kantan.Diagnostics;
+using Url = Flurl.Url;
 
 #pragma warning disable CS0168, IDE0051
 #pragma warning disable IDE0060
@@ -322,6 +324,22 @@ public static class HttpUtilities
 		}
 	}
 
+	public static bool TryOpenUrl([CBN] string u)
+	{
+		try {
+			var b = (!string.IsNullOrWhiteSpace(u)) && Url.IsValid(u);
+
+			if (b) {
+				OpenUrl(u);
+			}
+
+			return b;
+		}
+		catch (Exception e) {
+			return false;
+		}
+	}
+
 	public static void OpenUrl(string url)
 	{
 		// https://stackoverflow.com/questions/4580263/how-to-open-in-default-browser-in-c-sharp
@@ -373,8 +391,6 @@ public static class HttpUtilities
 
 	#endregion
 
-	#region Media types
-
 	/*public static async Task<IEnumerable<FileType>> GetResolvedMediaType(this IFlurlResponse r, IFileTypeResolver resolver = null)
 	{
 		resolver ??= IFileTypeResolver.Default;
@@ -384,6 +400,4 @@ public static class HttpUtilities
 
 		return t;
 	}*/
-
-	#endregion
 }

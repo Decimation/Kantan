@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using Kantan.Utilities;
 using Terminal.Gui;
 
 namespace Kantan.Console;
@@ -63,6 +64,18 @@ public static class TerminalHelper
 		}
 	}*/
 
+	public static void FromEnum<TEnum>(this ListView lv, TEnum e) where TEnum : struct, Enum
+	{
+		var list = lv.Source.ToList<TEnum>().ToArray();
+
+		for (var i = 0; i < list.Length; i++) {
+			// var flag = Enum.Parse<TEnum>(list[i].ToString());
+			// var mark = e.HasFlag(flag);
+			var mark = e.HasFlag(list[i]);
+			lv.Source.SetMark(i, mark);
+		}
+	}
+	
 	public static TEnum GetEnum<TEnum>(this IListDataSource lv, TEnum t = default) where TEnum : struct, Enum
 	{
 		var m = lv.GetItems<TEnum>();

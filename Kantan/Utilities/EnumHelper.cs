@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Kantan.Text;
 
 // ReSharper disable UnusedMember.Global
@@ -20,7 +23,6 @@ public static class EnumHelper
 		                .Where(f => value.HasFlag(f))
 		                .ToList();
 
-
 		if (excludeZero) {
 			flags.RemoveAll(e => Convert.ToInt32(e) == 0);
 
@@ -30,7 +32,6 @@ public static class EnumHelper
 
 		return flags;
 	}
-
 
 	public static TEnum SafeParse<TEnum>(string s) where TEnum : Enum
 	{
@@ -59,4 +60,54 @@ public static class EnumHelper
 
 		return default;
 	}
+
+	#region Generic bitwise operations
+	// TODO: .NET 7
+	public static TEnum Or<TEnum>(this TEnum t, TEnum t2) where TEnum : struct, Enum
+	{
+		unsafe {
+			Trace.Assert(Unsafe.SizeOf<TEnum>() == sizeof(int));
+			var ptr  = (int*) Unsafe.AsPointer(ref t);
+			var ptr2 = (int*) Unsafe.AsPointer(ref t2);
+
+			*ptr |= *ptr2;
+			return Unsafe.As<int, TEnum>(ref *ptr);
+		}
+	}
+
+	public static TEnum And<TEnum>(this TEnum t, TEnum t2) where TEnum : struct, Enum
+	{
+		unsafe {
+			Trace.Assert(Unsafe.SizeOf<TEnum>() == sizeof(int));
+			var ptr  = (int*) Unsafe.AsPointer(ref t);
+			var ptr2 = (int*) Unsafe.AsPointer(ref t2);
+
+			*ptr &= *ptr2;
+			return Unsafe.As<int, TEnum>(ref *ptr);
+		}
+	}
+
+	public static TEnum Xor<TEnum>(this TEnum t, TEnum t2) where TEnum : struct, Enum
+	{
+		unsafe {
+			Trace.Assert(Unsafe.SizeOf<TEnum>() == sizeof(int));
+			var ptr  = (int*) Unsafe.AsPointer(ref t);
+			var ptr2 = (int*) Unsafe.AsPointer(ref t2);
+
+			*ptr ^= *ptr2;
+			return Unsafe.As<int, TEnum>(ref *ptr);
+		}
+	}
+
+	public static TEnum Not<TEnum>(this TEnum t) where TEnum : struct, Enum
+	{
+		unsafe {
+			Trace.Assert(Unsafe.SizeOf<TEnum>() == sizeof(int));
+			var ptr = (int*) Unsafe.AsPointer(ref t);
+			*ptr = ~*ptr;
+			return Unsafe.As<int, TEnum>(ref *ptr);
+		}
+	}
+
+	#endregion
 }

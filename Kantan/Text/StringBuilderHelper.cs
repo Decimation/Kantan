@@ -34,7 +34,7 @@ public static class StringBuilderHelper
 					name = name.AddColor(nameColor.Value);
 				}
 
-				string fs = $"{name}: {valStr}".Truncate();
+				string fs = $"{name}: {valStr}".Truncate(Console.BufferWidth);
 
 				if (newLine) {
 					fs += "\n";

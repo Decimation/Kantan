@@ -76,11 +76,47 @@ public static partial class Program
 
 	private static async Task Main(string[] args)
 	{
+		var o = test.a.Or(test.b);
+		Console.WriteLine(o);
+		var o2 = o.And(test.a);
+		Console.WriteLine(o2);
+		Console.WriteLine(o2.Xor(test.a));
+		Console.WriteLine(test.a ^ test.a);
+		Console.WriteLine(test.a.Not());
+		Console.WriteLine(~test.a);
+	}
+
+	private static void Test3()
+	{
+		var m = new MyClass() { i = 123, f = "foo" };
+
+		foreach (var v in m.Data) {
+			Console.WriteLine($"{v}");
+		}
+	}
+
+	public class MyClass : IMap
+	{
+		public int    i { get; set; }
+		public string f;
+
+		#region Implementation of IMap
+
+		public Dictionary<string, object> Data
+		{
+			get => IMap.ToMap(this);
+		}
+
+		#endregion
+	}
+
+	private static void Test2()
+	{
 		var e = Enum.GetValues<test>();
 
 		test t = test.all;
 
-		var lv = new ListView()
+		var lv = new ListView(e)
 		{
 			X                       = 1,
 			Y                       = 1,
@@ -100,10 +136,16 @@ public static partial class Program
 
 		};
 
+		ThreadPool.QueueUserWorkItem((c) =>
+		{
+			Thread.Sleep(9000);
+			lv.FromEnum(test.all);
+			lv.SetNeedsDisplay();
+		});
+
 		Application.Init();
 		Application.Top.Add(lv);
 		Application.Run();
-
 	}
 
 	[Flags]

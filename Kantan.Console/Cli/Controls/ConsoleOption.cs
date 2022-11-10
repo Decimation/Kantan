@@ -23,10 +23,7 @@ public delegate object ConsoleOptionFunction();
 [Obsolete]
 public class ConsoleOption : IMap
 {
-	public ConsoleOption()
-	{
-		Data = new();
-	}
+	public ConsoleOption() { }
 
 	/// <summary>
 	///     Display name
@@ -48,8 +45,6 @@ public class ConsoleOption : IMap
 		//[0] = () => { return null; },
 
 	};
-
-	public Dictionary<string, object> Data { get;  }
 
 	[MaybeNull]
 	public Func<ConsoleOption, string> UpdateOption { get; set; }
@@ -79,6 +74,15 @@ public class ConsoleOption : IMap
 
 		return sb.ToString();
 	}
+
+	#region Implementation of IMap
+
+	public Dictionary<string, object> Data
+	{
+		get => IMap.ToMap(this);
+	}
+
+	#endregion
 
 	internal static char GetDisplayOptionFromIndex(int i)
 	{
@@ -112,7 +116,7 @@ public class ConsoleOption : IMap
 		char c  = GetDisplayOptionFromIndex(i);
 
 		string name = Name;
-		
+
 		sb.Append($"[{c}]: ");
 
 		if (name != null) {
