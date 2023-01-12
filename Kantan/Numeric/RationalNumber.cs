@@ -17,9 +17,13 @@ using Kantan.Numeric;
 
 namespace Kantan.Numeric;
 
+/*
+ * TODO: number interfaces
+ */
+
 [Serializable]
 public readonly struct RationalNumber : IFormattable, IEquatable<RationalNumber>, IComparable<RationalNumber>,
-	IComparable
+	IComparable,IEqualityOperators<RationalNumber, RationalNumber, bool>
 {
 	/*
 	 * Adapted from:

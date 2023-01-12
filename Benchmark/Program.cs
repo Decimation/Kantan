@@ -114,7 +114,7 @@ public class Benchmarks5
 	[Benchmark]
 	public int[] a()
 	{
-		return x.Add(2);
+		return ArrayHelper.Add(x, 2);
 	}
 	/*[Benchmark]
 	public int[] b()
@@ -138,7 +138,7 @@ public class Benchmarks5
 	[Benchmark]
 	public int[] d()
 	{
-		return x.Add(new[] { 2 });
+		return ArrayHelper.AddRange(x, new []{ 1 });
 	}
 }
 

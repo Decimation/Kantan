@@ -33,6 +33,7 @@ using Kantan.Net;
 using Kantan.Net.Properties;
 using Kantan.Text;
 using Kantan.Utilities;
+using Microsoft.Data.Sqlite;
 using Microsoft.VisualBasic.CompilerServices;
 using Terminal.Gui;
 using HttpMethod = System.Net.Http.HttpMethod;
@@ -76,14 +77,17 @@ public static partial class Program
 
 	private static async Task Main(string[] args)
 	{
-		var o = test.a.Or(test.b);
-		Console.WriteLine(o);
-		var o2 = o.And(test.a);
-		Console.WriteLine(o2);
-		Console.WriteLine(o2.Xor(test.a));
-		Console.WriteLine(test.a ^ test.a);
-		Console.WriteLine(test.a.Not());
-		Console.WriteLine(~test.a);
+		const string src = "Data Source=C:\\Users\\Deci\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\zvsw1qgf.default\\cookies.sqlite";
+
+		var s = new FirefoxCookieReader();
+		await s.OpenAsync();
+		var kv=await s.ReadHostAsync("%exhentai%");
+
+		foreach (KeyValuePair<string, object> pair in kv) {
+			pair.Deconstruct(out var k,out var v);
+			Console.WriteLine($"{k}={v}");
+		}
+		
 	}
 
 	private static void Test3()
@@ -100,21 +104,17 @@ public static partial class Program
 		public int    i { get; set; }
 		public string f;
 
-		#region Implementation of IMap
-
 		public Dictionary<string, object> Data
 		{
 			get => IMap.ToMap(this);
 		}
-
-		#endregion
 	}
 
 	private static void Test2()
 	{
-		var e = Enum.GetValues<test>();
+		var e = Enum.GetValues<TestEnum>();
 
-		test t = test.all;
+		TestEnum t = TestEnum.all;
 
 		var lv = new ListView(e)
 		{
@@ -128,8 +128,8 @@ public static partial class Program
 
 		lv.OpenSelectedItem += eventArgs =>
 		{
-			var  objects = lv.Source.GetMarkedItems<object>();
-			test tt      = lv.Source.GetEnum(t);
+			var      objects = lv.Source.GetMarkedItems<object>();
+			TestEnum tt      = lv.Source.GetEnum(t);
 
 			Debug.WriteLine($"{eventArgs.Value} {eventArgs.Item} \n" +
 			                $"{objects.QuickJoin()} | {tt}", nameof(lv.OpenSelectedItem));
@@ -139,7 +139,7 @@ public static partial class Program
 		ThreadPool.QueueUserWorkItem((c) =>
 		{
 			Thread.Sleep(9000);
-			lv.FromEnum(test.all);
+			lv.FromEnum(TestEnum.all);
 			lv.SetNeedsDisplay();
 		});
 
@@ -149,7 +149,7 @@ public static partial class Program
 	}
 
 	[Flags]
-	public enum test
+	public enum TestEnum
 	{
 		a   = 1 << 0,
 		b   = 1 << 1,

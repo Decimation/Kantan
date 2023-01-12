@@ -42,19 +42,18 @@ public static partial class Strings
 	{
 		//https://stackoverflow.com/questions/20534318/make-console-writeline-wrap-words-instead-of-letters
 
-		string[] lines = paragraph
-		                 .Replace("\t", new String(' ', tabSize))
-		                 .Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+		string[] lines = paragraph.Replace("\t", new string(' ', tabSize))
+		                          .Split(new[] { Environment.NewLine }, StringSplitOptions.None);
 
 		for (int i = 0; i < lines.Length; i++) {
-			string       process = lines[i];
-			List<String> wrapped = new List<string>();
+			string process = lines[i];
+			var    wrapped = new List<string>();
 
 			while (process.Length > Console.WindowWidth) {
 				int wrapAt = process.LastIndexOf(' ', Math.Min(Console.WindowWidth - 1, process.Length));
 				if (wrapAt <= 0) break;
 
-				wrapped.Add(process.Substring(0, wrapAt));
+				wrapped.Add(process[..wrapAt]);
 				process = process.Remove(0, wrapAt + 1);
 			}
 
@@ -68,8 +67,8 @@ public static partial class Strings
 	public static IEnumerable<string> GetWrappedWordsWidth(string text, int width)
 	{
 		//https://stackoverflow.com/questions/20534318/make-console-writeline-wrap-words-instead-of-letters
-		var forcedZones = Regex.Matches(text, @"\n").Cast<Match>().ToList();
-		var normalZones = Regex.Matches(text, @"\s+|(?<=[-,.;])|$").Cast<Match>().ToList();
+		var forcedZones = _rgx2().Matches(text).ToList();
+		var normalZones = _rgx3().Matches(text).ToList();
 
 		int start = 0;
 
@@ -83,7 +82,7 @@ public static partial class Strings
 				start += width;
 			}
 			else {
-				yield return text.Substring(start, zone.Index - start);
+				yield return text[start..zone.Index];
 				start = zone.Index + zone.Length;
 			}
 		}
@@ -119,7 +118,7 @@ public static partial class Strings
 	/// <summary>Convert a word that is formatted in pascal case to have splits (by space) at each upper case letter.</summary>
 	public static string SplitPascalCase(string convert)
 	{
-		return Regex.Replace(Regex.Replace(convert, @"(\P{Ll})(\P{Ll}\p{Ll})", "$1 $2"),
+		return Regex.Replace(_rgx1().Replace(convert, "$1 $2"),
 		                     @"(\p{Ll})(\P{Ll})", "$1 $2");
 	}
 
@@ -372,12 +371,23 @@ public static partial class Strings
 	public static string EncodingConvert(Encoding src, Encoding dest, string str)
 		=> dest.GetString(Encoding.Convert(src, dest, src.GetBytes(str)));
 
-	public static string EncodingConvert(Encoding src, string str) 
-		=> EncodingConvert(src, EncodingOEM, str);
+	public static string EncodingConvert(Encoding src, string str) => EncodingConvert(src, EncodingOEM, str);
 
 	public static bool IsCharInRange(ushort c, UnicodeRange r)
 		=> c < r.FirstCodePoint + r.Length && c >= r.FirstCodePoint;
 
-	public static bool IsCharInRange(short c, UnicodeRange r) 
-		=> IsCharInRange(c: unchecked((ushort) c), r);
+	public static bool IsCharInRange(short c, UnicodeRange r) => IsCharInRange(c: unchecked((ushort) c), r);
+
+	public static byte[] GetBytes(this string s, Encoding encoding) => encoding.GetBytes(s);
+
+	public static byte[] GetBytes(this string s) => s.GetBytes(Encoding.UTF8);
+
+	[GeneratedRegex("(\\P{Ll})(\\P{Ll}\\p{Ll})")]
+	private static partial Regex _rgx1();
+
+	[GeneratedRegex("\\n")]
+	private static partial Regex _rgx2();
+
+	[GeneratedRegex("\\s+|(?<=[-,.;])|$")]
+	private static partial Regex _rgx3();
 }

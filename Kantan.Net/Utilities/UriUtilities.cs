@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Web;
+using Flurl;
 
 // ReSharper disable InconsistentNaming
 
@@ -13,6 +14,10 @@ using System.Web;
 
 namespace Kantan.Net.Utilities;
 
+/// <summary>
+/// <see cref="Uri"/>
+/// <see cref="Url"/>
+/// </summary>
 public static class UriUtilities
 {
 	/*
@@ -20,7 +25,6 @@ public static class UriUtilities
 	 * https://stackoverflow.com/questions/1188096/truncating-query-string-returning-clean-url-c-sharp-asp-net
 	 * https://stackoverflow.com/questions/1222610/check-if-2-urls-are-equal
 	 */
-
 
 	public static Uri Normalize(this Uri u) => new(NormalizeUrl(u));
 
@@ -54,7 +58,6 @@ public static class UriUtilities
 	{
 		return UrlCompare(url1.ToString(), url2.ToString());
 	}
-
 
 	/// <summary>
 	/// Determines whether <paramref name="uri1"/> is equal to <paramref name="uri2"/>

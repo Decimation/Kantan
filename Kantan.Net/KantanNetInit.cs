@@ -30,10 +30,6 @@ public static class KantanNetInit
 {
 	public const string NAME = "Kantan.Net";
 
-	public static readonly LoggerFactory LoggerFactory = new() { };
-
-	public static readonly ILogger Logger = LoggerFactory.CreateLogger($"{nameof(NAME)}");
-
 	public static readonly Assembly Assembly = typeof(KNI).GetTypeInfo().Assembly;
 
 	static KantanNetInit()
@@ -52,7 +48,7 @@ public static class KantanNetInit
 	public static void Close()
 	{
 		HttpUtilities.Client.Dispose();
-		LoggerFactory.Dispose();
+		
 		//todo...
 	}
 }

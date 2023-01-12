@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 // ReSharper disable TailRecursiveCall
 // ReSharper disable ConvertIfStatementToReturnStatement
@@ -44,7 +45,7 @@ public static class MathHelper
 		}
 	}*/
 
-	public static int Wrap(int i, int n)
+	public static T Wrap<T>(T i, T n) where T : INumber<T>
 	{
 		return ((i % n) + n) % n;
 	}
@@ -56,29 +57,29 @@ public static class MathHelper
 		return Math.Abs(a - b) <= epsilon;
 	}
 
-	public static int HighestOrderBit(int num)
+	public static T HighestOrderBit<T>(T num) where T : INumber<T>, IShiftOperators<T, T, T>
 	{
 		// NOTE: redundant? Use BitOperations?
 
-		if (!(num > 0))
-			return 0;
+		if (!(num > T.Zero))
+			return T.Zero;
 
-		int ret = 1;
+		T ret = T.One;
 
-		while ((num >>= 1) > 0)
-			ret <<= 1;
+		while ((num >>= T.One) > T.Zero)
+			ret <<= T.One;
 
 		return ret;
 	}
 
-	public static long[] SimplifyRadical(long insideRoot)
+	public static T[] SimplifyRadical<T>(T insideRoot) where T : INumber<T>
 	{
-		int outside_root = 1;
+		T outside_root = T.One;
 
-		int d = 2;
+		T d = T.One + T.One;
 
 		while (d * d <= insideRoot) {
-			if (insideRoot % (d * d) == 0) {
+			if (insideRoot % (d * d) == T.Zero) {
 				insideRoot   /= (d * d);
 				outside_root *= d;
 			}
@@ -88,7 +89,7 @@ public static class MathHelper
 			}
 		}
 
-		var radical = new long[2];
+		var radical = new T[2];
 
 		radical[0] = outside_root;
 		radical[1] = insideRoot;
@@ -96,9 +97,9 @@ public static class MathHelper
 		return radical;
 	}
 
-	public static long GCD(long a, long b)
+	public static T GCD<T>(T a, T b) where T : INumber<T>, IBitwiseOperators<T, T, T>
 	{
-		while (a != 0 && b != 0) {
+		while (a != T.Zero && b != T.Zero) {
 			if (a > b)
 				a %= b;
 			else
@@ -108,7 +109,7 @@ public static class MathHelper
 		return a | b;
 	}
 
-	public static long LCM(long a, long b) => (a / GCD(a, b)) * b;
+	public static T LCM<T>(T a, T b) where T : INumber<T>, IBitwiseOperators<T, T, T> => (a / GCD(a, b)) * b;
 
 	public static BigInteger LCM(BigInteger number1, BigInteger number2)
 	{
@@ -231,60 +232,27 @@ public static class MathHelper
 
 	#endregion
 
-	#region Generic math
-
-	public static T Add<T>(T a, T b) => MathImplementation<T>.Add(a, b);
-
-	public static T Subtract<T>(T a, T b) => MathImplementation<T>.Sub(a, b);
-
-	public static T Multiply<T>(T a, T b) => MathImplementation<T>.Mul(a, b);
-
-	public static T Divide<T>(T a, T b) => MathImplementation<T>.Div(a, b);
-
-	private static class MathImplementation<T>
+	public static bool IsPrime<T>(T number)
+		where T : INumber<T>, IRootFunctions<T>, IBinaryNumber<T>, IFloatingPoint<T>
 	{
-		internal static readonly Func<T, T, T> Add;
-		internal static readonly Func<T, T, T> Sub;
-		internal static readonly Func<T, T, T> Mul;
-		internal static readonly Func<T, T, T> Div;
+		var two = (T.One + T.One);
 
-		static MathImplementation()
-		{
-			Add = Create(Expression.Add);
-			Sub = Create(Expression.Subtract);
-			Mul = Create(Expression.Multiply);
-			Div = Create(Expression.Divide);
-
+		if (number <= T.One) {
+			return false;
+		}
+		else if (number == two) {
+			return true;
 		}
 
-		private static Func<T, T, T> Create(Func<ParameterExpression, ParameterExpression, BinaryExpression> fx)
-		{
-			var paramA = Expression.Parameter(typeof(T));
-			var paramB = Expression.Parameter(typeof(T));
-			var body   = fx(paramA, paramB);
-			return Expression.Lambda<Func<T, T, T>>(body, paramA, paramB).Compile();
-
-		}
-	}
-
-	#endregion
-
-	public static bool IsPrime(int number)
-	{
-		switch (number) {
-			case <= 1:
-				return false;
-			case 2:
-				return true;
-		}
-
-		if (number % 2 == 0)
+		if (number % two == T.Zero)
 			return false;
 
-		int boundary = (int) Math.Floor(Math.Sqrt(number));
+		T boundary = (T) T.Floor(T.Sqrt(number));
 
-		for (int i = 3; i <= boundary; i += 2)
-			if (number % i == 0)
+		var three = (two + T.One);
+
+		for (T i = three; i <= boundary; i += two)
+			if (number % i == T.Zero)
 				return false;
 
 		return true;

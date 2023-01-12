@@ -2,8 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Kantan.Text;
@@ -27,14 +29,12 @@ public static class EnumerableHelper
 	/// <summary>
 	/// Invokes <see cref="IEnumerator.MoveNext"/> then returns <see cref="IEnumerator.Current"/> if <c>non-null</c>; otherwise <c>default</c>
 	/// </summary>
-	public static T MoveAndGet<T>(this IEnumerator<T> t) 
-		=> t.MoveNext() ? t.Current : default;
+	public static T MoveAndGet<T>(this IEnumerator<T> t) => t.MoveNext() ? t.Current : default;
 
 	/// <summary>
 	/// Invokes <see cref="IEnumerator.MoveNext"/> then returns <see cref="IEnumerator.Current"/> if <c>non-null</c>; otherwise <c>default</c>
 	/// </summary>
-	public static object MoveAndGet(this IEnumerator t) 
-		=> t.MoveNext() ? t.Current : default;
+	public static object MoveAndGet(this IEnumerator t) => t.MoveNext() ? t.Current : default;
 
 	/// <summary>
 	/// Determines whether <paramref name="list"/> ends with <paramref name="sequence"/>.
@@ -205,7 +205,7 @@ public static class EnumerableHelper
 
 	#region Dictionary
 
-	public static Dictionary<string, string> ReadCsv(string s, char delim = ',')
+	public static Dictionary<string, string> ReadDelim(string s, char delim = ',')
 	{
 		var dic = new Dictionary<string, string>();
 
@@ -279,4 +279,5 @@ public static class EnumerableHelper
 	private const string DICT_DELIM = "=";
 
 	#endregion
+
 }

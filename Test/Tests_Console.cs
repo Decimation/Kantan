@@ -1,4 +1,4 @@
-﻿#pragma warning disable 0162
+﻿#pragma warning disable CS0612, CS0649
 using System;
 using System.Collections.Generic;
 using System.Linq;

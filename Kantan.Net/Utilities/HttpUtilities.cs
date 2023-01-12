@@ -13,6 +13,7 @@ using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Flurl.Http;
 using Kantan.Diagnostics;
+using Kantan.Net.Properties;
 using Url = Flurl.Url;
 
 #pragma warning disable CS0168, IDE0051
@@ -46,8 +47,7 @@ public static class HttpUtilities
 
 	public static int MaxAutoRedirects { get; set; } = 50;
 
-	public static string UserAgent { get; set; } = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-	                                               "(KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36";
+	public static string UserAgent { get; set; } = Resources.UserAgent;
 
 	public static FlurlClient Client { get; internal set; } = new()
 	{
@@ -102,9 +102,22 @@ public static class HttpUtilities
 		do {
 
 			try {
+				var req = new FlurlRequest(url)
+				{
+					Settings =
+					{
+						Redirects =
+						{
+							Enabled          = true,
+							MaxAutoRedirects = MaxAutoRedirects
+						}
+					},
+					Verb = HttpMethod.Head
+				};
 
-				var resp1 = GetHttpResponse(url, method: HttpMethod.Head);
-				var resp  = resp1?.ResponseMessage;
+				var resp1 = req.WithClient(Client).AllowAnyHttpStatus().SendAsync(HttpMethod.Head);
+				resp1.Wait();
+				var resp = resp1?.Result.ResponseMessage;
 
 				switch (resp.StatusCode) {
 					case HttpStatusCode.OK:
@@ -305,7 +318,7 @@ public static class HttpUtilities
 		return response;
 	}
 
-	[CBN]
+	/*[CBN]
 	public static string Download(Uri src, string path)
 	{
 		string    filename = UriUtilities.NormalizeFilename(src);
@@ -322,7 +335,7 @@ public static class HttpUtilities
 			Debug.WriteLine($"{e.Message}", nameof(GetHttpResponseAsync));
 			return null;
 		}
-	}
+	}*/
 
 	public static bool TryOpenUrl([CBN] string u)
 	{

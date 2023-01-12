@@ -74,7 +74,7 @@ public static class Require
 
 	#endregion
 
-	public static bool QWrite(object o, [CallerArgumentExpression("o")] string? call = null)
+	public static bool QWrite(object o, [CallerArgumentExpression(nameof(o))] string? call = null)
 	{
 		//todo
 		string? s;
@@ -96,7 +96,6 @@ public static class Require
 
 		return true;
 	}
-
 
 	[DNR, DH, AM]
 	[CA(UNCONDITIONAL_HALT), SFM(KantanInit.STRING_FORMAT_ARG)]

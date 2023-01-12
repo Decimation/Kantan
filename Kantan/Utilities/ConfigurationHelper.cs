@@ -12,16 +12,15 @@ namespace Kantan.Utilities;
 public static class ConfigurationHelper
 {
 	[CBN]
-	public static T ReadSetting<T>(this Configuration configuration, string key, [CBN] T def)
+	public static T ReadSetting<T>(this Configuration configuration, string key, [CBN] T def = default)
 	{
 		try {
-			def ??= default(T);
 
 			var appSettings = configuration.AppSettings.Settings;
 			var result      = appSettings[key] ?? null;
 
 			if (result == null) {
-				configuration.AddUpdateSetting(key, def.ToString());
+				configuration.AddUpdateSetting(key, def?.ToString());
 				result = appSettings[key];
 			}
 
