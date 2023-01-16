@@ -4,13 +4,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Kantan.Monad;
 
 #endregion
 
 // ReSharper disable UnusedMember.Global
 
 namespace Kantan.Threading;
-
+/*
+ * https://github.com/UnoSD/ResultMonad/blob/master/Result/TaskExtensions.cs
+ * https://github.com/UnoSD/ResultMonad/blob/master/Result/TaskResultExtensions.cs
+ */
 public static class TaskHelper
 {
 	//https://github.com/tejacques/AsyncBridge
@@ -187,7 +191,6 @@ public static class TaskHelper
 		}).Unwrap().GetAwaiter().GetResult();
 	}*/
 
-
 	public static TResult RunSync<TResult>(this Task<TResult> func)
 	{
 		return func.GetAwaiter().GetResult();
@@ -224,4 +227,99 @@ public static class TaskHelper
 		else
 			error();
 	}
+
+	public static Task<T> ToTask<T>(this T source) => Task.FromResult(source);
+
+	public static Task<TResult> Select<T, TResult>
+	(
+		this Task<T> source,
+		Func<T, TResult> func
+	)
+		=> source.Map(func);
+
+	public static async Task<TResult> Map<T, TResult>
+	(
+		this Task<T> source,
+		Func<T, TResult> func
+	)
+	{
+		var result =
+			await source.ConfigureAwait(false);
+
+		return func(result);
+	}
+
+	public static Task<TResult> SelectMany<T, TResult>
+	(
+		this Task<T> source,
+		Func<T, Task<TResult>> func
+	)
+		=> source.Bind(func);
+
+	public static Task<TOutput> SelectMany<T, TResult, TOutput>
+	(
+		this Task<T> source,
+		Func<T, Task<TResult>> func,
+		Func<T, TResult, TOutput> projection
+	)
+		=> source.Bind(func)
+			.Map(result => projection(source.Result, result));
+
+	public static Task<TResult> Bind<T, TResult>
+	(
+		this Task<T> source,
+		Func<T, Task<TResult>> func
+	)
+		=> source.Map(func)
+			.Unwrap();
+
+	public static Task<T[]> WhenAll<T>(this IEnumerable<Task<T>> tasks) => Task.WhenAll(tasks);
+
+	public static Task WhenAll(this IEnumerable<Task> tasks) => Task.WhenAll(tasks);
+
+	public static async Task WhenAllSequential(this IEnumerable<Task> tasks)
+	{
+		foreach (var task in tasks)
+			await task.ConfigureAwait(false);
+	}
+
+	// TODO: Refactor list out of this
+	public static async Task<IReadOnlyCollection<T>> WhenAllSequential<T>
+		(this IEnumerable<Task<T>> tasks)
+	{
+		var results =
+			new List<T>();
+
+		foreach (var task in tasks)
+			results.Add(await task.ConfigureAwait(false));
+
+		return results;
+	}
+
+	public static Task<IResult<TResult>> SelectMany<T, TResult>
+	(
+		this Task<T> source,
+		Func<T, IResult<TResult>> func
+	) => source.Map(func);
+
+	public static Task<IResult<TOutput>> SelectMany<T, TResult, TOutput>
+	(
+		this Task<T> source,
+		Func<T, IResult<TResult>> func,
+		Func<T, TResult, TOutput> project
+	) => source.Map(tres => func(tres).Map(fres => project(tres, fres)));
+
+	public static Task<IResult<TResult>> Select<T, TResult>
+	(
+		this IResult<T> source,
+		Func<T, Task<TResult>> func
+	) => source.MapAsync(func);
+
+	public static Task<IResult<TResult>> MapAsync<T, TResult>
+	(
+		this IResult<T> source,
+		Func<T, Task<TResult>> func
+	) => source.Match(result => func(result).Map(o => o.ToResult()),
+	                  error => error.ToFailureResult<TResult>()
+		                  .ToTask());
 }

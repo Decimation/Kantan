@@ -37,6 +37,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.VisualBasic.CompilerServices;
 using Terminal.Gui;
 using HttpMethod = System.Net.Http.HttpMethod;
+#pragma warning disable CS0168
 
 // ReSharper disable InconsistentNaming
 

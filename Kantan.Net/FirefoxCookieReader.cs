@@ -39,7 +39,7 @@ public sealed class FirefoxCookieReader : BaseCookieReader
 	public FirefoxCookieReader(string c) : base(c) { }
 
 	public FirefoxCookieReader() : base($"Data Source={FindCookieFile().FullName}") { }
-
+	
 	public static FileInfo FindCookieFile()
 	{
 		//Data Source=C:\\Users\\Deci\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\

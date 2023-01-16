@@ -38,7 +38,9 @@ public static partial class Program
 		}, 1, out _);
 	}
 
+#pragma warning disable CS0169
 	private static ConsoleDialog _dialog;
+#pragma warning restore CS0169
 
 	private class ConsoleOption1 : IConsoleOption
 	{
