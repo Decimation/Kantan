@@ -64,44 +64,4 @@ public static class TerminalHelper
 		}
 	}*/
 
-	public static void FromEnum<TEnum>(this ListView lv, TEnum e) where TEnum : struct, Enum
-	{
-		var list = lv.Source.ToList<TEnum>().ToArray();
-
-		for (var i = 0; i < list.Length; i++) {
-			// var flag = Enum.Parse<TEnum>(list[i].ToString());
-			// var mark = e.HasFlag(flag);
-			var mark = e.HasFlag(list[i]);
-			lv.Source.SetMark(i, mark);
-		}
-	}
-	
-	public static TEnum GetEnum<TEnum>(this IListDataSource lv, TEnum t = default) where TEnum : struct, Enum
-	{
-		var m = lv.GetItems<TEnum>();
-
-		TEnum t2 = t;
-
-		Debug.Assert(Unsafe.SizeOf<TEnum>() == Unsafe.SizeOf<int>());
-
-		unsafe {
-			var ptr = (int*) Unsafe.AsPointer(ref t2);
-
-			foreach (var t1 in m) {
-				TEnum tv  = t1.Value;
-				var   val = (int*) Unsafe.AsPointer(ref tv);
-
-				if (t1.IsMarked) {
-					*ptr |= *val;
-
-				}
-				else {
-					*ptr &= ~*val;
-				}
-			}
-
-		}
-
-		return t2;
-	}
 }

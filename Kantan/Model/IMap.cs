@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using JetBrains.Annotations;
-using Kantan.Text;
 using Kantan.Utilities;
 
 namespace Kantan.Model;
@@ -14,22 +13,52 @@ public interface IMap
 {
 	public Dictionary<string, object> Data { get; }
 
-	public static Dictionary<string, object> ToMap(object value)
+	/*public static IEnumerable<KeyValuePair<string, object>> ToKeyValues(
+		object value, Predicate<MemberInfo> membPredicate = null, Func<MemberInfo, object, object> fieldConv = null)
 	{
+		var map = ToMap(value);
+
+		return map.ToArray();
+	}*/
+
+	/// <summary>
+	/// Converts an object <paramref name="value"/> to a <see cref="Dictionary{TKey,TValue}"/>
+	/// </summary>
+	/// <param name="value">Object</param>
+	/// <param name="membPredicate"><see cref="MemberInfo"/> predicate</param>
+	/// <param name="fieldConv">Field conversion functor</param>
+	public static Dictionary<string, object> ToMap(object value, Predicate<MemberInfo> membPredicate = null,
+	                                               Func<MemberInfo, object, object> fieldConv = null)
+	{
+		Predicate<MemberInfo> fn = (MemberInfo mi) => mi.Name != nameof(Data);
+
+		// membPredicate ??= fn;
+		Predicate<MemberInfo> mbp = mi =>
+		{
+			return fn(mi) && (membPredicate?.Invoke(mi) ?? true);
+		};
+
+		fieldConv ??= (info, inst) =>
+		{
+			return info switch
+			{
+				FieldInfo f    => f.GetValue(inst),
+				PropertyInfo p => p.GetValue(inst),
+				_              => inst
+			};
+		};
+
 		var type = value.GetType();
-		var f    = type.GetRuntimeFields();
-		var p    = type.GetRuntimeProperties().Where(r=>r.Name != nameof(Data));
 
-		var map = new Dictionary<string, object>();
+		var p = type.GetRuntimeProperties().Where(pi => mbp(pi))
+			.Where(r => r.Name != nameof(Data));
 
-		foreach (FieldInfo info in f) {
-			map.Add($"{info.Name}", info.GetValue(value));
-		}
+		var f = type.GetRuntimeFields().Where(fi => mbp(fi))
+			.Where(f => !p.Any(f.IsBackingFieldOf));
 
-		foreach (PropertyInfo info in p) {
-			map.Add($"{info.Name}", info.GetValue(value));
-		}
+		var m = f.OfType<MemberInfo>().Union(p)
+			.Where(m=>!m.DeclaringType.Namespace.StartsWith("System"));
 
-		return map;
+		return m.ToDictionary(info => $"{info.Name}", info => fieldConv(info, value));
 	}
 }

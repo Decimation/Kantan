@@ -17,6 +17,7 @@ namespace Kantan.Net.Utilities;
 /// <summary>
 /// <see cref="Uri"/>
 /// <see cref="Url"/>
+/// <seealso cref="UrlUtilities"/>
 /// </summary>
 public static class UriUtilities
 {

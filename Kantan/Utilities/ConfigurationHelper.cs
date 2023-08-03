@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,7 +32,6 @@ public static class ConfigurationHelper
 			if (type.IsEnum) {
 				return (T) Enum.Parse(type, value);
 			}
-
 			if (type == typeof(bool)) {
 				return (T) (object) bool.Parse(value);
 			}

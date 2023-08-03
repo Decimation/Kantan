@@ -220,7 +220,7 @@ public static class HttpUtilities
 		return output;
 	}
 
-	[CBN]
+	/*[CBN]
 	[MURV]
 	public static async Task<IFlurlResponse> GetHttpResponseAsync(string url, int? ms = null,
 	                                                              [CBN] HttpMethod method = null,
@@ -265,7 +265,7 @@ public static class HttpUtilities
 		using var client = new HttpClient(clientHandler)
 		{
 			Timeout = TimeSpan.FromMilliseconds(ms ?? Timeout)
-		};*/
+		};#1#
 
 		IFlurlResponse response = null;
 
@@ -317,6 +317,7 @@ public static class HttpUtilities
 
 		return response;
 	}
+	*/
 
 	/*[CBN]
 	public static string Download(Uri src, string path)

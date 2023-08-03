@@ -43,7 +43,7 @@ public static partial class Strings
 		//https://stackoverflow.com/questions/20534318/make-console-writeline-wrap-words-instead-of-letters
 
 		string[] lines = paragraph.Replace("\t", new string(' ', tabSize))
-		                          .Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+			.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
 
 		for (int i = 0; i < lines.Length; i++) {
 			string process = lines[i];
@@ -125,8 +125,8 @@ public static partial class Strings
 	public static string CreateRandom(int length)
 	{
 		return new(Enumerable.Repeat(Constants.Alphanumeric, length)
-		                     .Select(s => s[KantanInit.RandomInstance.Next(s.Length)])
-		                     .ToArray());
+			           .Select(s => s[KantanInit.RandomInstance.Next(s.Length)])
+			           .ToArray());
 	}
 
 	public static IEnumerable<int> AllIndexesOf(this string str, string search)
@@ -280,56 +280,6 @@ public static partial class Strings
 
 		return indent + j;
 	}
-
-	#endregion
-
-	#region Hex
-
-	private static HexFormatter Hex { get; } = new();
-
-	public sealed class HexFormatter : ICustomFormatter
-	{
-		public string Format(string fmt, object arg, IFormatProvider formatProvider)
-		{
-			fmt ??= FMT_P;
-
-			fmt = fmt.ToUpper(CultureInfo.InvariantCulture);
-			string hexStr;
-
-			if (arg is IFormattable f) {
-				hexStr = f.ToString(HEX_FORMAT_SPECIFIER, null);
-			}
-			else {
-				throw new NotImplementedException();
-			}
-
-			var sb = new StringBuilder();
-
-			switch (fmt) {
-				case FMT_P:
-					sb.Append(HEX_PREFIX);
-					goto case FMT_X;
-				case FMT_X:
-					sb.Append(hexStr);
-					break;
-				default:
-					return arg.ToString();
-			}
-
-			return sb.ToString();
-
-		}
-
-		public const string HEX_FORMAT_SPECIFIER = "X";
-
-		public const string HEX_PREFIX = "0x";
-
-		public const string FMT_X = "X";
-		public const string FMT_P = "P";
-	}
-
-	public static string ToHexString<T>(T t, string s = HexFormatter.FMT_P)
-		=> Hex.Format(s, t, CultureInfo.CurrentCulture);
 
 	#endregion
 

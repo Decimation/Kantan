@@ -100,48 +100,6 @@ public class Benchmarks3
 	}
 }
 
-public class Benchmarks5
-{
-	public int[] x;
-
-	[IterationSetup]
-	public void Setup()
-	{
-		x = new int[] { 1 };
-
-	}
-
-	[Benchmark]
-	public int[] a()
-	{
-		return ArrayHelper.Add(x, 2);
-	}
-	/*[Benchmark]
-	public int[] b()
-	{
-		Array.Resize(ref x, x.Length+1);
-		x[^1] = 2;
-		return x;
-	}
-	[Benchmark]
-	public int[] c()
-	{
-		var x2=new int[x.Length + 1];
-		x.CopyTo(x2,0);
-
-		x2[^1] = 2;
-		x      = x2;
-
-		return x;
-	}*/
-
-	[Benchmark]
-	public int[] d()
-	{
-		return ArrayHelper.AddRange(x, new []{ 1 });
-	}
-}
-
 public class Benchmarks6
 {
 	/*

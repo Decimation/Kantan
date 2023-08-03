@@ -37,6 +37,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.VisualBasic.CompilerServices;
 using Terminal.Gui;
 using HttpMethod = System.Net.Http.HttpMethod;
+
 #pragma warning disable CS0168
 
 // ReSharper disable InconsistentNaming
@@ -45,7 +46,7 @@ using HttpMethod = System.Net.Http.HttpMethod;
 
 // ReSharper disable UnusedMember.Local
 
-#pragma warning disable IDE0060, CS1998, IDE0051,CS0169,4014,CS0649,IDE0044,CS0612,CS0219, CS0169
+#pragma warning disable IDE0060, CS1998, IDE0051,CS0169,4014,CS0649,IDE0044,CS0612,CS0219, CS0169,IDE1006,IDE0059
 
 namespace Test;
 
@@ -78,17 +79,26 @@ public static partial class Program
 
 	private static async Task Main(string[] args)
 	{
-		const string src = "Data Source=C:\\Users\\Deci\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\zvsw1qgf.default\\cookies.sqlite";
+		var b = new TestObj1();
+		var m = ((IMemberTransformer) b).TransformMembers(_ => true, x => x.Name);
 
-		var s = new FirefoxCookieReader();
-		await s.OpenAsync();
-		var kv=await s.ReadHostAsync("%exhentai%");
-
-		foreach (KeyValuePair<string, object> pair in kv) {
-			pair.Deconstruct(out var k,out var v);
-			Console.WriteLine($"{k}={v}");
+		foreach (var s in m) {
+			Console.WriteLine(s);
 		}
-		
+
+	}
+
+	public class TestObj1 : IMemberTransformer
+	{
+		private int m_i = 1;
+
+		public string p2 { get; set; }
+		public string Ps => "hi";
+
+		public int PI
+		{
+			get => m_i;
+		}
 	}
 
 	private static void Test3()
@@ -109,44 +119,6 @@ public static partial class Program
 		{
 			get => IMap.ToMap(this);
 		}
-	}
-
-	private static void Test2()
-	{
-		var e = Enum.GetValues<TestEnum>();
-
-		TestEnum t = TestEnum.all;
-
-		var lv = new ListView(e)
-		{
-			X                       = 1,
-			Y                       = 1,
-			Width                   = 5,
-			Height                  = 5,
-			AllowsMarking           = true,
-			AllowsMultipleSelection = true
-		};
-
-		lv.OpenSelectedItem += eventArgs =>
-		{
-			var      objects = lv.Source.GetMarkedItems<object>();
-			TestEnum tt      = lv.Source.GetEnum(t);
-
-			Debug.WriteLine($"{eventArgs.Value} {eventArgs.Item} \n" +
-			                $"{objects.QuickJoin()} | {tt}", nameof(lv.OpenSelectedItem));
-
-		};
-
-		ThreadPool.QueueUserWorkItem((c) =>
-		{
-			Thread.Sleep(9000);
-			lv.FromEnum(TestEnum.all);
-			lv.SetNeedsDisplay();
-		});
-
-		Application.Init();
-		Application.Top.Add(lv);
-		Application.Run();
 	}
 
 	[Flags]

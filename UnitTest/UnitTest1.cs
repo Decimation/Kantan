@@ -22,7 +22,7 @@ using NUnit.Framework;
 // ReSharper disable UnusedMember.Local
 
 // ReSharper disable InconsistentNaming
-#pragma warning disable 649, IDE0059, IDE0060, CS0612
+#pragma warning disable 649, IDE0059, IDE0060, CS0612, IDE0079
 
 namespace UnitTest;
 
