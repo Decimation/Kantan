@@ -28,9 +28,11 @@ using Kantan.Collections;
 using Kantan.Console;
 using Kantan.Console.Cli;
 using Kantan.Console.Cli.Controls;
+using Kantan.Diagnostics;
 using Kantan.Model;
 using Kantan.Net;
 using Kantan.Net.Properties;
+using Kantan.Net.Utilities;
 using Kantan.Text;
 using Kantan.Utilities;
 using Microsoft.Data.Sqlite;
@@ -79,15 +81,22 @@ public static partial class Program
 
 	private static async Task Main(string[] args)
 	{
-		var b = new TestObj1();
-		var m = ((IMemberTransformer) b).TransformMembers(_ => true, x => x.Name);
-
-		foreach (var s in m) {
-			Console.WriteLine(s);
-		}
-
+		Console.WriteLine(new[]{1,} is IList<int>);
+		Console.WriteLine("butt");
+		Console.WriteLine(TE1.GetNextId<TE1>());
+		Console.WriteLine(TE1.GetAll().QuickJoin());
 	}
 
+	public class TE1 : Enumeration<byte>
+	{
+
+		public static readonly TE1 a = new(0, "butt");
+		public static readonly TE1 b = new(1, "butt");
+		public static readonly TE1 c = new("waifu");
+		public TE1(string name) : base(TE1.GetNextId<TE1>(), name) { }
+		public TE1(byte id, string name) : base(id, name) { }
+
+	}
 	public class TestObj1 : IMemberTransformer
 	{
 		private int m_i = 1;

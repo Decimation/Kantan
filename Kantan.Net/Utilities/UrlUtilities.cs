@@ -1,6 +1,8 @@
 ﻿// Read S Kantan.Net UrlUtilities.cs
 // 2023-07-23 @ 11:56 PM
 
+using System;
+using System.IO;
 using System.Web;
 using Flurl;
 
@@ -15,8 +17,7 @@ public static class UrlUtilities
 	{
 		string path;
 
-		if (v.PathSegments is { Count: >= 1 })
-		{
+		if (v.PathSegments is { Count: >= 1 }) {
 			path = v.PathSegments[^1];
 		}
 		else
@@ -25,7 +26,7 @@ public static class UrlUtilities
 		// path = HttpUtility.HtmlDecode(path);
 		// path = WebUtility.UrlDecode(path);
 		path = HttpUtility.UrlDecode(path);
-
+		
 		// path = FileSystem.SanitizeFilename(path);
 
 		return path;

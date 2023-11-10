@@ -36,69 +36,22 @@ namespace Kantan.Text;
 /// <seealso cref="UnicodeRanges"/>
 public static partial class Strings
 {
-	/// <param name="paragraph">The value to write.</param>
-	/// <param name="tabSize">The value that indicates the column width of tab characters.</param>
-	public static IEnumerable<string> GetWrappedWordsTab(string paragraph, int tabSize = 8)
-	{
-		//https://stackoverflow.com/questions/20534318/make-console-writeline-wrap-words-instead-of-letters
-
-		string[] lines = paragraph.Replace("\t", new string(' ', tabSize))
-			.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-
-		for (int i = 0; i < lines.Length; i++) {
-			string process = lines[i];
-			var    wrapped = new List<string>();
-
-			while (process.Length > Console.WindowWidth) {
-				int wrapAt = process.LastIndexOf(' ', Math.Min(Console.WindowWidth - 1, process.Length));
-				if (wrapAt <= 0) break;
-
-				wrapped.Add(process[..wrapAt]);
-				process = process.Remove(0, wrapAt + 1);
-			}
-
-			foreach (string wrap in wrapped) {
-				yield return wrap;
-			}
-
-		}
-	}
-
-	public static IEnumerable<string> GetWrappedWordsWidth(string text, int width)
-	{
-		//https://stackoverflow.com/questions/20534318/make-console-writeline-wrap-words-instead-of-letters
-		var forcedZones = _rgx2().Matches(text).ToList();
-		var normalZones = _rgx3().Matches(text).ToList();
-
-		int start = 0;
-
-		while (start < text.Length) {
-			var zone =
-				forcedZones.Find(z => z.Index >= start && z.Index <= start + width) ??
-				normalZones.FindLast(z => z.Index >= start && z.Index <= start + width);
-
-			if (zone == null) {
-				yield return text.Substring(start, width);
-				start += width;
-			}
-			else {
-				yield return text[start..zone.Index];
-				start = zone.Index + zone.Length;
-			}
-		}
-	}
 
 	public static string RemoveNewLines(this string s) => s.Remove(LineControlCharacters);
 
+	public static string Remove(this string s, char[] rg)   => rg.Aggregate(s, (current, t) => current.Remove(t));
+	
 	public static string Remove(this string s, string[] rg) => rg.Aggregate(s, (current, t) => current.Remove(t));
 
 	public static string Remove(this string s, string s2) => s.Replace(s2, string.Empty);
+	public static string Remove(this string s, char s2) => s.Remove(s2.ToString());
 
-	public static string SelectOnlyDigits(this string s) => s.SelectOnly(Char.IsDigit);
+	public static string SelectOnlyDigits(this string s) => s.AggregateWhere(Char.IsDigit);
 
-	public static string StripControl(this string s) => s.SelectOnly(c => !Char.IsControl(c));
+	public static string StripControl(this string s) => s.AggregateWhere(c => !Char.IsControl(c));
 
-	public static string SelectOnly(this string s, Func<char, bool> fn)
+	/// <remarks>Select only</remarks>
+	public static string AggregateWhere(this string s, Func<char, bool> fn)
 		=> s.Where(fn).Aggregate(String.Empty, (current, t) => current + t);
 
 	public static string CleanString(this string s) => s.Trim('\"');
@@ -129,14 +82,14 @@ public static partial class Strings
 			           .ToArray());
 	}
 
-	public static IEnumerable<int> AllIndexesOf(this string str, string search)
+	public static IEnumerable<int> IndexOfAll(this string str, string search, StringComparison c = StringComparison.Ordinal)
 	{
-		return EnumerableHelper.AllIndexesOf((s, i) => str.IndexOf(s, i, StringComparison.Ordinal),
+		return EnumerableHelper.IndexOfAll((s, i) => str.IndexOf(s, i, c),
 		                                     search.Length, search);
 	}
 
-	public static string RemoveLastOccurrence(this string s, string s2)
-		=> s.Remove(s.LastIndexOf(s2, StringComparison.Ordinal));
+	public static string RemoveLastOccurrence(this string s, string s2, StringComparison c = StringComparison.Ordinal)
+		=> s.Remove(s.LastIndexOf(s2, c));
 
 	/// <summary>
 	///     Compute the Levenshtein distance (approximate string matching) between <paramref name="s"/> and <paramref name="t"/>
@@ -283,6 +236,58 @@ public static partial class Strings
 
 	#endregion
 
+	/// <param name="paragraph">The value to write.</param>
+	/// <param name="tabSize">The value that indicates the column width of tab characters.</param>
+	public static IEnumerable<string> GetWrappedWordsTab(string paragraph, int tabSize = 8)
+	{
+		//https://stackoverflow.com/questions/20534318/make-console-writeline-wrap-words-instead-of-letters
+
+		string[] lines = paragraph.Replace("\t", new string(' ', tabSize))
+			.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+
+		for (int i = 0; i < lines.Length; i++) {
+			string process = lines[i];
+			var    wrapped = new List<string>();
+
+			while (process.Length > Console.WindowWidth) {
+				int wrapAt = process.LastIndexOf(' ', Math.Min(Console.WindowWidth - 1, process.Length));
+				if (wrapAt <= 0) break;
+
+				wrapped.Add(process[..wrapAt]);
+				process = process.Remove(0, wrapAt + 1);
+			}
+
+			foreach (string wrap in wrapped) {
+				yield return wrap;
+			}
+
+		}
+	}
+
+	public static IEnumerable<string> GetWrappedWordsWidth(string text, int width)
+	{
+		//https://stackoverflow.com/questions/20534318/make-console-writeline-wrap-words-instead-of-letters
+		var forcedZones = _rgx2().Matches(text).ToList();
+		var normalZones = _rgx3().Matches(text).ToList();
+
+		int start = 0;
+
+		while (start < text.Length) {
+			var zone =
+				forcedZones.Find(z => z.Index >= start && z.Index <= start + width) ??
+				normalZones.FindLast(z => z.Index >= start && z.Index <= start + width);
+
+			if (zone == null) {
+				yield return text.Substring(start, width);
+				start += width;
+			}
+			else {
+				yield return text[start..zone.Index];
+				start = zone.Index + zone.Length;
+			}
+		}
+	}
+
 	#endregion
 
 	#region Join
@@ -313,7 +318,7 @@ public static partial class Strings
 
 	#endregion
 
-	private static readonly string[] LineControlCharacters = new[] { "\n", "\r", Environment.NewLine };
+	private static readonly char[] LineControlCharacters = Environment.NewLine.ToCharArray();
 
 	private static readonly Encoding EncodingOEM =
 		CodePagesEncodingProvider.Instance.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage);

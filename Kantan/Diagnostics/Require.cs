@@ -7,7 +7,9 @@
 #pragma warning disable IDE0051, IDE0005
 
 #region Aliases
+
 global using VP = JetBrains.Annotations.ValueProviderAttribute;
+global using CMN = System.Runtime.CompilerServices.CallerMemberNameAttribute;
 global using CAE = System.Runtime.CompilerServices.CallerArgumentExpressionAttribute;
 global using ACT = JetBrains.Annotations.AssertionConditionType;
 global using AC = JetBrains.Annotations.AssertionConditionAttribute;
@@ -39,11 +41,14 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using JetBrains.Annotations;
 using Kantan.Collections;
 using Kantan.Text;
+using Kantan.Utilities;
+using static Kantan.KantanInit;
 
 #nullable enable
 
@@ -64,17 +69,18 @@ public static class Require
 
 	#region Contract annotations
 
-	private const string VALUE_NULL_HALT    = "value:null => halt";
-	private const string VALUE_NOTNULL_HALT = "value:notnull => halt";
-	private const string COND_FALSE_HALT    = "condition:false => halt";
-	private const string UNCONDITIONAL_HALT = "=> halt";
+	public const string CA_VALUE_NULL_HALT    = "value:null => halt";
+	public const string CA_VALUE_NOTNULL_HALT = "value:notnull => halt";
+	public const string CA_COND_FALSE_HALT    = "condition:false => halt";
+	public const string CA_UNCONDITIONAL_HALT = "=> halt";
 
 	private const ACT ACT_TRUE     = ACT.IS_TRUE;
 	private const ACT ACT_NOT_NULL = ACT.IS_NOT_NULL;
 
 	#endregion
 
-	public static bool QWrite(object o, [CallerArgumentExpression(nameof(o))] string? call = null)
+#if ALT
+	public static bool QWrite(object o, [CAE(nameof(o))] string? call = null)
 	{
 		//todo
 		string? s;
@@ -92,20 +98,22 @@ public static class Require
 			};
 		}
 
-		Console.WriteLine(s);
+		Trace.WriteLine(s);
 
 		return true;
 	}
+#endif
 
 	[DNR, DH, AM]
-	[CA(UNCONDITIONAL_HALT), SFM(KantanInit.STRING_FORMAT_ARG)]
-	public static void Fail(string? msg = null, params object[] args) => Fail<Exception>(msg, args);
+	[CA(CA_UNCONDITIONAL_HALT), SFM(STRING_FORMAT_ARG)]
+	public static void Fail(string? msg = null, params object[] args)
+		=> Fail<Exception>(msg, args);
 
 	/// <summary>
 	/// Root fail function
 	/// </summary>
 	[DNR, DH, AM]
-	[CA(UNCONDITIONAL_HALT), SFM(KantanInit.STRING_FORMAT_ARG)]
+	[CA(CA_UNCONDITIONAL_HALT), SFM(STRING_FORMAT_ARG)]
 	public static void Fail<TException>(string? msg = null, params object[] args)
 		where TException : Exception, new()
 	{
@@ -123,22 +131,8 @@ public static class Require
 		throw exception;
 	}
 
-	private static bool ActionThrows<TException>(Action f) where TException : Exception
-	{
-		bool throws = false;
-
-		try {
-			f();
-		}
-		catch (TException) {
-			throws = true;
-		}
-
-		return throws;
-	}
-
 	[DH, AM]
-	[CA(COND_FALSE_HALT)]
+	[CA(CA_COND_FALSE_HALT)]
 	public static void Assert([AC(ACT_TRUE), DNRI(false)] bool condition,
 	                          string? msg = null, params object[] args)
 		=> Assert<Exception>(condition, msg, args);
@@ -147,7 +141,7 @@ public static class Require
 	/// Root assertion function
 	/// </summary>
 	[DH, AM]
-	[CA(COND_FALSE_HALT), SFM(KantanInit.STRING_FORMAT_ARG)]
+	[CA(CA_COND_FALSE_HALT), SFM(STRING_FORMAT_ARG)]
 	public static void Assert<TException>([AC(ACT_TRUE), DNRI(false)] bool condition,
 	                                      string? msg = null, params object[] args)
 		where TException : Exception, new()
@@ -158,48 +152,60 @@ public static class Require
 	}
 
 	[DH, AM]
-	[CA(COND_FALSE_HALT)]
-	public static void Argument([AC(ACT_TRUE), DNRI(false)] bool condition,
-	                                  string? name = null)
+	[CA(CA_COND_FALSE_HALT)]
+	public static void Argument([AC(ACT_TRUE), DNRI(false)] bool condition, [CMN] string? name = null)
 		=> Assert<ArgumentException>(condition, name);
 
 	[DH, AM]
-	[CA(VALUE_NULL_HALT)]
-	public static void ArgumentNotNull([NN, AC(ACT_NOT_NULL)] object? value,
-	                                         string? name = null)
+	[CA(CA_VALUE_NULL_HALT)]
+	public static void ArgumentNotNull([NN, AC(ACT_NOT_NULL)] object? value, [CMN] string? name = null)
 		=> Assert<ArgumentNullException>(value != null, name);
 
 	[DH, AM]
-	[CA(VALUE_NULL_HALT)]
-	public static void NotNull([NN, AC(ACT_NOT_NULL)] object? value, string? name = null)
+	[CA(CA_VALUE_NULL_HALT)]
+	public static void NotNull([NN, AC(ACT_NOT_NULL)] object? value, [CMN] string? name = null)
 		=> Assert<NullReferenceException>(value != null, name);
 
 	[DH, AM]
-	[CA(VALUE_NULL_HALT)]
-	public static void NotNullOrWhiteSpace([NN, AC(ACT_NOT_NULL)] string? value, string? name = null)
+	[CA(CA_VALUE_NULL_HALT)]
+	public static void NotNullOrWhiteSpace([NN, AC(ACT_NOT_NULL)] string? value, [CMN] string? name = null)
 		=> Assert<NullReferenceException>(!String.IsNullOrWhiteSpace(value), name);
 
 	[DH, AM]
-	public static void Equal(object a, object b) => Assert(a.Equals(b));
+	public static void Equal(object a, object b)
+		=> Assert(a.Equals(b));
 
 	[DH, AM]
-	public static void Equal<T>(T a, T b) where T : IEquatable<T> => Assert(a.Equals(b));
+	public static void Equal<T>(T a, T b) where T : IEquatable<T>
+		=> Assert(a.Equals(b));
 
 	[DH, AM]
-	public static void Contains<T>(IEnumerable<T> enumerable, T value) => Assert(enumerable.Contains(value));
+	public static void Contains<T>(IEnumerable<T> enumerable, T value)
+		=> Assert(enumerable.Contains(value));
 
 	[DH, AM]
-	public static void NonNegative([NNV] long value, string? name = null) => Assert(value is > 0 or 0, name);
+	public static void Contains(string s, string value)
+		=> Assert(s.Contains(value));
 
 	[DH, AM]
-	public static void Positive([NNV] long value, string? name = null) => Assert(value > 0, name);
+	public static void NonNegative([NNV] long value, [CMN] string? name = null)
+		=> Assert(value is > 0 or 0, name);
 
 	[DH, AM]
-	public static void FileExists(string value, string? name = null)
+	public static void Positive([NNV] long value, [CMN] string? name = null)
+		=> Assert(value > 0, name);
+
+	[DH, AM]
+	public static void FileExists(string value, [CMN] string? name = null)
 		=> Assert<FileNotFoundException>(File.Exists(value), name);
 
 	[DH, AM]
-	public static void Throws<TException>(Action f) where TException : Exception => Assert(ActionThrows<TException>(f));
+	public static void Throws<TException>(Action f) where TException : Exception
+		=> Assert(FunctionHelper.ActionThrows<TException>(f));
+
+	[DH, AM]
+	public static void Throws(Action f)
+		=> Throws<Exception>(f);
 
 	[DH, AM]
 	public static void ForAll([AC(ACT_TRUE), DNRI(false)] params bool[] conditions)

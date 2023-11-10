@@ -30,9 +30,9 @@ public class NetworkTests
 				}
 			}";
 
-		dynamic execute = await g.ExecuteAsync(query);
+		var execute = await g.ExecuteAsync(query);
 
-		Assert.True(execute.data.Media.title.english.ToString().Contains("Cowboy Bebop"));
+		Assert.True(execute["data"]["Media"]["title"]["english"].ToString().Contains("Cowboy Bebop"));
 	}
 
 	[Test]
@@ -85,4 +85,3 @@ public class NetworkTests
 		Assert.True(UriUtilities.UrlEqual(a, b));
 	}
 }
-

@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Kantan.Monad;
 
@@ -11,6 +12,7 @@ using Kantan.Monad;
 // ReSharper disable UnusedMember.Global
 
 namespace Kantan.Threading;
+
 /*
  * https://github.com/UnoSD/ResultMonad/blob/master/Result/TaskExtensions.cs
  * https://github.com/UnoSD/ResultMonad/blob/master/Result/TaskResultExtensions.cs
@@ -191,6 +193,33 @@ public static class TaskHelper
 		}).Unwrap().GetAwaiter().GetResult();
 	}*/
 
+	public static Task<Task<T>>[] Interleaved<T>(IEnumerable<Task<T>> tasks)
+	{
+		var inputTasks = tasks.ToList();
+
+		var buckets = new TaskCompletionSource<Task<T>>[inputTasks.Count];
+		var results = new Task<Task<T>>[buckets.Length];
+
+		for (int i = 0; i < buckets.Length; i++) {
+			buckets[i] = new TaskCompletionSource<Task<T>>();
+			results[i] = buckets[i].Task;
+		}
+
+		int nextTaskIndex = -1;
+
+		Action<Task<T>> continuation = completed =>
+		{
+			var bucket = buckets[Interlocked.Increment(ref nextTaskIndex)];
+			bucket.TrySetResult(completed);
+		};
+
+		foreach (var inputTask in inputTasks)
+			inputTask.ContinueWith(continuation, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously,
+			                       TaskScheduler.Default);
+
+		return results;
+	}
+
 	public static TResult RunSync<TResult>(this Task<TResult> func)
 	{
 		return func.GetAwaiter().GetResult();
@@ -228,7 +257,8 @@ public static class TaskHelper
 			error();
 	}
 
-	public static Task<T> ToTask<T>(this T source) => Task.FromResult(source);
+	public static Task<T> ToTask<T>(this T source)
+		=> Task.FromResult(source);
 
 	public static Task<TResult> Select<T, TResult>
 	(
@@ -273,9 +303,11 @@ public static class TaskHelper
 		=> source.Map(func)
 			.Unwrap();
 
-	public static Task<T[]> WhenAll<T>(this IEnumerable<Task<T>> tasks) => Task.WhenAll(tasks);
+	public static Task<T[]> WhenAll<T>(this IEnumerable<Task<T>> tasks)
+		=> Task.WhenAll(tasks);
 
-	public static Task WhenAll(this IEnumerable<Task> tasks) => Task.WhenAll(tasks);
+	public static Task WhenAll(this IEnumerable<Task> tasks)
+		=> Task.WhenAll(tasks);
 
 	public static async Task WhenAllSequential(this IEnumerable<Task> tasks)
 	{
@@ -300,26 +332,30 @@ public static class TaskHelper
 	(
 		this Task<T> source,
 		Func<T, IResult<TResult>> func
-	) => source.Map(func);
+	)
+		=> source.Map(func);
 
 	public static Task<IResult<TOutput>> SelectMany<T, TResult, TOutput>
 	(
 		this Task<T> source,
 		Func<T, IResult<TResult>> func,
 		Func<T, TResult, TOutput> project
-	) => source.Map(tres => func(tres).Map(fres => project(tres, fres)));
+	)
+		=> source.Map(tres => func(tres).Map(fres => project(tres, fres)));
 
 	public static Task<IResult<TResult>> Select<T, TResult>
 	(
 		this IResult<T> source,
 		Func<T, Task<TResult>> func
-	) => source.MapAsync(func);
+	)
+		=> source.MapAsync(func);
 
 	public static Task<IResult<TResult>> MapAsync<T, TResult>
 	(
 		this IResult<T> source,
 		Func<T, Task<TResult>> func
-	) => source.Match(result => func(result).Map(o => o.ToResult()),
-	                  error => error.ToFailureResult<TResult>()
-		                  .ToTask());
+	)
+		=> source.Match(result => func(result).Map(o => o.ToResult()),
+		                error => error.ToFailureResult<TResult>()
+			                .ToTask());
 }

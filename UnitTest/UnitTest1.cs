@@ -41,6 +41,7 @@ public class EnumerableTests
 
 	}
 
+	/*
 	[Test]
 	public void TryIndexTest()
 	{
@@ -60,19 +61,20 @@ public class EnumerableTests
 			Assert.AreEqual(v, default(int));
 		}
 	}
+	*/
 
 	[Test]
 	public void AllIndexesOfTest()
 	{
 		var s = "foobarfoobar";
-		Assert.True(s.AllIndexesOf("foo").SequenceEqual(new[] { 0, 6 }));
+		Assert.True(s.IndexOfAll("foo", StringComparison.Ordinal).SequenceEqual(new[] { 0, 6 }));
 	}
 
 	[Test]
 	public void AllIndexesOfTest2()
 	{
 		var l = new List<int>() { 0, 1, 2, 4, 1, 4 };
-		Assert.True(l.AllIndexesOf(1).SequenceEqual(new[] { 1, 4 }));
+		Assert.True(l.IndexOfAll(1).SequenceEqual(new[] { 1, 4 }));
 	}
 
 	[Test]

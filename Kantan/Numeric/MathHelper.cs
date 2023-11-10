@@ -45,6 +45,19 @@ public static class MathHelper
 		}
 	}*/
 
+	public static bool IsInRange(this Range range, int value)
+	{
+		int start = range.Start.GetOffset(0);
+		int end   = range.End.GetOffset(value);
+
+		return value >= start && value < end;
+	}
+
+	public static bool IsInRange<T>(T i, T hi) where T : INumber<T>
+	{
+		return i >= T.Zero && i < hi;
+	}
+
 	public static T Wrap<T>(T i, T n) where T : INumber<T>
 	{
 		return ((i % n) + n) % n;

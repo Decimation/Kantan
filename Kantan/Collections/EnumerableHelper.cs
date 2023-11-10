@@ -6,10 +6,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Kantan.Monad;
+using Kantan.Numeric;
 using Kantan.Text;
 using Kantan.Threading;
 using Map = System.Collections.Generic.Dictionary<object, object>;
@@ -89,8 +91,13 @@ public static class EnumerableHelper
 	public static T TakeRandom<T>(this IList<T> list)
 	{
 		int i = KantanInit.RandomInstance.Next(list.Count);
-
+		
 		return list[i];
+	}
+
+	public static bool IsIndexWithinBounds<T>(this IList<T> r, int index)
+	{
+		return MathHelper.IsInRange(index, r.Count);
 	}
 
 	public static IEnumerable<T> TakeRandom<T>(this IList<T> list, int cnt) => list.Shuffle().Take(cnt);
@@ -105,7 +112,7 @@ public static class EnumerableHelper
 
 	public delegate int IndexOfCallback<in T>(T search, int start);
 
-	public static IEnumerable<int> AllIndexesOf<T>(IndexOfCallback<T> callback, int inc, T search)
+	public static IEnumerable<int> IndexOfAll<T>(IndexOfCallback<T> callback, int inc, T search)
 	{
 		int minIndex = callback(search, 0);
 
@@ -115,8 +122,8 @@ public static class EnumerableHelper
 		}
 	}
 
-	public static IEnumerable<int> AllIndexesOf<T>(this List<T> list, T search)
-		=> AllIndexesOf(list.IndexOf, 1, search);
+	public static IEnumerable<int> IndexOfAll<T>(this List<T> list, T search)
+		=> IndexOfAll(list.IndexOf, 1, search);
 
 	/// <summary>
 	/// Replaces all occurrences of sequence <paramref name="sequence"/> within <paramref name="rg"/> with <paramref name="replace"/>.
@@ -172,7 +179,7 @@ public static class EnumerableHelper
 
 	public static List<T> CastToList<T>(this IEnumerable value) => value.Cast<T>().ToList();
 
-	private static bool TryIndex<T>(Index i, int len, out T value)
+	/*private static bool TryIndex<T>(Index i, int len, out T value)
 	{
 		value = default;
 
@@ -204,7 +211,7 @@ public static class EnumerableHelper
 
 		return b;
 
-	}
+	}*/
 
 	#region Dictionary
 
@@ -286,41 +293,44 @@ public static class EnumerableHelper
 	public static IEnumerable<T> Cons<T>(this IEnumerable<T> source, T item) => new[] { item }.Concat(source);
 
 	public static IResult<IEnumerable<T>> AllOrNothing<T>
-		(this IEnumerable<IResult<T>> source) =>
-			source.Aggregate
-			(
-				 Enumerable.Empty<T>()
-						   .ToResult(),
-				 (left, right) =>
-					 left is IFailureResult<IEnumerable<T>> failure ?
-						 $"{failure.Error}\n{right.Match(_ => string.Empty, error => error)}"
-							 .ToFailureResult<IEnumerable<T>>() :
-					 left is ISuccessResult<IEnumerable<T>> success ?
-						 right is ISuccessResult<T> s ? success.Result
-															   .Cons(s.Result)
-															   .ToResult() :
-						 right is IFailureResult<T> f ? f.Error
-														 .ToFailureResult<IEnumerable<T>>() :
-						 throw new ArgumentNullException(nameof(right)) :
-						 throw new ArgumentNullException(nameof(left))
-			);
+		(this IEnumerable<IResult<T>> source)
+		=> source.Aggregate
+		(
+			Enumerable.Empty<T>()
+				.ToResult(),
+			(left, right) =>
+				left is IFailureResult<IEnumerable<T>> failure
+					? $"{failure.Error}\n{right.Match(_ => string.Empty, error => error)}"
+						.ToFailureResult<IEnumerable<T>>()
+					: left is ISuccessResult<IEnumerable<T>> success
+						? right is ISuccessResult<T> s ? success.Result
+							  .Cons(s.Result)
+							  .ToResult() :
+						  right is IFailureResult<T> f ? f.Error
+							                                 .ToFailureResult<IEnumerable<T>>() :
+						                                 throw new ArgumentNullException(nameof(right))
+						: throw new ArgumentNullException(nameof(left))
+		);
 
 	static IResult<IEnumerable<T>> AnyOrNothing<T>
-	(this IEnumerable<IResult<T>> source) =>
-		source.Aggregate
+		(this IEnumerable<IResult<T>> source)
+		=> source.Aggregate
 		(
-			 string.Empty
-				   .ToFailureResult<IEnumerable<T>>(),
-			 (left, right) =>
-				 right is ISuccessResult<T> success ?
-					 left is ISuccessResult<IEnumerable<T>> s ? s.Result.Cons(success.Result).ToResult() :
-					 left is IFailureResult<IEnumerable<T>> _ ? new[] { success.Result }.ToResult() :
-					 throw new ArgumentNullException(nameof(left)) :
-				 right is IFailureResult<T> failure ?
-					 left is ISuccessResult<IEnumerable<T>> ? left :
-					 left is IFailureResult<IEnumerable<T>> f ? $"{failure.Error}\n{f.Error}".ToFailureResult<IEnumerable<T>>() :
-					 throw new ArgumentNullException(nameof(left)) :
-				 throw new ArgumentNullException(nameof(right))
+			string.Empty
+				.ToFailureResult<IEnumerable<T>>(),
+			(left, right) =>
+				right is ISuccessResult<T> success ? left is ISuccessResult<IEnumerable<T>> s
+					                                     ? s.Result.Cons(success.Result).ToResult()
+					                                     : left is IFailureResult<IEnumerable<T>> _
+						                                     ? new[] { success.Result }.ToResult()
+						                                     : throw new ArgumentNullException(nameof(left)) :
+				right is IFailureResult<T> failure ? left is ISuccessResult<IEnumerable<T>>
+					                                     ? left
+					                                     : left is IFailureResult<IEnumerable<T>> f
+						                                     ? $"{failure.Error}\n{f.Error}"
+							                                     .ToFailureResult<IEnumerable<T>>()
+						                                     : throw new ArgumentNullException(nameof(left)) :
+				                                     throw new ArgumentNullException(nameof(right))
 		);
 
 	// This call is ambiguous with SelectMany<IEnumerable<T>, T>
@@ -330,7 +340,8 @@ public static class EnumerableHelper
 	(
 		this IResult<IEnumerable<T>> source,
 		Func<T, IResult<TResult>> func
-	) => source.BindMany(func);
+	)
+		=> source.BindMany(func);
 
 	// We enumerate the enumerable two times, one for the BindMany
 	// and one for the Zip, should really be an IReadOnlyCollection<T>
@@ -340,45 +351,50 @@ public static class EnumerableHelper
 		this IResult<IEnumerable<T>> source,
 		Func<T, IResult<TResult>> func,
 		Func<T, TResult, TOutput> projection
-	) => source.BindMany(func)
-			   .Bind(result =>
-						 ((ISuccessResult<IEnumerable<T>>)source)
-							 .Result
-							 .Zip(result, projection)
-							 .ToResult());
+	)
+		=> source.BindMany(func)
+			.Bind(result =>
+				      ((ISuccessResult<IEnumerable<T>>) source)
+				      .Result
+				      .Zip(result, projection)
+				      .ToResult());
 
 	public static IResult<IEnumerable<TResult>> BindMany<T, TResult>
 	(
 		this IResult<IEnumerable<T>> source,
 		Func<T, IResult<TResult>> func
-	) => source.Match(success => success.Select(func).AllOrNothing(),
-					  failure => failure.ToFailureResult<TResult[]>());
+	)
+		=> source.Match(success => success.Select(func).AllOrNothing(),
+		                failure => failure.ToFailureResult<TResult[]>());
 
 	public static Task<IResult<IEnumerable<TResult>>> SelectMany<T, TResult>
 	(
 		this IResult<IEnumerable<T>> source,
 		Func<T, Task<IResult<TResult>>> func
-	) => source.BindManyAsync(func);
+	)
+		=> source.BindManyAsync(func);
 
 	public static Task<IResult<IEnumerable<TOutput>>> SelectMany<T, TResult, TOutput>
 	(
 		this IResult<IEnumerable<T>> source,
 		Func<T, Task<IResult<TResult>>> func,
 		Func<T, TResult, TOutput> projection
-	) => source.BindManyAsync(func)
-			   .BindAsync(result =>
-				   result.Zip(((ISuccessResult<IEnumerable<T>>)source).Result,
-							  (l, r) => projection(r, l))
-						 .ToResult());
+	)
+		=> source.BindManyAsync(func)
+			.BindAsync(result =>
+				           result.Zip(((ISuccessResult<IEnumerable<T>>) source).Result,
+				                      (l, r) => projection(r, l))
+					           .ToResult());
 
 	public static Task<IResult<IEnumerable<TResult>>> BindManyAsync<T, TResult>
 	(
 		this IResult<IEnumerable<T>> source,
 		Func<T, Task<IResult<TResult>>> func
-	) => source.Match(result => result.Select(func)
-									  .WhenAll()
-									  .Map(t => t.AllOrNothing()),
-					  error => error.ToFailureResult<IEnumerable<TResult>>().ToTask());
+	)
+		=> source.Match(result => result.Select(func)
+			                .WhenAll()
+			                .Map(t => t.AllOrNothing()),
+		                error => error.ToFailureResult<IEnumerable<TResult>>().ToTask());
 
 	// First error message is lost when second fails
 	public static Task<IResult<IEnumerable<TResult>>> BindManyAsync<T, TResult>
@@ -386,21 +402,24 @@ public static class EnumerableHelper
 		this IResult<IEnumerable<T>> source,
 		Func<T, Task<IResult<TResult>>> func,
 		Func<T, Task<IResult<TResult>>> fallbackFunc
-	) => source.BindManyAsync(func)
-			   .MatchAsync(result => result.ToResult().ToTask(),
-						   _ => source.BindManyAsync(fallbackFunc)).Unwrap();
+	)
+		=> source.BindManyAsync(func)
+			.MatchAsync(result => result.ToResult().ToTask(),
+			            _ => source.BindManyAsync(fallbackFunc)).Unwrap();
 
 	public static IResult<IEnumerable<TResult>> BindMultipleAll<T, TResult>
 	(
 		this IResult<T> source,
 		params Func<T, IResult<TResult>>[] func
-	) => source.Match(result => func.Select(fun => fun(result)).AllOrNothing(),
-					  error => error.ToFailureResult<IEnumerable<TResult>>());
+	)
+		=> source.Match(result => func.Select(fun => fun(result)).AllOrNothing(),
+		                error => error.ToFailureResult<IEnumerable<TResult>>());
 
 	public static IResult<IEnumerable<TResult>> BindMultipleAny<T, TResult>
 	(
 		this IResult<T> source,
 		params Func<T, IResult<TResult>>[] func
-	) => source.Match(result => func.Select(fun => fun(result)).AnyOrNothing(),
-					  error => error.ToFailureResult<IEnumerable<TResult>>());
+	)
+		=> source.Match(result => func.Select(fun => fun(result)).AnyOrNothing(),
+		                error => error.ToFailureResult<IEnumerable<TResult>>());
 }

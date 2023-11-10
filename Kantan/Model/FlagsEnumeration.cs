@@ -11,8 +11,10 @@ using Kantan.Text;
 
 namespace Kantan.Model;
 
-public abstract class FlagsEnumeration : Enumeration
+public abstract class FlagsEnumeration : Enumeration,
+	IBitwiseOperators<FlagsEnumeration, FlagsEnumeration, FlagsEnumeration>
 {
+
 	protected FlagsEnumeration(int id, string name) : base(id, name) { }
 
 	public FlagsEnumeration Or(FlagsEnumeration f)
@@ -55,13 +57,16 @@ public abstract class FlagsEnumeration : Enumeration
 
 	public abstract FlagsEnumeration Copy();
 
-	public static FlagsEnumeration operator &(FlagsEnumeration f, FlagsEnumeration f2) => f.Copy().And(f2);
+	public static FlagsEnumeration operator &(FlagsEnumeration f, FlagsEnumeration f2)
+		=> f.Copy().And(f2);
 
-	public static FlagsEnumeration operator |(FlagsEnumeration f, FlagsEnumeration f2) => f.Copy().Or(f2);
+	public static FlagsEnumeration operator |(FlagsEnumeration f, FlagsEnumeration f2)
+		=> f.Copy().Or(f2);
 
-	public static FlagsEnumeration operator ^(FlagsEnumeration f, FlagsEnumeration f2) => f.Copy().Xor(f2);
+	public static FlagsEnumeration operator ^(FlagsEnumeration f, FlagsEnumeration f2)
+		=> f.Copy().Xor(f2);
 
-	public static FlagsEnumeration operator ~(FlagsEnumeration f) => f.Copy().Not();
+	public static FlagsEnumeration operator ~(FlagsEnumeration f)
+		=> f.Copy().Not();
 
-		
 }

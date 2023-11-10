@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Json;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
@@ -7,9 +8,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Flurl.Http;
+using Jint.Native.Json;
 using Kantan.Utilities;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
@@ -48,7 +49,7 @@ public class GraphQLClient : IDisposable
 
 	}
 
-	public async Task<dynamic> ExecuteAsync(string query, object variables = null,
+	public async Task<JsonValue> ExecuteAsync(string query, object variables = null,
 	                                        Dictionary<string, string> additionalHeaders = null,
 	                                        int timeout = -1)
 	{
@@ -78,13 +79,12 @@ public class GraphQLClient : IDisposable
 			variables = variables
 		};
 
-		var c = new StringContent(JsonConvert.SerializeObject(obj), Encoding.UTF8,
-		                          "application/json");
+		var c = new StringContent(JsonSerializer.Serialize(obj), Encoding.UTF8, "application/json");
 
-		var response = await r.PostAsync(content: c);
+		var response = await r.PostJsonAsync(obj);
 		var task     = await response.GetStringAsync();
 
-		return JObject.Parse(task);
+		return JsonValue.Parse(task);
 	}
 
 	public void Dispose()

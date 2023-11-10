@@ -71,7 +71,7 @@ public static class HttpUtilities
 				{ }
 		};*/
 
-		ServicePointManager.DefaultConnectionLimit = 300;
+		ServicePointManager.DefaultConnectionLimit = int.MaxValue;
 
 		ServicePointManager.SecurityProtocol =
 			SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
@@ -79,19 +79,16 @@ public static class HttpUtilities
 		const string fieldName = "_sendStatus";
 
 		RequestStatusField = typeof(HttpRequestMessage)
-		                     .GetTypeInfo()
-		                     .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+			.GetTypeInfo()
+			.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
 
 	}
 
-	[CBN]
-	public static string GetFinalRedirect(string url)
+	public static async Task<Url> GetFinalRedirectAsync(Url url)
 	{
 		// https://stackoverflow.com/questions/704956/getting-the-redirected-url-from-the-original-url
 
-		if (String.IsNullOrWhiteSpace(url)) {
-			return url;
-		}
+		Require.NotNullOrWhiteSpace(url);
 
 		const int MAX_REDIR = 8;
 
@@ -112,12 +109,14 @@ public static class HttpUtilities
 							MaxAutoRedirects = MaxAutoRedirects
 						}
 					},
-					Verb = HttpMethod.Head
+					Verb = HttpMethod.Head,
+					Client = Client
 				};
 
-				var resp1 = req.WithClient(Client).AllowAnyHttpStatus().SendAsync(HttpMethod.Head);
-				resp1.Wait();
-				var resp = resp1?.Result.ResponseMessage;
+				var resp1 = await req.AllowAnyHttpStatus()
+					            .SendAsync(HttpMethod.Head);
+
+				var resp = resp1.ResponseMessage;
 
 				switch (resp.StatusCode) {
 					case HttpStatusCode.OK:
@@ -151,7 +150,7 @@ public static class HttpUtilities
 				return newUrl;
 			}
 			catch (Exception) {
-				return null;
+				return newUrl;
 			}
 		} while (maxRedirCount-- > 0);
 
@@ -356,6 +355,7 @@ public static class HttpUtilities
 
 	public static void OpenUrl(string url)
 	{
+		//todo
 		// https://stackoverflow.com/questions/4580263/how-to-open-in-default-browser-in-c-sharp
 		// url must start with a protocol i.e. http://
 

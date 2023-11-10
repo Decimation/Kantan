@@ -46,4 +46,18 @@ public static class FunctionHelper
 
 		return rg;
 	}
+
+	public static bool ActionThrows<TException>(Action f) where TException : Exception
+	{
+		bool throws = false;
+
+		try {
+			f();
+		}
+		catch (TException) {
+			throws = true;
+		}
+
+		return throws;
+	}
 }
