@@ -14,12 +14,15 @@ namespace Kantan.Net.Utilities;
 
 public static class HostUtilities
 {
+
+	private const int TIMEOUT_DEFAULT = -1;
+
 	public static Task<IPGeolocation> GetIPInformationAsync()
 	{
 		var task = (Resources.IFConfigUrl).WithHeaders(new
 		{
 			Accept     = "application/json",
-			User_Agent = HttpUtilities.UserAgent
+			User_Agent = Resources.UserAgent,
 		}).GetJsonAsync<IPGeolocation>();
 
 		return task;
@@ -44,17 +47,6 @@ public static class HostUtilities
 		return GetHostAddress(s).ToString();
 	}
 
-	public static Task<PingReply> PingAsync(Uri u, int? ms = null)
-		=> PingAsync(GetAddress(u.ToString()), ms);
-
-	public static async Task<PingReply> PingAsync(string hostOrIP, int? ms = null)
-	{
-		using var ping = new Ping();
-		
-		var task = await ping.SendPingAsync(hostOrIP, ms ?? HttpUtilities.Timeout);
-
-		return task;
-	}
 }
 
 // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse); 

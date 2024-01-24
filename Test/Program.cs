@@ -84,14 +84,14 @@ public static partial class Program
 		Console.WriteLine(new[]{1,} is IList<int>);
 		Console.WriteLine("butt");
 		Console.WriteLine(TE1.GetNextId<TE1>());
-		Console.WriteLine(TE1.GetAll().QuickJoin());
+		Console.WriteLine(TE1.GetAll<TE1>().QuickJoin());
 	}
 
 	public class TE1 : Enumeration<byte>
 	{
 
 		public static readonly TE1 a = new(0, "butt");
-		public static readonly TE1 b = new(1, "butt");
+		public static readonly TE1 b = new(1, "hi");
 		public static readonly TE1 c = new("waifu");
 		public TE1(string name) : base(TE1.GetNextId<TE1>(), name) { }
 		public TE1(byte id, string name) : base(id, name) { }

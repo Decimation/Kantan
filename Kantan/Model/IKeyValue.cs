@@ -5,7 +5,14 @@ using System.Collections.Generic;
 
 namespace Kantan.Model;
 
-public interface IKeyValue
+/*public interface IKeyValue : IKeyValue<string, object>
 {
-	public KeyValuePair<string, object>[] KeyValues { get; }
+
+}*/
+
+public interface IKeyValue<TKey, TValue>
+{
+
+	public IList<KeyValuePair<TKey, TValue>> GetKeyValues();
+
 }

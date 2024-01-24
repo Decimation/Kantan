@@ -43,25 +43,9 @@ namespace Kantan.Net.Utilities;
 /// <seealso cref="HttpUtility" />
 public static class HttpUtilities
 {
-	public static int Timeout { get; set; } = 2000;
 
-	public static int MaxAutoRedirects { get; set; } = 50;
-
-	public static string UserAgent { get; set; } = Resources.UserAgent;
-
-	public static FlurlClient Client { get; internal set; } = new()
-	{
-		Settings =
-		{
-			Redirects =
-			{
-				AllowSecureToInsecure = true,
-				Enabled               = true
-			},
-
-		},
-
-	};
+	public static readonly string UserAgent
+		= Resources.UserAgent;
 
 	static HttpUtilities()
 	{
@@ -105,12 +89,13 @@ public static class HttpUtilities
 					{
 						Redirects =
 						{
-							Enabled          = true,
-							MaxAutoRedirects = MaxAutoRedirects
-						}
+							Enabled               = true,
+							MaxAutoRedirects      = MAX_REDIR,
+							AllowSecureToInsecure = true,
+						},
+						Timeout = TimeSpan.FromSeconds(5),
 					},
 					Verb = HttpMethod.Head,
-					Client = Client
 				};
 
 				var resp1 = await req.AllowAnyHttpStatus()
@@ -155,68 +140,6 @@ public static class HttpUtilities
 		} while (maxRedirCount-- > 0);
 
 		return newUrl;
-	}
-
-	public static string GetFile(string url, string folder)
-	{
-		string    fileName = Path.GetFileName(url);
-		using var client   = new HttpClient();
-
-		client.DefaultRequestHeaders.Add("User-Agent", UserAgent);
-		string dir = Path.Combine(folder, fileName);
-		client.DownloadFile(url, dir);
-
-		return dir;
-	}
-
-	public static IHtmlDocument GetHtmlDocument(this HttpResponseMessage r)
-	{
-		Task<string> task = r.Content.ReadAsStringAsync();
-		task.Wait();
-		string html = task.Result;
-
-		var parser = new HtmlParser();
-
-		var document = parser.ParseDocument(html);
-		return document;
-	}
-
-	public static Stream GetStream(this HttpClient client, string url)
-	{
-		var task = client.GetStreamAsync(url);
-		task.Wait();
-		return task.Result;
-	}
-
-	public static string DownloadString(this HttpClient client, string url)
-	{
-		var task = client.GetStringAsync(url);
-		task.Wait();
-		return task.Result;
-	}
-
-	public static byte[] DownloadData(this HttpClient client, string url)
-	{
-		var task = client.GetByteArrayAsync(url);
-		task.Wait();
-		return task.Result;
-	}
-
-	public static string DownloadFile(this HttpClient client, string url)
-	{
-		var fname = Path.GetFileName(url);
-		var tmp   = Path.Combine(Path.GetTempPath(), fname);
-
-		return client.DownloadFile(url, tmp);
-	}
-
-	public static string DownloadFile(this HttpClient client, string url, string output)
-	{
-		var bytes = client.DownloadData(url);
-
-		File.WriteAllBytes(output, bytes);
-
-		return output;
 	}
 
 	/*[CBN]
@@ -337,37 +260,40 @@ public static class HttpUtilities
 		}
 	}*/
 
-	public static bool TryOpenUrl([CBN] string u)
+	public static bool TryOpenUrl([CBN] string u, out Process p)
 	{
+		bool b;
+		p = null;
+
 		try {
-			var b = (!string.IsNullOrWhiteSpace(u)) && Url.IsValid(u);
+			b = (!string.IsNullOrWhiteSpace(u)) && Url.IsValid(u);
 
 			if (b) {
-				OpenUrl(u);
+				OpenUrl(u, out p);
 			}
-
-			return b;
 		}
 		catch (Exception e) {
-			return false;
+			b = false;
 		}
+
+		return b;
 	}
 
-	public static void OpenUrl(string url)
+	public static void OpenUrl(string url, out Process p)
 	{
 		//todo
 		// https://stackoverflow.com/questions/4580263/how-to-open-in-default-browser-in-c-sharp
 		// url must start with a protocol i.e. http://
 
 		try {
-			Process.Start(url);
+			p = Process.Start(url);
 		}
 		catch {
 			// hack because of this: https://github.com/dotnet/corefx/issues/10361
 			if (OperatingSystem.IsWindows()) {
 				url = url.Replace("&", "^&");
 
-				Process.Start(new ProcessStartInfo("cmd", $"/c start {url}")
+				p = Process.Start(new ProcessStartInfo("cmd", $"/c start {url}")
 				{
 					CreateNoWindow = true
 				});
@@ -414,4 +340,5 @@ public static class HttpUtilities
 
 		return t;
 	}*/
+
 }

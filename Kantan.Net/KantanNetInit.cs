@@ -48,8 +48,6 @@ public static class KantanNetInit
 
 	public static void Close()
 	{
-		HttpUtilities.Client.Dispose();
-		
 		//todo...
 	}
 }

@@ -27,16 +27,16 @@ public static class UriUtilities
 	 * https://stackoverflow.com/questions/1222610/check-if-2-urls-are-equal
 	 */
 
-	public static Uri Normalize(this Uri u) => new(NormalizeUrl(u));
+	public static Uri Normalize(this Uri u) => new(NormalizeUri(u));
 
 	/// <summary>
 	/// Determines whether <paramref name="url1"/> is equal to <paramref name="url2"/>
 	/// when both are normalized.
 	/// </summary>
-	public static bool UrlEqual(string url1, string url2)
+	public static bool UriEqual(string url1, string url2)
 	{
-		url1 = NormalizeUrl(url1);
-		url2 = NormalizeUrl(url2);
+		url1 = NormalizeUri(url1);
+		url2 = NormalizeUri(url2);
 		return url1.Equals(url2);
 	}
 
@@ -44,10 +44,10 @@ public static class UriUtilities
 	/// Compares <paramref name="url1"/> to <paramref name="url2"/>
 	/// when both are normalized.
 	/// </summary>
-	public static int UrlCompare(string url1, string url2)
+	public static int UriCompare(string url1, string url2)
 	{
-		url1 = NormalizeUrl(url1);
-		url2 = NormalizeUrl(url2);
+		url1 = NormalizeUri(url1);
+		url2 = NormalizeUri(url2);
 		return String.Compare(url1, url2, StringComparison.Ordinal);
 	}
 
@@ -55,19 +55,19 @@ public static class UriUtilities
 	/// Compares <paramref name="url1"/> to <paramref name="url2"/>
 	/// when both are normalized.
 	/// </summary>
-	public static int UrlCompare(Uri url1, Uri url2)
+	public static int UriCompare(Uri url1, Uri url2)
 	{
-		return UrlCompare(url1.ToString(), url2.ToString());
+		return UriCompare(url1.ToString(), url2.ToString());
 	}
 
 	/// <summary>
 	/// Determines whether <paramref name="uri1"/> is equal to <paramref name="uri2"/>
 	/// when both are normalized.
 	/// </summary>
-	public static bool UrlEqual(Uri uri1, Uri uri2)
+	public static bool UriEqual(Uri uri1, Uri uri2)
 	{
-		var url1 = NormalizeUrl(uri1);
-		var url2 = NormalizeUrl(uri2);
+		var url1 = NormalizeUri(uri1);
+		var url2 = NormalizeUri(uri2);
 		return url1.Equals(url2);
 	}
 
@@ -80,27 +80,27 @@ public static class UriUtilities
 		"index.php"
 	};
 
-	public static string RemoveUrlQueries(string url)
+	public static string RemoveUriQueries(string url)
 	{
 		var uri = new Uri(url);
 		return uri.GetLeftPart(UriPartial.Path);
 	}
 
-	public static string NormalizeUrl(Uri uri)
+	public static string NormalizeUri(Uri uri)
 	{
-		var url = UrlToLower(uri);
+		var url = UriToLower(uri);
 		url = LimitProtocols(url);
 		url = RemoveDefaultDirectoryIndexes(url);
 		url = RemoveFragment(url);
 		url = RemoveDuplicateSlashes(url);
 		url = AddWWW(url);
 		url = RemoveFeedburnerPart(url);
-		url = RemoveUrlQueries(url);
+		url = RemoveUriQueries(url);
 		url = RemoveTrailingSlashAndEmptyQuery(url);
 		return url;
 	}
 
-	public static string NormalizeUrl(string url) => NormalizeUrl(new Uri(url));
+	public static string NormalizeUri(string url) => NormalizeUri(new Uri(url));
 
 	public static string RemoveFeedburnerPart(string url)
 	{
@@ -134,7 +134,7 @@ public static class UriUtilities
 		return String.IsNullOrWhiteSpace(fragment) ? url : url.Replace(fragment, String.Empty);
 	}
 
-	public static string UrlToLower(Uri uri) => HttpUtility.UrlDecode(uri.AbsoluteUri.ToLowerInvariant());
+	public static string UriToLower(Uri uri) => HttpUtility.UrlDecode(uri.AbsoluteUri.ToLowerInvariant());
 
 	public static string RemoveTrailingSlashAndEmptyQuery(string url)
 	{

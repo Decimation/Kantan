@@ -82,6 +82,6 @@ public class NetworkTests
 		"https://danbooru.donmai.us/data/original/ca/7b/__re_l_mayer_ergo_proxy_drawn_by_koyorin__ca7b942f24b30e3a7a6f49b932fa2d56.png")]
 	public void UrlUtilTest(string a, string b)
 	{
-		Assert.True(UriUtilities.UrlEqual(a, b));
+		Assert.True(UriUtilities.UriEqual(a, b));
 	}
 }

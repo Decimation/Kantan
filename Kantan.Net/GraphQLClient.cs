@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Flurl.Http;
-using Jint.Native.Json;
 using Kantan.Utilities;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
@@ -60,7 +59,8 @@ public class GraphQLClient : IDisposable
 		{
 			Settings =
 			{
-				Timeout = t
+				Timeout = t,
+				AllowedHttpStatusRange = "*"
 			},
 			Client = Client,
 			Url    = Endpoint,
@@ -79,7 +79,7 @@ public class GraphQLClient : IDisposable
 			variables = variables
 		};
 
-		var c = new StringContent(JsonSerializer.Serialize(obj), Encoding.UTF8, "application/json");
+		// var c = new StringContent(JsonSerializer.Serialize(obj), Encoding.UTF8, "application/json");
 
 		var response = await r.PostJsonAsync(obj);
 		var task     = await response.GetStringAsync();
