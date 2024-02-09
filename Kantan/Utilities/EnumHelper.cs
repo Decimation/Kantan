@@ -5,6 +5,7 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using Kantan.Text;
 
@@ -17,16 +18,26 @@ namespace Kantan.Utilities;
 /// </summary>
 public static class EnumHelper
 {
-	public static List<TEnum> GetSetFlags<TEnum>(TEnum value, bool excludeZero = true) where TEnum : Enum
+
+	public static List<TEnum> GetSetFlags<TEnum>(this TEnum value, bool excludeZero = true, bool excludeValue = false)
+		where TEnum : Enum
 	{
 		var flags = Enum.GetValues(typeof(TEnum))
-		                .Cast<TEnum>()
-		                .Where(f => value.HasFlag(f))
-		                .ToList();
+			.Cast<TEnum>()
+			.Where(f =>
+			{
+				var flag = value.HasFlag(f);
+				return flag;
+			})
+			.ToList();
 
 		if (excludeZero) {
 			flags.RemoveAll(e => Convert.ToInt32(e) == 0);
 
+		}
+
+		if (excludeValue) {
+			flags.RemoveAll(e => value.Equals(e));
 		}
 
 		//flags.RemoveAll(e => e.Equals(value));
@@ -63,52 +74,50 @@ public static class EnumHelper
 	}
 
 	#region Generic bitwise operations
+
 	// TODO: .NET 7
-	public static TEnum Or<TEnum>(this TEnum t, TEnum t2) where TEnum : struct, Enum
-	{
-		unsafe {
-			Trace.Assert(Unsafe.SizeOf<TEnum>() == sizeof(int));
-			var ptr  = (int*) Unsafe.AsPointer(ref t);
-			var ptr2 = (int*) Unsafe.AsPointer(ref t2);
 
-			*ptr |= *ptr2;
-			return Unsafe.As<int, TEnum>(ref *ptr);
+	public static TEnum Or<TEnum>(TEnum t, TEnum t2) where TEnum : struct, Enum
+	{
+		if (Enum.GetUnderlyingType(typeof(TEnum)) != typeof(int)) {
+			throw new NotImplementedException();
 		}
+
+		var v = Unsafe.As<TEnum, int>(ref t) | Unsafe.As<TEnum, int>(ref t2);
+		return Unsafe.As<int, TEnum>(ref v);
 	}
 
-	public static TEnum And<TEnum>(this TEnum t, TEnum t2) where TEnum : struct, Enum
+	public static TEnum And<TEnum>(TEnum t, TEnum t2) where TEnum : struct, Enum
 	{
-		unsafe {
-			Trace.Assert(Unsafe.SizeOf<TEnum>() == sizeof(int));
-			var ptr  = (int*) Unsafe.AsPointer(ref t);
-			var ptr2 = (int*) Unsafe.AsPointer(ref t2);
-
-			*ptr &= *ptr2;
-			return Unsafe.As<int, TEnum>(ref *ptr);
+		if (Enum.GetUnderlyingType(typeof(TEnum)) != typeof(int)) {
+			throw new NotImplementedException();
 		}
+
+		var v = Unsafe.As<TEnum, int>(ref t) & Unsafe.As<TEnum, int>(ref t2);
+		return Unsafe.As<int, TEnum>(ref v);
 	}
 
-	public static TEnum Xor<TEnum>(this TEnum t, TEnum t2) where TEnum : struct, Enum
+	public static TEnum Xor<TEnum>(TEnum t, TEnum t2) where TEnum : struct, Enum
 	{
-		unsafe {
-			Trace.Assert(Unsafe.SizeOf<TEnum>() == sizeof(int));
-			var ptr  = (int*) Unsafe.AsPointer(ref t);
-			var ptr2 = (int*) Unsafe.AsPointer(ref t2);
-
-			*ptr ^= *ptr2;
-			return Unsafe.As<int, TEnum>(ref *ptr);
+		if (Enum.GetUnderlyingType(typeof(TEnum)) != typeof(int)) {
+			throw new NotImplementedException();
 		}
+
+		var v = Unsafe.As<TEnum, int>(ref t) ^ Unsafe.As<TEnum, int>(ref t2);
+		return Unsafe.As<int, TEnum>(ref v);
+
 	}
 
-	public static TEnum Not<TEnum>(this TEnum t) where TEnum : struct, Enum
+	public static TEnum Not<TEnum>(TEnum t) where TEnum : struct, Enum
 	{
-		unsafe {
-			Trace.Assert(Unsafe.SizeOf<TEnum>() == sizeof(int));
-			var ptr = (int*) Unsafe.AsPointer(ref t);
-			*ptr = ~*ptr;
-			return Unsafe.As<int, TEnum>(ref *ptr);
+		if (Enum.GetUnderlyingType(typeof(TEnum)) != typeof(int)) {
+			throw new NotImplementedException();
 		}
+
+		var v = ~Unsafe.As<TEnum, int>(ref t);
+		return Unsafe.As<int, TEnum>(ref v);
 	}
 
 	#endregion
+
 }

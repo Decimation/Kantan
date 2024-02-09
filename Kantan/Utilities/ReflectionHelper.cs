@@ -8,13 +8,14 @@ namespace Kantan.Utilities;
 
 internal static class ReflectionHelper
 {
-    public static bool IsBackingFieldOf(this FieldInfo f, PropertyInfo p)
-    {
-        var fn = f.Name.SubstringBetween("<", ">");
-        var pfn = fn == p.Name;
-        var bfn = f.Name.Contains("k__BackingField");
 
-        return bfn && pfn;
+	internal static bool IsBackingFieldOf(this FieldInfo f, PropertyInfo p)
+	{
+		var fn = f.Name.SubstringBetween("<", ">");
+		var pfn = fn == p.Name;
+		var bfn = f.Name.Contains("k__BackingField");
 
-    }
+		return bfn && pfn;
+
+	}
 }

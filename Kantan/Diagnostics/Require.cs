@@ -62,6 +62,7 @@ namespace Kantan.Diagnostics;
 /// <seealso cref="Debugger"/>
 public static class Require
 {
+
 	/*
 	 * https://www.jetbrains.com/help/resharper/Contract_Annotations.html
 	 * https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/attributes/nullable-analysis
@@ -214,11 +215,14 @@ public static class Require
 			Assert(condition);
 		}
 	}
+
 }
 
 public sealed class RequireException : Exception
 {
+
 	public RequireException() { }
 
 	public RequireException(string? message) : base(message) { }
+
 }

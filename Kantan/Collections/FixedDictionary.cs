@@ -1,10 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 // ReSharper disable UnusedMember.Global
 
 namespace Kantan.Collections;
 
+[Experimental(KantanInit.DIAG_ID_001)]
 public class FixedDictionary<TKey, TValue> : IDictionary<TKey, TValue>
 {
 	private readonly Dictionary<TKey, TValue> m_values;

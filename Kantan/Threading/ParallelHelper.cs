@@ -15,7 +15,7 @@ public static class ParallelHelper
 	/*
 	 * https://devblogs.microsoft.com/pfxteam/implementing-parallel-while-with-parallel-foreach/
 	 */
-	public static async Task ForeachAsync<T>(IEnumerable<T> source, int maxParallelCount, Func<T, Task> action)
+	public static async Task ForEachAsync<T>(IEnumerable<T> source, int maxParallelCount, Func<T, Task> action)
 	{
 		using var completeSemphoreSlim = new SemaphoreSlim(1);
 

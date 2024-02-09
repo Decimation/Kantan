@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 // ReSharper disable UnusedMember.Global
 
@@ -9,8 +10,10 @@ namespace Kantan.Collections;
 /// <summary>
 ///     Represents a collection implemented by delegates.
 /// </summary>
+[Experimental(KantanInit.DIAG_ID_001)]
 public class ReadOnlyVirtualCollection<T> : IReadOnlyList<T>
 {
+
 	/// <summary>
 	///     Retrieves an item with the name <paramref name="name" />
 	/// </summary>
@@ -53,7 +56,9 @@ public class ReadOnlyVirtualCollection<T> : IReadOnlyList<T>
 		return GetEnumerator();
 	}
 
-	public T[] ToArray() => m_fnGetItems();
+	public T[] ToArray()
+		=> m_fnGetItems();
 
 	public int Count => ToArray().Length;
+
 }

@@ -11,6 +11,7 @@ using System.Net.Http;
 using System.Text.Unicode;
 using System.Threading.Tasks;
 using Kantan.Collections;
+using Kantan.Console;
 using Kantan.Diagnostics;
 using Kantan.Model;
 using Kantan.Net;
@@ -34,6 +35,7 @@ namespace UnitTest;
 [TestFixture]
 public class EnumerableTests
 {
+
 	[Test]
 	public void CopyToListTest()
 	{
@@ -133,14 +135,17 @@ public class EnumerableTests
 		// var rg2New = new[] {"a", "goo", "hi"};
 		// Assert.True(rg2.SequenceEqual(rg2New));
 	}
+
 }
 
 [TestFixture]
 public class Tests
 {
+
 	[SetUp]
 	public void Setup() { }
-
+#if OTHER
+	
 	[Test]
 	public void CliTest()
 	{
@@ -220,16 +225,26 @@ public class Tests
 		Assert.AreEqual("hello", s);
 
 	}
+#endif
 
 	[Test]
 	public void EnumTest()
 	{
 		var name1 = "combo1";
 		var p     = Enum.Parse<TestFlags>(name1);
-		var flags = EnumHelper.GetSetFlags(p, false);
+		var flags = EnumHelper.GetSetFlags(p, false, false);
 		var str   = flags.QuickJoin();
 
 		Assert.AreEqual(str, "a, b, c, combo1");
+	}
+
+	[Test]
+	public void EnumTest2()
+	{
+		var p     = TestFlags2.combo1;
+		var flags = EnumHelper.GetSetFlags(p, false, true);
+		TestContext.WriteLine(flags.QuickJoin());
+		Assert.True(flags.SequenceEqual([TestFlags2.a, TestFlags2.b, TestFlags2.c]));
 	}
 
 	[Test]
@@ -324,24 +339,39 @@ public class Tests
 		Assert.Null(Strings.NormalizeNull(""));
 		Assert.Null(Strings.NormalizeNull(null));
 	}
+
 }
 
 [Flags]
 internal enum TestFlags
 {
+
 	a = 0,
 	b = 1 << 0,
 	c = 1 << 1,
 
 	combo1 = b | c,
-}
 
+}
+[Flags]
+internal enum TestFlags2
+{
+
+	a = 1,
+	b = 1 << 1,
+	c = 1 << 2,
+
+	combo1 = a|b | c,
+
+}
 internal class EnumerationTestType : Enumeration
 {
+
 	public static string str;
 	public        string str2;
 
 	public static readonly EnumerationTestType a1 = new(1, "g");
 
 	public EnumerationTestType(int id, string name) : base(id, name) { }
+
 }

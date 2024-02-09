@@ -8,6 +8,7 @@ using Kantan.Utilities;
 // ReSharper disable UnusedMember.Global
 
 namespace Kantan.Text;
+#if OTHER
 
 public static class StringBuilderHelper
 {
@@ -48,3 +49,4 @@ public static class StringBuilderHelper
 		return sb;
 	}
 }
+#endif

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using JetBrains.Annotations;
 using Kantan.Collections;
 using Kantan.Diagnostics;
@@ -12,7 +9,7 @@ using static Kantan.Diagnostics.LogCategories;
 
 // ReSharper disable UnusedMember.Global
 
-namespace Kantan.Utilities;
+namespace Kantan.Console;
 
 public class CliHandler
 {

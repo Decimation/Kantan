@@ -16,8 +16,30 @@ using Array = System.Array;
 
 namespace Benchmark;
 
+public class Benchmarks5
+{
+
+	[Benchmark]
+	public MyEnum Test1()
+	{
+		return EnumHelper.Or(MyEnum.a, MyEnum.b);
+	}
+
+	[Flags]
+	public enum MyEnum
+	{
+
+		a = 1,
+		b = 2,
+		c = 3,
+
+	}
+
+}
+
 public class Benchmarks1
 {
+
 	[Benchmark]
 	public int Test2()
 	{
@@ -35,10 +57,12 @@ public class Benchmarks1
 	{
 		return new Func<int, int, int>((a, b) => a + b)(A, B);
 	}
+
 }
 
 public class Benchmarks4
 {
+
 	private Action m_action;
 
 	[GlobalSetup]
@@ -69,10 +93,12 @@ public class Benchmarks4
 		Task task = Task.Run(m_action);
 		task.Wait();
 	}
+
 }
 
 public class Benchmarks2
 {
+
 	[Benchmark]
 	public IList<int> Test()
 	{
@@ -83,10 +109,12 @@ public class Benchmarks2
 		return rg.ReplaceAllSequences(search, replace);
 
 	}
+
 }
 
 public class Benchmarks3
 {
+
 	[Benchmark]
 	public BigInteger gcd2()
 	{
@@ -98,10 +126,12 @@ public class Benchmarks3
 	{
 		return MathHelper.GCD(123, 456);
 	}
+
 }
 
 public class Benchmarks6
 {
+
 	/*
 | Method |     Mean |     Error |    StdDev |   Median |
 |------- |---------:|----------:|----------:|---------:|
@@ -125,9 +155,11 @@ public class Benchmarks6
 
 public static class Program
 {
+
 	public static void Main(string[] args)
 	{
-		BenchmarkRunner.Run<Benchmarks6>();
+		BenchmarkRunner.Run<Benchmarks5>();
 
 	}
+
 }

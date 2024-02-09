@@ -17,6 +17,7 @@ namespace Kantan.Numeric;
 
 public enum MetricPrefix
 {
+
 	Kilo = 1,
 	Mega,
 	Giga,
@@ -25,10 +26,12 @@ public enum MetricPrefix
 	Exa,
 	Zetta,
 	Yotta
+
 }
 
 public static class MathHelper
 {
+
 	/*public static bool ToleranceEqual(double a, double b, double epsilon = double.Epsilon)
 	{
 		//https://stackoverflow.com/questions/4787125/evaluate-if-two-doubles-are-equal-based-on-a-given-precision-not-within-a-certa
@@ -63,11 +66,15 @@ public static class MathHelper
 		return ((i % n) + n) % n;
 	}
 
-	public static bool ToleranceEqual(double a, double b, double epsilon = double.Epsilon)
+	public static bool ToleranceEqual<T>(T a, T b)
+		where T : IFloatingPoint<T>, IFloatingPointConstants<T>, IFloatingPointIeee754<T>
+		=> ToleranceEqual(a, b, T.Epsilon);
+
+	public static bool ToleranceEqual<T>(T a, T b, T epsilon)
+		where T : IFloatingPoint<T>, IFloatingPointConstants<T>
 	{
 		//https://stackoverflow.com/questions/4787125/evaluate-if-two-doubles-are-equal-based-on-a-given-precision-not-within-a-certa
-
-		return Math.Abs(a - b) <= epsilon;
+		return T.Abs(a - b) <= epsilon;
 	}
 
 	public static T HighestOrderBit<T>(T num) where T : INumber<T>, IShiftOperators<T, T, T>
@@ -110,7 +117,7 @@ public static class MathHelper
 		return radical;
 	}
 
-	public static T GCD<T>(T a, T b) where T : INumber<T>, IBitwiseOperators<T, T, T>
+	public static T GCD2<T>(T a, T b) where T : INumber<T>, IBitwiseOperators<T, T, T>
 	{
 		while (a != T.Zero && b != T.Zero) {
 			if (a > b)
@@ -122,40 +129,41 @@ public static class MathHelper
 		return a | b;
 	}
 
-	public static T LCM<T>(T a, T b) where T : INumber<T>, IBitwiseOperators<T, T, T> => (a / GCD(a, b)) * b;
+	public static T LCM2<T>(T a, T b) where T : INumber<T>, IBitwiseOperators<T, T, T>
+		=> (a / GCD2(a, b)) * b;
 
-	public static BigInteger LCM(BigInteger number1, BigInteger number2)
+	public static T LCM<T>(T number1, T number2) where T : IBinaryInteger<T>
 	{
-		if (number1 == 0) {
+		if (number1 == T.Zero) {
 			return number2;
 		}
 
-		if (number2 == 0) {
+		if (number2 == T.Zero) {
 			return number1;
 		}
 
-		var positiveNumber2 = number2 < 0 ? BigInteger.Abs(number2) : number2;
-		var positiveNumber1 = number1 < 0 ? BigInteger.Abs(number1) : number1;
+		var positiveNumber2 = number2 < T.Zero ? T.Abs(number2) : number2;
+		var positiveNumber1 = number1 < T.Zero ? T.Abs(number1) : number1;
 
 		return positiveNumber1 / GCD(positiveNumber1, positiveNumber2) * positiveNumber2;
 	}
 
-	public static BigInteger GCD(BigInteger number1, BigInteger number2)
+	public static T GCD<T>(T number1, T number2) where T : IBinaryInteger<T>
 	{
-		var positiveNumber2 = number2 < 0 ? BigInteger.Abs(number2) : number2;
-		var positiveNumber1 = number1 < 0 ? BigInteger.Abs(number1) : number1;
+		var positiveNumber2 = number2 < T.Zero ? T.Abs(number2) : number2;
+		var positiveNumber1 = number1 < T.Zero ? T.Abs(number1) : number1;
 
 		if (positiveNumber1 == positiveNumber2)
 			return positiveNumber1;
 
-		if (positiveNumber1 == 0)
+		if (positiveNumber1 == T.Zero)
 			return positiveNumber2;
 
-		if (positiveNumber2 == 0)
+		if (positiveNumber2 == T.Zero)
 			return positiveNumber1;
 
-		if ((~positiveNumber1 & 1) != 0) {
-			if ((positiveNumber2 & 1) != 0) {
+		if ((~positiveNumber1 & T.One) != T.Zero) {
+			if ((positiveNumber2 & T.One) != T.Zero) {
 				return GCD(positiveNumber1 >> 1, positiveNumber2);
 			}
 			else {
@@ -163,7 +171,7 @@ public static class MathHelper
 			}
 		}
 
-		if ((~positiveNumber2 & 1) != 0) {
+		if ((~positiveNumber2 & T.One) != T.Zero) {
 			return GCD(positiveNumber1, positiveNumber2 >> 1);
 		}
 
@@ -194,7 +202,7 @@ public static class MathHelper
 
 		char? prefix = Math.Sign(degree) switch
 		{
-			1  => IncPrefixes[degree - 1],
+			1  => IncPrefixes[degree  - 1],
 			-1 => DecPrefixes[-degree - 1],
 			_  => null
 		};
@@ -237,11 +245,11 @@ public static class MathHelper
 		return v;
 	}
 
-	private static readonly string[] BytePrefixes = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+	private static readonly string[] BytePrefixes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 
-	private static readonly char[] IncPrefixes = { 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y' };
+	private static readonly char[] IncPrefixes = ['k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
 
-	private static readonly char[] DecPrefixes = { 'm', '\u03bc', 'n', 'p', 'f', 'a', 'z', 'y' };
+	private static readonly char[] DecPrefixes = ['m', '\u03bc', 'n', 'p', 'f', 'a', 'z', 'y'];
 
 	#endregion
 
@@ -304,4 +312,5 @@ public static class MathHelper
 
 		return sum / (float) length;
 	}
+
 }

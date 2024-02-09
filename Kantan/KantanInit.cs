@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-[assembly: InternalsVisibleTo("Novus")]
+// [assembly: InternalsVisibleTo("Novus")]
 [assembly: InternalsVisibleTo("Kantan.Net")]
 [assembly: InternalsVisibleTo("Kantan.Console")]
 [assembly: InternalsVisibleTo("Test")]
@@ -62,4 +62,6 @@ public static class KantanInit
 			return appFolder;
 		}
 	}*/
+	public const string DIAG_ID_001 = "EXP001";
+
 }

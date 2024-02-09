@@ -37,36 +37,38 @@ namespace Kantan.Text;
 public static partial class Strings
 {
 
-	public static string RemoveNewLines(this string s) => s.Remove(LineControlCharacters);
+	public static string RemoveNewLines(this string s)
+		=> s.Remove(LineControlCharacters, (current, t) => current.Remove(t));
 
-	public static string Remove(this string s, char[] rg)   => rg.Aggregate(s, (current, t) => current.Remove(t));
-	
-	public static string Remove(this string s, string[] rg) => rg.Aggregate(s, (current, t) => current.Remove(t));
+	public static string Remove<T>(this string s, T[] rg, Func<string, T, string> func)
+		=> rg.Aggregate(s, func);
 
-	public static string Remove(this string s, string s2) => s.Replace(s2, string.Empty);
-	public static string Remove(this string s, char s2) => s.Remove(s2.ToString());
+	// public static string Remove(this string s, char[] rg)   => rg.Aggregate(s, (current, t) => current.Remove(t));
 
-	public static string SelectOnlyDigits(this string s) => s.AggregateWhere(Char.IsDigit);
+	// public static string Remove(this string s, string[] rg) => rg.Aggregate(s, (current, t) => current.Remove(t));
 
-	public static string StripControl(this string s) => s.AggregateWhere(c => !Char.IsControl(c));
+	public static string Remove(this string s, string s2)
+		=> s.Replace(s2, string.Empty);
+
+	public static string Remove(this string s, char s2)
+		=> s.Remove(s2.ToString());
+
+	public static string SelectOnlyDigits(this string s)
+		=> s.WhereAggregate(Char.IsDigit);
+
+	public static string StripControl(this string s)
+		=> s.WhereAggregate(c => !Char.IsControl(c));
 
 	/// <remarks>Select only</remarks>
-	public static string AggregateWhere(this string s, Func<char, bool> fn)
+	public static string WhereAggregate(this string s, Func<char, bool> fn)
 		=> s.Where(fn).Aggregate(String.Empty, (current, t) => current + t);
 
-	public static string CleanString(this string s) => s.Trim('\"');
-
-	public static string Truncate(this string value, int maxLength)
-	{
-		if (String.IsNullOrEmpty(value)) {
-			return value;
-		}
-
-		return value.Length <= maxLength ? value : value[..maxLength];
-	}
+	public static string CleanString(this string s)
+		=> s.Trim('\"');
 
 	[CBN]
-	public static string NormalizeNull([CBN] string str) => String.IsNullOrWhiteSpace(str) ? null : str;
+	public static string NormalizeNull([CBN] string str)
+		=> String.IsNullOrWhiteSpace(str) ? null : str;
 
 	/// <summary>Convert a word that is formatted in pascal case to have splits (by space) at each upper case letter.</summary>
 	public static string SplitPascalCase(string convert)
@@ -82,10 +84,11 @@ public static partial class Strings
 			           .ToArray());
 	}
 
-	public static IEnumerable<int> IndexOfAll(this string str, string search, StringComparison c = StringComparison.Ordinal)
+	public static IEnumerable<int> IndexOfAll(this string str, string search,
+	                                          StringComparison c = StringComparison.Ordinal)
 	{
 		return EnumerableHelper.IndexOfAll((s, i) => str.IndexOf(s, i, c),
-		                                     search.Length, search);
+		                                   search.Length, search);
 	}
 
 	public static string RemoveLastOccurrence(this string s, string s2, StringComparison c = StringComparison.Ordinal)
@@ -149,7 +152,8 @@ public static partial class Strings
 	/// <summary>
 	///     Simulates Java substring function
 	/// </summary>
-	public static string JSubstring(this string s, int beginIndex) => s[beginIndex..];
+	public static string JSubstring(this string s, int beginIndex)
+		=> s[beginIndex..];
 
 	/// <summary>
 	///     Simulates Java substring function
@@ -160,12 +164,14 @@ public static partial class Strings
 	/// <summary>
 	///     Simulates Java substring function
 	/// </summary>
-	public static string JSubstring(this string s, Range r) => s.JSubstring(r.Start.Value, r.End.Value);
+	public static string JSubstring(this string s, Range r)
+		=> s.JSubstring(r.Start.Value, r.End.Value);
 
 	/// <summary>
 	///     Simulates Java substring function
 	/// </summary>
-	public static string JSubstring(this string s, Index i) => s.JSubstring(i.Value);
+	public static string JSubstring(this string s, Index i)
+		=> s.JSubstring(i.Value);
 
 	/// <summary>
 	///     <returns>String value after [last] <paramref name="a" /></returns>
@@ -188,7 +194,7 @@ public static partial class Strings
 	public static string SubstringBefore(this string value, string a)
 	{
 		int posA = value.IndexOf(a, StringComparison.Ordinal);
-		return posA == KantanInit.INVALID ? String.Empty : value[..posA];
+		return posA == KI.INVALID ? String.Empty : value[..posA];
 	}
 
 	/// <summary>
@@ -209,6 +215,17 @@ public static partial class Strings
 
 	#endregion
 
+#if OTHER
+
+	public static string Truncate(this string value, int maxLength)
+	{
+		if (String.IsNullOrEmpty(value)) {
+			return value;
+		}
+
+		return value.Length <= maxLength ? value : value[..maxLength];
+	}
+
 	#region Formatting
 
 	public static string Center(string str, int width)
@@ -223,7 +240,8 @@ public static partial class Strings
 
 	#region Outline
 
-	public static string Indent(string s) => Indent(s, Constants.Indentation);
+	public static string Indent(string s)
+		=> Indent(s, Constants.Indentation);
 
 	public static string Indent(string s, string indent)
 	{
@@ -274,21 +292,25 @@ public static partial class Strings
 
 		while (start < text.Length) {
 			var zone =
-				forcedZones.Find(z => z.Index >= start && z.Index <= start + width) ??
+				forcedZones.Find(z => z.Index     >= start && z.Index <= start + width) ??
 				normalZones.FindLast(z => z.Index >= start && z.Index <= start + width);
 
 			if (zone == null) {
 				yield return text.Substring(start, width);
+
 				start += width;
 			}
 			else {
 				yield return text[start..zone.Index];
+
 				start = zone.Index + zone.Length;
 			}
 		}
 	}
 
 	#endregion
+
+#endif
 
 	#region Join
 
@@ -326,16 +348,20 @@ public static partial class Strings
 	public static string EncodingConvert(Encoding src, Encoding dest, string str)
 		=> dest.GetString(Encoding.Convert(src, dest, src.GetBytes(str)));
 
-	public static string EncodingConvert(Encoding src, string str) => EncodingConvert(src, EncodingOEM, str);
+	public static string EncodingConvert(Encoding src, string str)
+		=> EncodingConvert(src, EncodingOEM, str);
 
 	public static bool IsCharInRange(ushort c, UnicodeRange r)
 		=> c < r.FirstCodePoint + r.Length && c >= r.FirstCodePoint;
 
-	public static bool IsCharInRange(short c, UnicodeRange r) => IsCharInRange(c: unchecked((ushort) c), r);
+	public static bool IsCharInRange(short c, UnicodeRange r)
+		=> IsCharInRange(c: unchecked((ushort) c), r);
 
-	public static byte[] GetBytes(this string s, Encoding encoding) => encoding.GetBytes(s);
+	/*public static byte[] GetBytes(this string s, Encoding encoding)
+		=> encoding.GetBytes(s);
 
-	public static byte[] GetBytes(this string s) => s.GetBytes(Encoding.UTF8);
+	public static byte[] GetBytes(this string s)
+		=> s.GetBytes(Encoding.UTF8);*/
 
 	[GeneratedRegex("(\\P{Ll})(\\P{Ll}\\p{Ll})")]
 	private static partial Regex _rgx1();
@@ -345,4 +371,5 @@ public static partial class Strings
 
 	[GeneratedRegex("\\s+|(?<=[-,.;])|$")]
 	private static partial Regex _rgx3();
+
 }
