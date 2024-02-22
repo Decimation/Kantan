@@ -53,6 +53,7 @@ using HttpMethod = System.Net.Http.HttpMethod;
 namespace Test;
 
 using System;
+using Kantan.Model.MemberIndex;
 
 public static partial class Program
 {
@@ -84,7 +85,7 @@ public static partial class Program
 	private static async Task Main(string[] args)
 	{
 		butt b = new butt() { a="foo", b=321};
-		var  v = MemberIndexFormat.Format(b);
+		var  v = MemberIndexer.Format(b);
 
 		foreach (KeyValuePair<string, string> pair in v) {
 			Console.WriteLine(pair);
@@ -101,7 +102,7 @@ public static partial class Program
 
 	}
 
-	public class bf : IMemberFormatter
+	public class bf : IMemberIndexFormatter
 	{
 
 		public KeyValuePair<string, string> Format(object o, MemberInfo m)
