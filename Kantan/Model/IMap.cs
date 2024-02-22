@@ -9,6 +9,7 @@ using Kantan.Utilities;
 
 namespace Kantan.Model;
 
+[Obsolete]
 public interface IMap
 {
 	public Dictionary<string, object> Data { get; }

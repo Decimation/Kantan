@@ -56,6 +56,7 @@ using System;
 
 public static partial class Program
 {
+
 	private static string[] _rg1 = new[]
 	{
 		@"https://static.zerochan.net/Atago.%28Azur.Lane%29.full.2750747.png",
@@ -75,39 +76,67 @@ public static partial class Program
 		@"http://www.zerochan.net/2750747",
 		@"https://i.imgur.com/QtCausw.png",
 		@"https://kemono.party/patreon/user/3332300/post/65227512",
+
 		// @"https://i.pximg.net/img-master/img/2022/05/01/19/44/39/98022741_p0_master1200.jpg",
 		"C:\\Users\\Deci\\Pictures\\Test Images\\Test1.jpg"
 	};
 
 	private static async Task Main(string[] args)
 	{
-		Console.WriteLine(new[]{1,} is IList<int>);
-		Console.WriteLine("butt");
-		Console.WriteLine(TE1.GetNextId<TE1>());
-		Console.WriteLine(TE1.GetAll<TE1>().QuickJoin());
+		butt b = new butt() { a="foo", b=321};
+		var  v = MemberIndexFormat.Format(b);
+
+		foreach (KeyValuePair<string, string> pair in v) {
+			Console.WriteLine(pair);
+		}
 	}
 
+	[MemberIndexType(Formatter = typeof(bf), Mode = MemberIndexMode.Inclusive)]
+	public class butt
+	{
+
+		public string a;
+
+		public int b;
+
+	}
+
+	public class bf : IMemberFormatter
+	{
+
+		public KeyValuePair<string, string> Format(object o, MemberInfo m)
+		{
+			return new($"g {m.Name}", "butt");
+		}
+
+	}
 	public class TE1 : Enumeration<byte>
 	{
 
 		public static readonly TE1 a = new(0, "butt");
 		public static readonly TE1 b = new(1, "hi");
 		public static readonly TE1 c = new("waifu");
+
 		public TE1(string name) : base(TE1.GetNextId<TE1>(), name) { }
+
 		public TE1(byte id, string name) : base(id, name) { }
 
 	}
+
 	public class TestObj1 : IMemberTransformer
 	{
+
 		private int m_i = 1;
 
 		public string p2 { get; set; }
+
 		public string Ps => "hi";
 
 		public int PI
 		{
 			get => m_i;
 		}
+
 	}
 
 	private static void Test3()
@@ -121,28 +150,33 @@ public static partial class Program
 
 	public class MyClass : IMap
 	{
-		public int    i { get; set; }
+
+		public int i { get; set; }
+
 		public string f;
 
 		public Dictionary<string, object> Data
 		{
 			get => IMap.ToMap(this);
 		}
+
 	}
 
 	[Flags]
 	public enum TestEnum
 	{
+
 		a   = 1 << 0,
 		b   = 1 << 1,
 		c   = 1 << 2,
 		all = a | b | c
+
 	}
 
 	public static Dictionary<MemberInfo, object> Dump(object obj, [CanBeNull] Func<MemberInfo, object> getValue = null)
 	{
-		var members = obj.GetType().GetMembers(BindingFlags.Instance | BindingFlags.Default | BindingFlags.GetField |
-		                                       BindingFlags.GetProperty | BindingFlags.Public |
+		var members = obj.GetType().GetMembers(BindingFlags.Instance    | BindingFlags.Default | BindingFlags.GetField |
+		                                       BindingFlags.GetProperty | BindingFlags.Public  |
 		                                       BindingFlags.NonPublic);
 
 		getValue ??= m =>
@@ -225,4 +259,5 @@ public static partial class Program
 			Console.WriteLine(diff.TotalSeconds);
 		}*/
 	}
+
 }

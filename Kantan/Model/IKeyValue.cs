@@ -1,6 +1,7 @@
 ﻿// Read S Kantan IKeyValue.cs
 // 2023-06-04 @ 6:47 PM
 
+using System;
 using System.Collections.Generic;
 
 namespace Kantan.Model;
@@ -10,6 +11,7 @@ namespace Kantan.Model;
 
 }*/
 
+[Obsolete]
 public interface IKeyValue<TKey, TValue>
 {
 

@@ -9,6 +9,7 @@ using Kantan.Utilities;
 
 namespace Kantan.Model;
 
+[Obsolete]
 public interface IMemberTransformer
 {
 	public static BindingFlags DefaultFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
