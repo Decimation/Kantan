@@ -12,8 +12,8 @@ namespace Kantan.Model;
 [Obsolete]
 public interface IMemberTransformer
 {
-	public static BindingFlags DefaultFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
-	                                     BindingFlags.DeclaredOnly;
+	public static BindingFlags DefaultFlags { get; set; } = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
+	                                                        BindingFlags.DeclaredOnly;
 	
 	public static IEnumerable<T> TransformMembers<T>(object obj, Func<MemberInfo, bool> pred,
 	                                                 Func<MemberInfo, T> transformer,

@@ -38,4 +38,8 @@
     <Folder Include="Properties\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Validation" Version="17.8.8" />
+  </ItemGroup>
+
 </Project>

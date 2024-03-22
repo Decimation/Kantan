@@ -68,5 +68,5 @@ public static class FormatHelper
 	public static string ToHexString<T>(T t, string s = HexFormatter.FMT_P)
 		=> Hex.Format(s, t, CultureInfo.CurrentCulture);
 
-	private static readonly string[] Suffixes = new[] { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+	private static readonly string[] Suffixes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 }

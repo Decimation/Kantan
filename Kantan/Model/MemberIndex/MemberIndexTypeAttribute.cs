@@ -10,8 +10,8 @@ namespace Kantan.Model.MemberIndex;
 public class MemberIndexTypeAttribute : Attribute
 {
 
-	public static BindingFlags DefaultFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
-	                                          BindingFlags.DeclaredOnly;
+	public static BindingFlags DefaultFlags { get; set; } = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
+	                                                        BindingFlags.DeclaredOnly;
 
 	public MemberIndexMode Mode { get; set; } = MemberIndexMode.Inclusive;
 

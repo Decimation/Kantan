@@ -30,7 +30,6 @@ using Kantan.Console.Cli;
 using Kantan.Console.Cli.Controls;
 using Kantan.Diagnostics;
 using Kantan.Model;
-using Kantan.Net;
 using Kantan.Net.Properties;
 using Kantan.Net.Utilities;
 using Kantan.Text;
@@ -54,6 +53,7 @@ namespace Test;
 
 using System;
 using Kantan.Model.MemberIndex;
+using Kantan.Net.Web;
 
 public static partial class Program
 {
@@ -84,11 +84,19 @@ public static partial class Program
 
 	private static async Task Main(string[] args)
 	{
-		butt b = new butt() { a="foo", b=321};
-		var  v = MemberIndexer.Format(b);
+		var c = new FirefoxCookieReader();
+		await c.OpenAsync();
 
-		foreach (KeyValuePair<string, string> pair in v) {
-			Console.WriteLine(pair);
+		var list = await c.ReadCookiesAsync();
+
+		foreach (var v in list) {
+			Console.WriteLine(v);
+		}
+
+		Console.WriteLine(list.Count);
+
+		foreach (var v in list.OfType<FirefoxCookie>().Where(x=>x.Host.Contains("google"))) {
+			Console.WriteLine($"{v.Host} {v.Name} {v.Value}");
 		}
 	}
 
@@ -111,6 +119,7 @@ public static partial class Program
 		}
 
 	}
+
 	public class TE1 : Enumeration<byte>
 	{
 
