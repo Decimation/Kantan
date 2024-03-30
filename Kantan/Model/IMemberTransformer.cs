@@ -8,6 +8,7 @@ using System.Reflection;
 using Kantan.Utilities;
 
 namespace Kantan.Model;
+#if OBSOLETE
 
 [Obsolete]
 public interface IMemberTransformer
@@ -44,3 +45,4 @@ public interface IMemberTransformer
 		return TransformMembers(this, pred, transformer, bf);
 	}
 }
+#endif

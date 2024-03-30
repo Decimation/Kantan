@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Microsoft.Data.Sqlite;
 
 namespace Kantan.Net.Web;
@@ -12,15 +13,24 @@ namespace Kantan.Net.Web;
 public sealed class FirefoxCookieReader : BaseCookieReader
 {
 
-	public FirefoxCookieReader(string c) : base(c) { }
+	// public FirefoxCookieReader(string c) : base(c) { }
 
-	public FirefoxCookieReader() : base($"Data Source={FindCookieFile().FullName}") { }
+	public FirefoxCookieReader([NN] string f) : base(f) { }
 
+	public FirefoxCookieReader() : this(FindCookieFile()?.FullName) { }
+
+	[CBN]
 	public static FileInfo FindCookieFile()
 	{
 		var cf = FindCookieFiles();
 
-		return cf.OrderByDescending(x => x.LastWriteTime)
+		var infos = cf as FileInfo[] ?? cf.ToArray();
+
+		if (!infos.Any()) {
+			return null;
+		}
+
+		return infos.OrderByDescending(x => x.LastWriteTime)
 			.FirstOrDefault(x => x.DirectoryName.Contains("default"));
 
 	}
@@ -49,8 +59,7 @@ public sealed class FirefoxCookieReader : BaseCookieReader
 	public override async Task<List<IBrowserCookie>> ReadCookiesAsync()
 	{
 		var           dict = new List<IBrowserCookie>();
-		SqliteCommand cmd  = Connection.CreateCommand();
-		cmd.CommandText = "select * from moz_cookies";
+		SqliteCommand cmd  = CreateCommand();
 
 		/*cmd.CommandText = """
 						  SELECT name,value
@@ -69,6 +78,13 @@ public sealed class FirefoxCookieReader : BaseCookieReader
 
 		return dict;
 
+	}
+
+	private SqliteCommand CreateCommand()
+	{
+		SqliteCommand cmd = Connection.CreateCommand();
+		cmd.CommandText = "SELECT * FROM moz_cookies";
+		return cmd;
 	}
 
 }

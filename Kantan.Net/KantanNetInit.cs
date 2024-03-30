@@ -5,6 +5,7 @@ global using MA = System.Runtime.InteropServices.MarshalAsAttribute;
 global using KNI = Kantan.Net.KantanNetInit;
 global using MURV = JetBrains.Annotations.MustUseReturnValueAttribute;
 global using CBN = JetBrains.Annotations.CanBeNullAttribute;
+global using NN = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 global using VP = JetBrains.Annotations.ValueProviderAttribute;
 using System;
 using System.Collections.Generic;

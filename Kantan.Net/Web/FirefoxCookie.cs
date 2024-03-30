@@ -17,8 +17,13 @@ public class FirefoxCookie : IBrowserCookie
 			HttpOnly = IsHttpOnly,
 			Name = Name,
 			Domain = Host,
-			Expires = DateTime.UnixEpoch
+			Value = Value,
+			Path = Path,
+			Secure = IsSecure,
+			
+			// Expires =
 		};
+
 		return cc;
 	}
 

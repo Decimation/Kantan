@@ -10,6 +10,7 @@ namespace Kantan.Model;
 {
 
 }*/
+#if OBSOLETE
 
 [Obsolete]
 public interface IKeyValue<TKey, TValue>
@@ -18,3 +19,4 @@ public interface IKeyValue<TKey, TValue>
 	public IList<KeyValuePair<TKey, TValue>> GetKeyValues();
 
 }
+#endif

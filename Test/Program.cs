@@ -95,7 +95,7 @@ public static partial class Program
 
 		Console.WriteLine(list.Count);
 
-		foreach (var v in list.OfType<FirefoxCookie>().Where(x=>x.Host.Contains("google"))) {
+		foreach (var v in list.OfType<FirefoxCookie>().Where(x => x.Host.Contains("google"))) {
 			Console.WriteLine($"{v.Host} {v.Name} {v.Value}");
 		}
 	}
@@ -119,6 +119,7 @@ public static partial class Program
 		}
 
 	}
+#if OBSOLETE
 
 	public class TE1 : Enumeration<byte>
 	{
@@ -157,7 +158,6 @@ public static partial class Program
 			Console.WriteLine($"{v}");
 		}
 	}
-
 	public class MyClass : IMap
 	{
 
@@ -171,6 +171,7 @@ public static partial class Program
 		}
 
 	}
+#endif
 
 	[Flags]
 	public enum TestEnum

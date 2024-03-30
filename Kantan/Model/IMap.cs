@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 using Kantan.Utilities;
 
 namespace Kantan.Model;
+#if OBSOLETE
 
 [Obsolete]
 public interface IMap
@@ -63,3 +64,4 @@ public interface IMap
 		return m.ToDictionary(info => $"{info.Name}", info => fieldConv(info, value));
 	}
 }
+#endif
