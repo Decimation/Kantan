@@ -32,7 +32,6 @@ using Kantan.Diagnostics;
 using Kantan.Model;
 using Kantan.Net.Properties;
 using Kantan.Net.Utilities;
-using Kantan.Text;
 using Kantan.Utilities;
 using Microsoft.Data.Sqlite;
 using Microsoft.VisualBasic.CompilerServices;
@@ -84,29 +83,25 @@ public static partial class Program
 
 	private static async Task Main(string[] args)
 	{
-		var c = new FirefoxCookieReader();
-		await c.OpenAsync();
+		var      butt    = new butt() { a = "foo", c=321 };
+		var objects = MemberUtility.Select(butt, TestEnum.a | TestEnum.c | TestEnum.b);
+		foreach (object o in objects) {
+			Console.WriteLine(o);
 
-		var list = await c.ReadCookiesAsync();
-
-		foreach (var v in list) {
-			Console.WriteLine(v);
 		}
 
-		Console.WriteLine(list.Count);
-
-		foreach (var v in list.OfType<FirefoxCookie>().Where(x => x.Host.Contains("google"))) {
-			Console.WriteLine($"{v.Host} {v.Name} {v.Value}");
-		}
+		Console.WriteLine(String.Join(',', objects));
 	}
 
 	[MemberIndexType(Formatter = typeof(bf), Mode = MemberIndexMode.Inclusive)]
 	public class butt
 	{
 
-		public string a;
+		public string a { get; init; }
 
 		public int b;
+
+		public int c { get; init; }
 
 	}
 
@@ -120,7 +115,6 @@ public static partial class Program
 
 	}
 #if OBSOLETE
-
 	public class TE1 : Enumeration<byte>
 	{
 
@@ -176,7 +170,7 @@ public static partial class Program
 	[Flags]
 	public enum TestEnum
 	{
-
+		None=0,
 		a   = 1 << 0,
 		b   = 1 << 1,
 		c   = 1 << 2,

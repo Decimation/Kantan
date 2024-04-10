@@ -4,6 +4,7 @@
 using System;
 using System.Data;
 using System.Net;
+using Flurl.Http;
 
 namespace Kantan.Net.Web;
 
@@ -15,16 +16,30 @@ public class FirefoxCookie : IBrowserCookie
 		var cc = new Cookie()
 		{
 			HttpOnly = IsHttpOnly,
-			Name = Name,
-			Domain = Host,
-			Value = Value,
-			Path = Path,
-			Secure = IsSecure,
-			
+			Name     = Name,
+			Domain   = Host,
+			Value    = Value,
+			Path     = Path,
+			Secure   = IsSecure,
+
 			// Expires =
 		};
 
 		return cc;
+	}
+
+	public FlurlCookie AsFlurlCookie()
+	{
+		var fk = new FlurlCookie(Name, Value, null, null)
+		{
+			Domain   = Host,
+			HttpOnly = IsHttpOnly,
+			Secure   = IsSecure,
+			SameSite = SameSite,
+			Path     = Path,
+		};
+
+		return fk;
 	}
 
 	public long   Id;
@@ -41,7 +56,7 @@ public class FirefoxCookie : IBrowserCookie
 
 	public bool InBrowserElement;
 
-	public bool SameSite;
+	public SameSite SameSite;
 
 	public bool RawSameSite;
 
@@ -62,9 +77,9 @@ public class FirefoxCookie : IBrowserCookie
 		CreationTime = reader.GetInt64(8);
 		IsSecure     = reader.GetBoolean(9);
 		IsHttpOnly   = reader.GetBoolean(10);
-
+		
 		InBrowserElement          = reader.GetBoolean(11);
-		SameSite                  = reader.GetBoolean(12);
+		SameSite                  = (SameSite) reader.GetInt32(12);
 		RawSameSite               = reader.GetBoolean(13);
 		SchemeMap                 = reader.GetInt32(14);
 		IsPartitionedAttributeSet = reader.GetBoolean(15);
