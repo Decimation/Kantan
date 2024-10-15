@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,8 +14,9 @@ namespace Kantan.Utilities;
 public static class ConfigurationHelper
 {
 	[CBN]
-	public static T ReadSetting<T>(this Configuration configuration, string key, [CBN] T def = default)
+	public static T ReadSetting<T>(this Configuration configuration, [CallerMemberName] string key = null, [CBN] T def = default)
 	{
+		ArgumentNullException.ThrowIfNull(key, nameof(key));
 		try {
 
 			var appSettings = configuration.AppSettings.Settings;

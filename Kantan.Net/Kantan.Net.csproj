@@ -10,7 +10,7 @@
     <Authors>Read Stanton (Decimation)</Authors>
     <Company>Read Stanton (Decimation)</Company>
     <NoWarn>
-      HAA0601
+      HAA0601,
       HAA0601,
       HAA0602,
       HAA0603,
@@ -25,7 +25,7 @@
       HAA0302,
       HAA0303,
       HAA0101,
-      CS1591,
+      CS1591
     </NoWarn>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Configurations>Debug;Release;TestDebug</Configurations>
@@ -37,11 +37,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='TestDebug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Remove="Content\HttpResource.cs~RF299da50.TMP\**" />
-    <EmbeddedResource Remove="Content\HttpResource.cs~RF299da50.TMP\**" />
-    <None Remove="Content\HttpResource.cs~RF299da50.TMP\**" />
-  </ItemGroup>
  
   <ItemGroup>
     <PackageReference Include="AngleSharp" Version="1.1.0" />

@@ -6,15 +6,52 @@ using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Diagnosers;
+using BenchmarkDotNet.Engines;
+using BenchmarkDotNet.Environments;
+using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
+using BenchmarkDotNet.Toolchains.InProcess.Emit;
+using BenchmarkDotNet.Toolchains.InProcess.NoEmit;
 using Kantan.Collections;
 using Kantan.Net;
+using Kantan.Net.Web;
 using Kantan.Numeric;
 using Kantan.Threading;
 using Kantan.Utilities;
 using Array = System.Array;
 
 namespace Benchmark;
+
+public class Benchmarks7
+{
+
+	[IterationSetup]
+	public async Task Setup()
+	{
+		f          = new FirefoxCookieReader();
+		m_consumer = new Consumer();
+		await f.OpenAsync();
+	}
+
+	[IterationCleanup]
+	public void Cleanup()
+	{
+		f.Dispose();
+
+	}
+
+	private FirefoxCookieReader f;
+	private Consumer            m_consumer;
+
+	[Benchmark]
+	public async Task Read()
+	{
+		(await f.ReadCookiesAsync()).Consume(m_consumer);
+	}
+
+}
 
 public class Benchmarks5
 {
@@ -158,7 +195,13 @@ public static class Program
 
 	public static void Main(string[] args)
 	{
-		BenchmarkRunner.Run<Benchmarks5>();
+		var cfg = DefaultConfig.Instance
+
+			// .AddExporter(new HtmlExporter())
+			.AddDiagnoser(MemoryDiagnoser.Default)
+			.AddJob(Job.Default.WithRuntime(CoreRuntime.Core80).WithToolchain(InProcessNoEmitToolchain.Instance));
+
+		BenchmarkRunner.Run<Benchmarks7>(cfg);
 
 	}
 

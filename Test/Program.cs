@@ -67,15 +67,12 @@ public static partial class Program
 		"https://twitter.com/mircosciamart/status/1186775807655587841",
 		@"https://en.wikipedia.org/wiki/Lambda_calculus",
 		@"http://www.zerochan.net/2750747",
-		"https://scontent-ord1-1.xx.fbcdn.net/t31.0-8/14715634_1300559193310808_8524406991247613051_o.jpg",
-		"https://kemono.party/data/45/a0/45a04a55cdc142ee78f6f00452886bc4b336d9f35d3d851f5044852a7e26b5da.png"
 	};
 
 	private static string[] _rg = new[]
 	{
 		@"http://www.zerochan.net/2750747",
 		@"https://i.imgur.com/QtCausw.png",
-		@"https://kemono.party/patreon/user/3332300/post/65227512",
 
 		// @"https://i.pximg.net/img-master/img/2022/05/01/19/44/39/98022741_p0_master1200.jpg",
 		"C:\\Users\\Deci\\Pictures\\Test Images\\Test1.jpg"
@@ -83,7 +80,17 @@ public static partial class Program
 
 	private static async Task Main(string[] args)
 	{
-		var      butt    = new butt() { a = "foo", c=321 };
+		var c = new FirefoxCookieReader();
+		await c.OpenAsync();
+
+		foreach (IBrowserCookie cookie in (await c.ReadCookiesAsync("google"))) {
+			Console.WriteLine(cookie);
+		}
+	}
+
+	private static void Test2()
+	{
+		var butt    = new butt() { a = "foo", c=321 };
 		var objects = MemberUtility.Select(butt, TestEnum.a | TestEnum.c | TestEnum.b);
 		foreach (object o in objects) {
 			Console.WriteLine(o);
@@ -222,47 +229,6 @@ public static partial class Program
 		}
 
 		return map;
-	}
-
-	private static async Task Test1()
-	{
-		// var v = await Kantan.Net.Content.HttpScanner.ScanAsync(_rg[0], HttpResourceSniffer.Default);
-
-		/*
-		foreach (var a in _rg) {
-			foreach (var aa in await HttpScanner.ScanAsync(a)) {
-				Console.WriteLine(aa.Value);
-			}
-		}*/
-
-		// Debugger.Break();
-
-		var u2 =
-			"https://data19.kemono.party/data/1e/90/1e90c71e9bedc2998289ca175e2dcc6580bbbc3d3c698cdbb0f427f0a0d364b7.png?f=Bianca%20bunny%201-3.png";
-
-		// var u = CliAdapters.gallery_dl_resolve("https://kemono.party/patreon/user/3332300/post/65227512");
-		// Console.WriteLine(u);
-
-		// KantanNetInit.Close();
-
-		/*foreach (string s in _rg.Union(_rg1)) {
-			Console.WriteLine(s);
-
-			var now = Stopwatch.GetTimestamp();
-			var o   = await ResourceHandle.GetAsync(s, true) as HttpResourceHandle;
-			o?.Resolve(true);
-
-			if (o is not { }) {
-				Console.WriteLine($"failed");
-				continue;
-			}
-
-			Console.WriteLine(o);
-			Console.WriteLine(o.NoSniffFlag);
-
-			var diff = TimeSpan.FromTicks(Stopwatch.GetTimestamp() - now);
-			Console.WriteLine(diff.TotalSeconds);
-		}*/
 	}
 
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft;
@@ -24,9 +25,9 @@ public abstract class BaseCookieReader : IDisposable
 		File       = new FileInfo(c);
 	}
 
-	public async Task OpenAsync()
+	public Task OpenAsync()
 	{
-		await Connection.OpenAsync();
+		return Connection.OpenAsync();
 	}
 
 	public abstract Task<List<IBrowserCookie>> ReadCookiesAsync();
@@ -34,6 +35,21 @@ public abstract class BaseCookieReader : IDisposable
 	public void Dispose()
 	{
 		Connection?.Dispose();
+	}
+
+	
+
+	public static async IAsyncEnumerable<IBrowserCookie> ReadToEndAsync(
+		SqliteCommand cmd, Func<SqliteDataReader, IBrowserCookie> list)
+	{
+		//todo
+
+		await using SqliteDataReader reader = await cmd.ExecuteReaderAsync();
+
+		while (await reader.ReadAsync()) {
+
+			yield return list(reader);
+		}
 	}
 
 }

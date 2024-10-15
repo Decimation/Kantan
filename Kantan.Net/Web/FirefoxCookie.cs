@@ -21,7 +21,6 @@ public class FirefoxCookie : IBrowserCookie
 			Value    = Value,
 			Path     = Path,
 			Secure   = IsSecure,
-
 			// Expires =
 		};
 
@@ -77,13 +76,12 @@ public class FirefoxCookie : IBrowserCookie
 		CreationTime = reader.GetInt64(8);
 		IsSecure     = reader.GetBoolean(9);
 		IsHttpOnly   = reader.GetBoolean(10);
-		
+
 		InBrowserElement          = reader.GetBoolean(11);
 		SameSite                  = (SameSite) reader.GetInt32(12);
 		RawSameSite               = reader.GetBoolean(13);
 		SchemeMap                 = reader.GetInt32(14);
 		IsPartitionedAttributeSet = reader.GetBoolean(15);
-
 	}
 
 }

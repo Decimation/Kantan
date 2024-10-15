@@ -56,35 +56,29 @@ public sealed class FirefoxCookieReader : BaseCookieReader
 		// return new FileInfo(file);
 	}
 
-	public override async Task<List<IBrowserCookie>> ReadCookiesAsync()
+	public async Task<IList<IBrowserCookie>> ReadCookiesAsync(string host = "%", bool wildcard = true)
 	{
-		var           dict = new List<IBrowserCookie>();
-		SqliteCommand cmd  = CreateCommand();
+		var           list = new List<IBrowserCookie>();
+		SqliteCommand cmd  = Connection.CreateCommand();
 
-		/*cmd.CommandText = """
-						  SELECT name,value
-						  FROM moz_cookies
-						  WHERE host like $host
-						  """;
+		cmd.CommandText = """
+		                  SELECT *
+		                  FROM moz_cookies
+		                  WHERE host like $host
+		                  """;
 
-		cmd.Parameters.AddWithValue("$host", host);*/
-
-		await using SqliteDataReader reader = await cmd.ExecuteReaderAsync();
-
-		while (await reader.ReadAsync()) {
-
-			dict.Add(new FirefoxCookie(reader));
+		if (wildcard) {
+			host = $"%{host}%";
 		}
 
-		return dict;
+		cmd.Parameters.AddWithValue("$host", host);
+
+		ReadToEndAsync(cmd, x=>);
+
+		return list;
 
 	}
 
-	private SqliteCommand CreateCommand()
-	{
-		SqliteCommand cmd = Connection.CreateCommand();
-		cmd.CommandText = "SELECT * FROM moz_cookies";
-		return cmd;
-	}
+
 
 }
