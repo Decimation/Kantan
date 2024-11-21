@@ -81,7 +81,7 @@ public static partial class Program
 	private static async Task Main(string[] args)
 	{
 		var c = new FirefoxCookieReader();
-		await c.OpenAsync();
+		await c.Connection.OpenAsync();
 
 		foreach (IBrowserCookie cookie in (await c.ReadCookiesAsync("google"))) {
 			Console.WriteLine(cookie);

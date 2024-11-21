@@ -21,7 +21,7 @@ public class FirefoxCookie : IBrowserCookie
 			Value    = Value,
 			Path     = Path,
 			Secure   = IsSecure,
-			// Expires =
+			Expires  = Expiry.DateTime,
 		};
 
 		return cc;
@@ -29,29 +29,30 @@ public class FirefoxCookie : IBrowserCookie
 
 	public FlurlCookie AsFlurlCookie()
 	{
-		var fk = new FlurlCookie(Name, Value, null, null)
+		var fk = new FlurlCookie(Name, Value, null, CreationTime)
 		{
 			Domain   = Host,
 			HttpOnly = IsHttpOnly,
 			Secure   = IsSecure,
 			SameSite = SameSite,
 			Path     = Path,
+			Expires  = Expiry,
 		};
 
 		return fk;
 	}
 
-	public long   Id;
-	public string Attribute;
-	public string Name;
-	public string Value;
-	public string Host;
-	public string Path;
-	public long   Expiry;
-	public long   LastAccess;
-	public long   CreationTime;
-	public bool   IsSecure;
-	public bool   IsHttpOnly;
+	public long           Id;
+	public string         Attribute;
+	public string         Name;
+	public string         Value;
+	public string         Host;
+	public string         Path;
+	public DateTimeOffset Expiry;
+	public DateTime       LastAccess;
+	public DateTime       CreationTime;
+	public bool           IsSecure;
+	public bool           IsHttpOnly;
 
 	public bool InBrowserElement;
 
@@ -71,9 +72,9 @@ public class FirefoxCookie : IBrowserCookie
 		Value        = reader.GetString(3);
 		Host         = reader.GetString(4);
 		Path         = reader.GetString(5);
-		Expiry       = reader.GetInt64(6);
-		LastAccess   = reader.GetInt64(7);
-		CreationTime = reader.GetInt64(8);
+		Expiry       = (DateTime.UnixEpoch + TimeSpan.FromSeconds(reader.GetInt64(6)));
+		LastAccess   = (DateTime.UnixEpoch + TimeSpan.FromMicroseconds(reader.GetInt64(7)));
+		CreationTime = DateTime.UnixEpoch + TimeSpan.FromMicroseconds(reader.GetInt64(8));
 		IsSecure     = reader.GetBoolean(9);
 		IsHttpOnly   = reader.GetBoolean(10);
 

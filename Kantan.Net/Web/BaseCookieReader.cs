@@ -25,12 +25,14 @@ public abstract class BaseCookieReader : IDisposable
 		File       = new FileInfo(c);
 	}
 
+	/*
 	public Task OpenAsync()
 	{
 		return Connection.OpenAsync();
 	}
+	*/
 
-	public abstract Task<List<IBrowserCookie>> ReadCookiesAsync();
+	public abstract Task<IList<IBrowserCookie>> ReadCookiesAsync();
 
 	public void Dispose()
 	{

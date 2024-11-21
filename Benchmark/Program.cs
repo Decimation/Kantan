@@ -32,7 +32,7 @@ public class Benchmarks7
 	{
 		f          = new FirefoxCookieReader();
 		m_consumer = new Consumer();
-		await f.OpenAsync();
+		await f.Connection.OpenAsync();
 	}
 
 	[IterationCleanup]

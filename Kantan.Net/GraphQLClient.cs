@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Json;
+using System.Text.Json;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Flurl.Http;
@@ -48,7 +49,7 @@ public class GraphQLClient : IDisposable
 
 	}
 
-	public async Task<JsonValue> ExecuteAsync(string query, object variables = null,
+	public async Task<JsonNode> ExecuteAsync(string query, object variables = null,
 	                                        Dictionary<string, string> additionalHeaders = null,
 	                                        int timeout = -1)
 	{
@@ -84,7 +85,7 @@ public class GraphQLClient : IDisposable
 		var response = await r.PostJsonAsync(obj);
 		var task     = await response.GetStringAsync();
 
-		return JsonValue.Parse(task);
+		return JsonNode.Parse(task);
 	}
 
 	public void Dispose()

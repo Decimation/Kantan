@@ -50,7 +50,6 @@
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Microsoft.VisualStudio.Validation" Version="17.8.8" />
-    <PackageReference Include="System.Json" Version="4.7.1" />
   </ItemGroup>
 
   <ItemGroup>

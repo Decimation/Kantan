@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.Json;
+using System.Text.Json;
 using System.Linq;
+using System.Text.Json.Nodes;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 
@@ -31,9 +32,4 @@ public static class DomUtilities
 		return null;
 	}
 
-	[CBN]
-	public static JsonValue TryGetKeyValue(this JsonValue value, string k)
-	{
-		return value.ContainsKey(k) ? value[k] : null;
-	}
 }

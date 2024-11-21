@@ -56,7 +56,7 @@ public sealed class FirefoxCookieReader : BaseCookieReader
 		// return new FileInfo(file);
 	}
 
-	public async Task<IList<IBrowserCookie>> ReadCookiesAsync(string host = "%", bool wildcard = true)
+	public async Task<IList<IBrowserCookie>> ReadCookiesAsync(string host, bool wildcard = true)
 	{
 		var           list = new List<IBrowserCookie>();
 		SqliteCommand cmd  = Connection.CreateCommand();
@@ -73,12 +73,17 @@ public sealed class FirefoxCookieReader : BaseCookieReader
 
 		cmd.Parameters.AddWithValue("$host", host);
 
-		ReadToEndAsync(cmd, x=>);
+		await foreach (var c in ReadToEndAsync(cmd, r => new FirefoxCookie(r))) {
+			list.Add(c);
+		}
 
 		return list;
 
 	}
 
-
+	public override Task<IList<IBrowserCookie>> ReadCookiesAsync()
+	{
+		return ReadCookiesAsync("%");
+	}
 
 }
