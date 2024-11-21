@@ -4,7 +4,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Net.Mime;
 using System.Reflection;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
@@ -67,6 +71,82 @@ public static class HttpUtilities
 			.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
 
 	}
+
+	#region
+
+	public static async Task<bool> WriteResponseDataAsync(this HttpListenerResponse response, byte[] responseBytes,
+	                                                      CancellationToken ct = default)
+	{
+			response.ContentType     = MediaTypeNames.Text.Plain;
+			response.StatusCode      = (int) HttpStatusCode.OK;
+			response.ContentLength64 = responseBytes.Length;
+			await response.OutputStream.WriteAsync(responseBytes, 0, responseBytes.Length, ct);
+
+ response.OutputStream.Close();
+
+			// state.Dispose();
+			response.Close();
+			return true;
+		
+
+
+	}
+
+	public static Task<bool> WriteResponseStringAsync(this HttpListenerResponse req, string s,
+	                                                  CancellationToken ct = default)
+	{
+		var encoding = req.ContentEncoding ?? DefaultEncoding;
+		var bytes    = encoding.GetBytes(s);
+		return req.WriteResponseDataAsync(bytes, ct);
+	}
+
+	public static Task<bool> WriteResponseJsonAsync<T>(this HttpListenerResponse req, T t,
+	                                                   CancellationToken ct = default)
+	{
+		var bytes = JsonSerializer.Serialize(t, Options);
+		return req.WriteResponseStringAsync(bytes, ct);
+	}
+
+	public static async Task<byte[]> ReadRequestDataAsync(this HttpListenerRequest req, CancellationToken ct = default)
+	{
+		var len = req.ContentLength64;
+
+		if (len == KantanInit.INVALID) {
+			if (!req.InputStream.CanSeek) {
+				return [];
+			}
+
+			len = req.InputStream.Length;
+		}
+
+		var responseData = new byte[len];
+		var cb           = await req.InputStream.ReadAsync(responseData, 0, (int) len, ct);
+
+		if (cb < len) {
+			Debugger.Break();
+		}
+
+		return responseData;
+	}
+
+	public static async Task<string> ReadRequestStringAsync(this HttpListenerRequest req,
+	                                                        CancellationToken ct = default)
+	{
+		var data = await req.ReadRequestDataAsync(ct);
+		var s    = req.ContentEncoding.GetString(data);
+
+		return s;
+	}
+
+	public static async Task<T> ReadRequestJsonAsync<T>(this HttpListenerRequest req, CancellationToken ct = default)
+	{
+		var data = await req.ReadRequestDataAsync(ct);
+		var obj  = JsonSerializer.Deserialize<T>(data, Options);
+
+		return obj;
+	}
+
+	#endregion
 
 	public static async Task<Url> GetFinalRedirectAsync(Url url)
 	{
@@ -340,5 +420,17 @@ public static class HttpUtilities
 
 		return t;
 	}*/
+
+	public static readonly JsonSerializerOptions Options = new(JsonSerializerOptions.Default)
+	{
+		IncludeFields          = true,
+		DefaultIgnoreCondition = JsonIgnoreCondition.Never,
+		Converters =
+		{
+			new UrlTypeConverter()
+		}
+	};
+
+	public static readonly Encoding DefaultEncoding = Encoding.UTF8;
 
 }

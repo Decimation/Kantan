@@ -3,14 +3,18 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Flurl.Http;
+using Kantan.Net.Utilities;
 
 namespace Kantan.Net;
 
@@ -33,11 +37,11 @@ public sealed class SmartHttpListener : IDisposable
 			builder.Settings.AllowedHttpStatusRange = "*";
 			builder.AllowAnyHttpStatus();
 
-			builder.OnError(f =>
+			/*builder.OnError(f =>
 			{
 				f.ExceptionHandled = true;
 				return;
-			});
+			});*/
 
 		});
 	}
@@ -54,7 +58,9 @@ public sealed class SmartHttpListener : IDisposable
 
 	// public delegate Task<string> RequestDataCallback(byte[] buf);
 
-	public delegate Task<string> HandleRequestCallback(HttpListenerRequest buf);
+	// public delegate Task<string> HandleRequestCallback(HttpListenerRequest buf);
+
+	public delegate Task<object> HandleRequestCallback(HttpListenerRequest buf, HttpListenerResponse res);
 
 	public SmartHttpListener(RouteCallbackMap requestHandlers, int port)
 		: this(requestHandlers, $"http://*:{port}/") { }
@@ -77,7 +83,7 @@ public sealed class SmartHttpListener : IDisposable
 
 
 		Listener.Prefixes.Add(uriPrefix);
-		Encoding = Encoding.UTF8;
+		Encoding = HttpUtilities.DefaultEncoding;
 
 		// Start();
 
@@ -93,7 +99,7 @@ public sealed class SmartHttpListener : IDisposable
 			// Listener.BeginGetContext(HandleRequest, Listener);
 
 			while (Listener.IsListening) {
-				var ctx = await Listener.GetContextAsync();
+				var ctx = await Listener.GetContextAsync().ConfigureAwait(false);
 
 				var res = await HandleRequestAsync(ctx, ct);
 
@@ -107,41 +113,40 @@ public sealed class SmartHttpListener : IDisposable
 	private async Task<bool> HandleRequestAsync(HttpListenerContext context, CancellationToken ct = default)
 	{
 
-		// var bytesRead = state.Stream.Length;
-
-		/*var responseData = new byte[context.Request.ContentLength64];
-		var cb           = await context.Request.InputStream.ReadAsync(responseData, 0, responseData.Length, ct);*/
-
-		var data = context.Request;
-
-		// var responseData = state.ResultBuffer;
+		var request  = context.Request;
+		var response = context.Response;
 
 		foreach (var requestHandler in RequestHandlers) {
 
+			var requestUrl = request.Url;
 
-			var requestUrl = data.Url;
-
-			if (requestUrl != null && !requestUrl.PathAndQuery.Contains(requestHandler.Key))
+			if (requestUrl != null && !requestUrl.PathAndQuery.Contains(requestHandler.Key)) {
 				continue;
+			}
 
-			var responseValue = await requestHandler.Value(data);
-			var responseBytes = Encoding.GetBytes(responseValue);
+			var handlerObject = await requestHandler.Value(request, response);
 
-			context.Response.ContentType     = MediaTypeNames.Text.Plain;
-			context.Response.StatusCode      = (int) HttpStatusCode.OK;
-			context.Response.ContentLength64 = responseBytes.Length;
-			await context.Response.OutputStream.WriteAsync(responseBytes, 0, responseBytes.Length, ct);
+			/*if (handlerObject is byte[] responseBytes) {
+				//...
+			}
+			else if (handlerObject is string sz) {
+				responseBytes = Encoding.GetBytes(sz);
+			}
+			else {
+				responseBytes = await request.ReadRequestDataAsync(ct: ct);
+			}*/
 
-			context.Response.OutputStream.Dispose();
 
-			// state.Dispose();
-			context.Response.Close();
+			if (handlerObject != null) {
+				Trace.WriteLine($"{handlerObject} :: {request}, {response}");
+			}
 
 			return true;
 		}
 
 		return true;
 	}
+
 
 
 	[return: MN]
