@@ -1,4 +1,5 @@
-﻿global using MN = System.Diagnostics.CodeAnalysis.MaybeNullAttribute;
+﻿global using ICBN = JetBrains.Annotations.ItemCanBeNullAttribute;
+global using MN = System.Diagnostics.CodeAnalysis.MaybeNullAttribute;
 global using MNNW = System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute;
 global using UT = System.Runtime.InteropServices.UnmanagedType;
 global using MA = System.Runtime.InteropServices.MarshalAsAttribute;

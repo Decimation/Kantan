@@ -100,7 +100,7 @@ public sealed class SmartHttpListener : IDisposable
 
 			while (Listener.IsListening) {
 				var ctx = await Listener.GetContextAsync().ConfigureAwait(false);
-
+				Trace.WriteLine($"{ctx}");
 				var res = await HandleRequestAsync(ctx, ct);
 
 				if (ct.IsCancellationRequested) {
@@ -146,7 +146,6 @@ public sealed class SmartHttpListener : IDisposable
 
 		return true;
 	}
-
 
 
 	[return: MN]
