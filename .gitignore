@@ -364,3 +364,14 @@ FodyWeavers.xsd
 
 .idea
 .idea/
+/Test/Test.csproj
+/UnitTest/UnitTest.csproj
+
+Test/
+Test/*
+/Test/Test.csproj
+/Test/Program.cs
+UnitTest/
+UnitTest/*
+Benchmark/
+Benchmark/*
