@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -31,6 +32,7 @@ namespace Kantan.Collections;
 /// </summary>
 public static class EnumerableHelper
 {
+
 	/// <summary>
 	/// Invokes <see cref="IEnumerator.MoveNext"/> then returns <see cref="IEnumerator.Current"/> if <c>non-null</c>; otherwise <c>default</c>
 	/// </summary>
@@ -64,7 +66,7 @@ public static class EnumerableHelper
 	public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source)
 	{
 		// return source.OrderBy(x => Guid.NewGuid());
-		return source.OrderBy(x => KantanInit.RandomInstance.Next());
+		return source.OrderBy(x => Random.Shared.Next());
 	}
 
 	public static IList<T> Shuffle<T>(this IList<T> list)
@@ -74,7 +76,7 @@ public static class EnumerableHelper
 
 		while (n > 1) {
 			n--;
-			int k = KantanInit.RandomInstance.Next(n + 1);
+			int k = Random.Shared.Next(n + 1);
 
 			(cpy[k], cpy[n]) = (cpy[n], cpy[k]);
 		}
@@ -90,25 +92,23 @@ public static class EnumerableHelper
 	/// <returns>A random element</returns>
 	public static T TakeRandom<T>(this IList<T> list)
 	{
-		int i = KantanInit.RandomInstance.Next(list.Count);
-		
+		int i = Random.Shared.Next(list.Count);
+
 		return list[i];
 	}
 
 	public static bool IsIndexWithinBounds<T>(this IList<T> r, int index)
-	{
-		return MathHelper.IsInRange(index, r.Count);
-	}
+		=> MathHelper.IsInRange(index, r.Count);
 
 	public static IEnumerable<T> TakeRandom<T>(this IList<T> list, int cnt) => list.Shuffle().Take(cnt);
 
-	public static object[] CastObjectArray(this Array r)
+	/*public static object[] CastObjectArray(this Array r)
 	{
 		/*var rg = new object[r.Length];
 		r.CopyTo(rg, 0);
-		return rg;*/
+		return rg;#1#
 		return r.Cast<object>().ToArray();
-	}
+	}*/
 
 	public delegate int IndexOfCallback<in T>(T search, int start);
 
@@ -118,6 +118,7 @@ public static class EnumerableHelper
 
 		while (minIndex != -1) {
 			yield return minIndex;
+
 			minIndex = callback(search, minIndex + inc);
 		}
 	}
@@ -157,12 +158,12 @@ public static class EnumerableHelper
 		return rg;
 	}
 
-	public static IEnumerator<T> Cast<T>(this IEnumerator iterator)
+	/*public static IEnumerator<T> Cast<T>(this IEnumerator iterator)
 	{
 		while (iterator.MoveNext()) {
 			yield return (T) iterator.Current;
 		}
-	}
+	}*/
 
 	public static IEnumerable<T> Difference<T>(this IEnumerable<T> a, IEnumerable<T> b) => b.Where(c => !a.Contains(c));
 
@@ -175,9 +176,9 @@ public static class EnumerableHelper
 		list[oldItemIndex] = newItem;
 	}
 
-	public static List<object> CastToList(this IEnumerable value) => CastToList<object>(value);
+	// public static List<object> CastToList(this IEnumerable value) => CastToList<object>(value);
 
-	public static List<T> CastToList<T>(this IEnumerable value) => value.Cast<T>().ToList();
+	// public static List<T> CastToList<T>(this IEnumerable value) => value.Cast<T>().ToList();
 
 	/*private static bool TryIndex<T>(Index i, int len, out T value)
 	{
@@ -422,4 +423,5 @@ public static class EnumerableHelper
 	)
 		=> source.Match(result => func.Select(fun => fun(result)).AnyOrNothing(),
 		                error => error.ToFailureResult<IEnumerable<TResult>>());
+
 }

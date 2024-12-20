@@ -75,6 +75,7 @@ public static class HttpUtilities
 	#region
 
 	public static async Task<bool> WriteResponseDataAsync(this HttpListenerResponse response, byte[] responseBytes,
+														  bool autoClose = false,
 	                                                      CancellationToken ct = default)
 	{
 			response.ContentType     = MediaTypeNames.Text.Plain;
@@ -82,10 +83,12 @@ public static class HttpUtilities
 			response.ContentLength64 = responseBytes.Length;
 			await response.OutputStream.WriteAsync(responseBytes, 0, responseBytes.Length, ct);
 
- response.OutputStream.Close();
+			if(autoClose ) {
+				response.OutputStream.Close();
+				// state.Dispose();
+				response.Close();
 
-			// state.Dispose();
-			response.Close();
+			}
 			return true;
 		
 
@@ -97,14 +100,14 @@ public static class HttpUtilities
 	{
 		var encoding = req.ContentEncoding ?? DefaultEncoding;
 		var bytes    = encoding.GetBytes(s);
-		return req.WriteResponseDataAsync(bytes, ct);
+		return req.WriteResponseDataAsync(bytes, ct: ct);
 	}
 
 	public static Task<bool> WriteResponseJsonAsync<T>(this HttpListenerResponse req, T t,
 	                                                   CancellationToken ct = default)
 	{
 		var bytes = JsonSerializer.Serialize(t, Options);
-		return req.WriteResponseStringAsync(bytes, ct);
+		return req.WriteResponseStringAsync(bytes, ct: ct);
 	}
 
 	public static async Task<byte[]> ReadRequestDataAsync(this HttpListenerRequest req, CancellationToken ct = default)
@@ -132,7 +135,7 @@ public static class HttpUtilities
 	public static async Task<string> ReadRequestStringAsync(this HttpListenerRequest req,
 	                                                        CancellationToken ct = default)
 	{
-		var data = await req.ReadRequestDataAsync(ct);
+		var data = await req.ReadRequestDataAsync(ct: ct);
 		var s    = req.ContentEncoding.GetString(data);
 
 		return s;

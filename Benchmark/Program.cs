@@ -45,7 +45,7 @@ public class Benchmarks7
 	private FirefoxCookieReader f;
 	private Consumer            m_consumer;
 
-	[Benchmark]
+	[BenchmarkAttribute]
 	public async Task Read()
 	{
 		(await f.ReadCookiesAsync()).Consume(m_consumer);

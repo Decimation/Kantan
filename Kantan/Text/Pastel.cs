@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -13,14 +14,17 @@ using Kantan.Utilities;
 // ReSharper disable InconsistentNaming
 
 #nullable enable
+
 // ReSharper disable UnusedMember.Global
 // ReSharper disable ParameterTypeCanBeEnumerable.Global
 // ReSharper disable StringCompareToIsCultureSpecific
 #pragma warning disable IDE0059
 namespace Kantan.Text;
 
+
 public static class Pastel
 {
+
 	//https://github.com/silkfire/Pastel/blob/master/src/ConsoleExtensions.cs
 
 	private const string FORMAT_STRING_START   = "\u001b[{0};2;";
@@ -158,8 +162,10 @@ public static class Pastel
 
 	private enum ColorPlane : byte
 	{
+
 		Foreground,
 		Background
+
 	}
 
 	/// <summary>
@@ -213,20 +219,22 @@ public static class Pastel
 		return s.AddColorBG(f).AddColor(c.Value);
 	}
 
-	public enum Decoration
+	public enum PastelDecoration
 	{
+
 		Underline,
 		Negative,
 		Bold
+
 	}
 
-	public static string AddDecoration(this string s, Decoration d)
+	public static string AddDecoration(this string s, PastelDecoration d)
 	{
 		string? dec = d switch
 		{
-			Decoration.Underline => EmbeddedResources.Seq_Underline,
-			Decoration.Negative  => EmbeddedResources.Seq_Negative,
-			Decoration.Bold      => EmbeddedResources.Seq_Bold,
+			PastelDecoration.Underline => EmbeddedResources.Seq_Underline,
+			PastelDecoration.Negative  => EmbeddedResources.Seq_Negative,
+			PastelDecoration.Bold      => EmbeddedResources.Seq_Bold,
 			_                    => null,
 		};
 
@@ -237,4 +245,5 @@ public static class Pastel
 	{
 		return Regex.Replace(s, "(\x9B|\x1B\\[)[0-?]*[ -/]*[@-~]", String.Empty);
 	}
+
 }

@@ -26,11 +26,11 @@ public class CliHandler
 	{
 		Trace.WriteLine($"{nameof(CliHandler)}: arguments: {args.QuickJoin(" ")}", C_DEBUG);
 
-		var argEnum = args.GetEnumerator().Cast<string>();
+		var argEnum = (IEnumerator<string>) args.GetEnumerator();
 
 		while (argEnum.MoveNext()) {
 
-			var current = argEnum.Current;
+			var current = (string) argEnum.Current;
 
 			var cliParam = Parameters.FirstOrDefault(p => p.ParameterId == current);
 

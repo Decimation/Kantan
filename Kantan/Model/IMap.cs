@@ -8,11 +8,11 @@ using JetBrains.Annotations;
 using Kantan.Utilities;
 
 namespace Kantan.Model;
-#if OBSOLETE
 
 [Obsolete]
 public interface IMap
 {
+
 	public Dictionary<string, object> Data { get; }
 
 	/*public static IEnumerable<KeyValuePair<string, object>> ToKeyValues(
@@ -35,10 +35,7 @@ public interface IMap
 		Predicate<MemberInfo> fn = (MemberInfo mi) => mi.Name != nameof(Data);
 
 		// membPredicate ??= fn;
-		Predicate<MemberInfo> mbp = mi =>
-		{
-			return fn(mi) && (membPredicate?.Invoke(mi) ?? true);
-		};
+		Predicate<MemberInfo> mbp = mi => { return fn(mi) && (membPredicate?.Invoke(mi) ?? true); };
 
 		fieldConv ??= (info, inst) =>
 		{
@@ -56,12 +53,12 @@ public interface IMap
 			.Where(r => r.Name != nameof(Data));
 
 		var f = type.GetRuntimeFields().Where(fi => mbp(fi))
-			.Where(f => !p.Any(f.IsBackingFieldOf));
+			.Where(f => !p.Any(pp => pp.Name.Contains(f.Name, StringComparison.InvariantCultureIgnoreCase)));
 
 		var m = f.OfType<MemberInfo>().Union(p)
-			.Where(m=>!m.DeclaringType.Namespace.StartsWith("System"));
+			.Where(m => !m.DeclaringType.Namespace.StartsWith("System"));
 
 		return m.ToDictionary(info => $"{info.Name}", info => fieldConv(info, value));
 	}
+
 }
-#endif

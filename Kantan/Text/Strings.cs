@@ -38,9 +38,9 @@ public static partial class Strings
 {
 
 	public static string RemoveNewLines(this string s)
-		=> s.Remove(LineControlCharacters, (current, t) => current.Remove(t));
+		=> s.Aggregate(LineControlCharacters, (current, t) => current.Remove(t));
 
-	public static string Remove<T>(this string s, T[] rg, Func<string, T, string> func)
+	public static string Aggregate<T>(this string s, IEnumerable<T> rg, Func<string, T, string> func)
 		=> rg.Aggregate(s, func);
 
 	// public static string Remove(this string s, char[] rg)   => rg.Aggregate(s, (current, t) => current.Remove(t));
@@ -61,7 +61,7 @@ public static partial class Strings
 
 	/// <remarks>Select only</remarks>
 	public static string WhereAggregate(this string s, Func<char, bool> fn)
-		=> s.Where(fn).Aggregate(String.Empty, (current, t) => current + t);
+		=> s.Where(fn).Aggregate(String.Empty, static (current, t) => current + t);
 
 	public static string CleanString(this string s)
 		=> s.Trim('\"');
@@ -80,16 +80,14 @@ public static partial class Strings
 	public static string CreateRandom(int length)
 	{
 		return new(Enumerable.Repeat(Constants.Alphanumeric, length)
-			           .Select(s => s[KantanInit.RandomInstance.Next(s.Length)])
+			           .Select(s => s[Random.Shared.Next(s.Length)])
 			           .ToArray());
 	}
 
 	public static IEnumerable<int> IndexOfAll(this string str, string search,
 	                                          StringComparison c = StringComparison.Ordinal)
-	{
-		return EnumerableHelper.IndexOfAll((s, i) => str.IndexOf(s, i, c),
-		                                   search.Length, search);
-	}
+		=> EnumerableHelper.IndexOfAll((s, i) => str.IndexOf(s, i, c),
+		                               search.Length, search);
 
 	public static string RemoveLastOccurrence(this string s, string s2, StringComparison c = StringComparison.Ordinal)
 		=> s.Remove(s.LastIndexOf(s2, c));
@@ -133,20 +131,6 @@ public static partial class Strings
 		return d[n, m];
 	}
 
-	public static string GetMapString(Dictionary<string, string> map, Color? c = null)
-	{
-		return map.Select(kv =>
-		{
-			var key = kv.Key;
-
-			if (c.HasValue) {
-				key = key.AddColor(c.Value);
-			}
-
-			return $"{key}: {kv.Value}";
-		}).QuickJoin(" | ");
-	}
-
 	#region Substring
 
 	/// <summary>
@@ -180,7 +164,7 @@ public static partial class Strings
 	{
 		int posA = value.LastIndexOf(a, StringComparison.Ordinal);
 
-		if (posA == KantanInit.INVALID) {
+		if (posA == KI.INVALID) {
 			return String.Empty;
 		}
 
@@ -205,7 +189,7 @@ public static partial class Strings
 		int posA = value.IndexOf(a, StringComparison.Ordinal);
 		int posB = value.LastIndexOf(b, StringComparison.Ordinal);
 
-		if (posA == KantanInit.INVALID || posB == KantanInit.INVALID) {
+		if (posA == KI.INVALID || posB == KI.INVALID) {
 			return String.Empty;
 		}
 
@@ -215,9 +199,8 @@ public static partial class Strings
 
 	#endregion
 
-#if OTHER
 
-	public static string Truncate(this string value, int maxLength)
+	public static string Truncate(string value, int maxLength)
 	{
 		if (String.IsNullOrEmpty(value)) {
 			return value;
@@ -269,7 +252,9 @@ public static partial class Strings
 
 			while (process.Length > Console.WindowWidth) {
 				int wrapAt = process.LastIndexOf(' ', Math.Min(Console.WindowWidth - 1, process.Length));
-				if (wrapAt <= 0) break;
+
+				if (wrapAt <= 0)
+					break;
 
 				wrapped.Add(process[..wrapAt]);
 				process = process.Remove(0, wrapAt + 1);
@@ -310,7 +295,6 @@ public static partial class Strings
 
 	#endregion
 
-#endif
 
 	#region Join
 
@@ -345,11 +329,11 @@ public static partial class Strings
 	private static readonly Encoding EncodingOEM =
 		CodePagesEncodingProvider.Instance.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
 
-	public static string EncodingConvert(Encoding src, Encoding dest, string str)
+	public static string ConvertString(this Encoding src, Encoding dest, string str)
 		=> dest.GetString(Encoding.Convert(src, dest, src.GetBytes(str)));
 
-	public static string EncodingConvert(Encoding src, string str)
-		=> EncodingConvert(src, EncodingOEM, str);
+	public static string ConvertString(this Encoding src, string str)
+		=> src.ConvertString(EncodingOEM, str);
 
 	public static bool IsCharInRange(ushort c, UnicodeRange r)
 		=> c < r.FirstCodePoint + r.Length && c >= r.FirstCodePoint;

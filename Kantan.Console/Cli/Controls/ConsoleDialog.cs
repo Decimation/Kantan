@@ -512,7 +512,7 @@ public class ConsoleDialog
 
 	public ConsoleDialog AddDescription(Dictionary<string, string> s, Color? c = null)
 	{
-		return AddDescription(Strings.GetMapString(s, c));
+		return AddDescription(ConsoleManager.GetMapString(s, c));
 
 	}
 

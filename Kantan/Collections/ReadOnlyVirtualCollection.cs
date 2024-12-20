@@ -10,7 +10,7 @@ namespace Kantan.Collections;
 /// <summary>
 ///     Represents a collection implemented by delegates.
 /// </summary>
-[Experimental(KantanInit.DIAG_ID_001)]
+[Experimental(KI.DIAG_ID_001)]
 public class ReadOnlyVirtualCollection<T> : IReadOnlyList<T>
 {
 

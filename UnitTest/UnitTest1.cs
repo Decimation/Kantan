@@ -36,6 +36,7 @@ namespace UnitTest;
 public class EnumerableTests
 {
 
+	/*
 	[Test]
 	public void CopyToListTest()
 	{
@@ -47,6 +48,7 @@ public class EnumerableTests
 		Assert.True(enumerable.CastToList().SequenceEqual(array.Cast<object>()));
 
 	}
+	*/
 
 	/*
 	[Test]

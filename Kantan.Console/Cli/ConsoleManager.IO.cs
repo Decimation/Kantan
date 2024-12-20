@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.ComponentModel;
+using System.Drawing;
 using System.Text;
+using Kantan.Text;
 
 // ReSharper disable InconsistentNaming
 
@@ -396,4 +398,19 @@ public static partial class ConsoleManager
 
 		return sb.ToString().Trim(QUOTE);
 	}
+
+	public static string GetMapString(Dictionary<string, string> map, Color? c = null)
+	{
+		return map.Select(kv =>
+		{
+			var key = kv.Key;
+
+			if (c.HasValue) {
+				key = key.AddColor(c.Value);
+			}
+
+			return $"{key}: {kv.Value}";
+		}).QuickJoin(" | ");
+	}
+
 }

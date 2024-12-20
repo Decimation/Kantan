@@ -123,7 +123,7 @@ public static partial class ConsoleManager
 
 			}
 
-			string c = b.Truncate(BufferLimit);
+			string c = b[(BufferLimit)..];
 
 			if (c.Length < b.Length) {
 				c += Constants.ELLIPSES;
@@ -182,6 +182,7 @@ public static partial class ConsoleManager
 			//https://stackoverflow.com/questions/8946808/can-console-clear-be-used-to-only-clear-a-line-instead-of-whole-console
 
 			ClearCurrentLineCR();
+
 
 			if (prompt != null) {
 				string str = $"{Constants.CHEVRON} {prompt}: ".AddColor(ColorOptions);

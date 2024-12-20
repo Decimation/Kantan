@@ -35,8 +35,6 @@ public static class KantanInit
 
 	public static void Close() { }
 
-	internal static readonly Random RandomInstance = new();
-
 	internal const string DEBUG_COND        = "DEBUG";
 	internal const string TRACE_COND        = "TRACE";
 	internal const string STRING_FORMAT_ARG = "msg";

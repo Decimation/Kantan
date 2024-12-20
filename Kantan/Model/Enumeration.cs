@@ -42,6 +42,8 @@ public abstract class Enumeration<T> : IComparable where T : INumber<T>, IAdditi
 		return last.Id + T.One;
 	}
 
+	#region 
+
 	public static IEnumerable<Enumeration<T>> GetAll(Type t)
 		=> GetAllFields(t).Select(x => x.GetValue(null)).Cast<Enumeration<T>>();
 
@@ -58,6 +60,8 @@ public abstract class Enumeration<T> : IComparable where T : INumber<T>, IAdditi
 	public static IEnumerable<FieldInfo> GetAllFields<TEnumeration>()
 		where TEnumeration : Enumeration<T>
 		=> GetAllFields(typeof(TEnumeration));
+
+	#endregion
 
 	public override bool Equals(object obj)
 	{

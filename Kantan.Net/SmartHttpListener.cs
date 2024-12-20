@@ -77,7 +77,7 @@ public sealed class SmartHttpListener : IDisposable
 		{
 			TimeoutManager =
 			{
-				IdleConnection = Timeout.InfiniteTimeSpan,
+				// IdleConnection = Timeout.InfiniteTimeSpan,
 			},
 		};
 

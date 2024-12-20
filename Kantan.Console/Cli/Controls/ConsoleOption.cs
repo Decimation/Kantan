@@ -21,7 +21,7 @@ public delegate object ConsoleOptionFunction();
 ///     Represents an interactive console/shell option
 /// </summary>
 [Obsolete]
-public class ConsoleOption : IMap
+public class ConsoleOption
 {
 	public ConsoleOption() { }
 
