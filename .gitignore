@@ -367,6 +367,8 @@ FodyWeavers.xsd
 /Test/Test.csproj
 /UnitTest/UnitTest.csproj
 
+/Test/
+/Test/*
 Test/
 Test/*
 /Test/Test.csproj
@@ -375,3 +377,5 @@ UnitTest/
 UnitTest/*
 Benchmark/
 Benchmark/*
+/Test/Program.cs
+/Test/Tests_Console.cs
