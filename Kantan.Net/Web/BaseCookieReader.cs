@@ -19,7 +19,7 @@ public abstract class BaseCookieReader : IDisposable
 
 	public BaseCookieReader([NN] string c, bool ds = true)
 	{
-		Requires.NotNull(c);
+		ArgumentException.ThrowIfNullOrWhiteSpace(c);
 
 		Connection = new SqliteConnection(ds ? $"Data Source={c}" : c);
 		File       = new FileInfo(c);
@@ -39,7 +39,6 @@ public abstract class BaseCookieReader : IDisposable
 		Connection?.Dispose();
 	}
 
-	
 
 	public static async IAsyncEnumerable<IBrowserCookie> ReadToEndAsync(
 		SqliteCommand cmd, Func<SqliteDataReader, IBrowserCookie> list)

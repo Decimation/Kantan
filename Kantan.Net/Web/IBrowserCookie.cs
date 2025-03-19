@@ -8,7 +8,11 @@ namespace Kantan.Net.Web;
 
 public interface IBrowserCookie
 {
+
 	public Cookie AsCookie();
+
 	public FlurlCookie AsFlurlCookie();
+
+	public string Name { get; }
 
 }

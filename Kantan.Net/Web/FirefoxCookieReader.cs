@@ -15,9 +15,12 @@ public sealed class FirefoxCookieReader : BaseCookieReader
 
 	// public FirefoxCookieReader(string c) : base(c) { }
 
+	/// <example>
+	/// <see cref="FindCookieFile"/> <see cref="FileInfo.FullName"/>
+	/// </example>
 	public FirefoxCookieReader([NN] string f) : base(f) { }
 
-	public FirefoxCookieReader() : this(FindCookieFile()?.FullName) { }
+	// public FirefoxCookieReader() : this(FindCookieFile()?.FullName) { }
 
 	[CBN]
 	public static FileInfo FindCookieFile()

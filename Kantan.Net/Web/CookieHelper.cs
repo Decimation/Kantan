@@ -10,7 +10,11 @@ public static class CookieHelper
 
 	public static IEnumerable<Cookie> ToCookies(Dictionary<string, string> kv, string uri)
 	{
-		return kv.Select(c => new Cookie(c.Key, c.Value, domain: new Uri(uri).Host, path: "/"));
+		var host = new Uri(uri).Host;
+
+		foreach (var (k, v) in kv) {
+			yield return new Cookie(k, v, domain: host, path: "/");
+		}
 	}
 
 	/// <summary>

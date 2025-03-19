@@ -13,6 +13,10 @@ public class FirefoxCookie : IBrowserCookie
 
 	public Cookie AsCookie()
 	{
+		if (String.IsNullOrWhiteSpace(Name)) {
+			return null;
+		}
+
 		var cc = new Cookie()
 		{
 			HttpOnly = IsHttpOnly,
@@ -29,6 +33,10 @@ public class FirefoxCookie : IBrowserCookie
 
 	public FlurlCookie AsFlurlCookie()
 	{
+		if (String.IsNullOrWhiteSpace(Name)) {
+			return null;
+		}
+
 		var fk = new FlurlCookie(Name, Value, null, CreationTime)
 		{
 			Domain   = Host,
@@ -42,9 +50,11 @@ public class FirefoxCookie : IBrowserCookie
 		return fk;
 	}
 
-	public long           Id;
-	public string         Attribute;
-	public string         Name;
+	public long   Id;
+	public string Attribute;
+
+	public string Name { get; }
+
 	public string         Value;
 	public string         Host;
 	public string         Path;

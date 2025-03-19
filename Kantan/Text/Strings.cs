@@ -71,11 +71,16 @@ public static partial class Strings
 		=> String.IsNullOrWhiteSpace(str) ? null : str;
 
 	/// <summary>Convert a word that is formatted in pascal case to have splits (by space) at each upper case letter.</summary>
-	public static string SplitPascalCase(string convert)
+	public static string[] SplitPascalCase(this string convert)
 	{
+		/*
 		return Regex.Replace(_rgx1().Replace(convert, "$1 $2"),
 		                     @"(\p{Ll})(\P{Ll})", "$1 $2");
+		*/
+
+		return _rgxPascalCase().Split(convert);
 	}
+
 
 	public static string CreateRandom(int length)
 	{
@@ -270,8 +275,8 @@ public static partial class Strings
 	public static IEnumerable<string> GetWrappedWordsWidth(string text, int width)
 	{
 		//https://stackoverflow.com/questions/20534318/make-console-writeline-wrap-words-instead-of-letters
-		var forcedZones = _rgx2().Matches(text).ToList();
-		var normalZones = _rgx3().Matches(text).ToList();
+		var forcedZones = _rgxForcedZones().Matches(text).ToList();
+		var normalZones = _rgxNormalZones().Matches(text).ToList();
 
 		int start = 0;
 
@@ -351,9 +356,12 @@ public static partial class Strings
 	private static partial Regex _rgx1();
 
 	[GeneratedRegex("\\n")]
-	private static partial Regex _rgx2();
+	private static partial Regex _rgxForcedZones();
 
 	[GeneratedRegex("\\s+|(?<=[-,.;])|$")]
-	private static partial Regex _rgx3();
+	private static partial Regex _rgxNormalZones();
+
+	[GeneratedRegex("(?!^)(?=[A-Z])")]
+	private static partial Regex _rgxPascalCase();
 
 }
