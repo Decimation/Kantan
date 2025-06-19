@@ -10,7 +10,7 @@ using Microsoft.Data.Sqlite;
 
 namespace Kantan.Net.Web;
 
-public sealed class FirefoxCookieReader : BaseCookieReader
+public sealed class FirefoxCookiesDatabaseReader : BaseCookiesDatabaseReader
 {
 
 	// public FirefoxCookieReader(string c) : base(c) { }
@@ -18,7 +18,7 @@ public sealed class FirefoxCookieReader : BaseCookieReader
 	/// <example>
 	/// <see cref="FindCookieFile"/> <see cref="FileInfo.FullName"/>
 	/// </example>
-	public FirefoxCookieReader([NN] string f) : base(f) { }
+	public FirefoxCookiesDatabaseReader([NN] string f) : base(f) { }
 
 	// public FirefoxCookieReader() : this(FindCookieFile()?.FullName) { }
 
@@ -59,9 +59,9 @@ public sealed class FirefoxCookieReader : BaseCookieReader
 		// return new FileInfo(file);
 	}
 
-	public async Task<IList<IBrowserCookie>> ReadCookiesAsync(string host, bool wildcard = true)
+	public async Task<IList<ICookie>> ReadCookiesAsync(string host, bool wildcard = true)
 	{
-		var           list = new List<IBrowserCookie>();
+		var           list = new List<ICookie>();
 		SqliteCommand cmd  = Connection.CreateCommand();
 
 		cmd.CommandText = """
@@ -76,7 +76,9 @@ public sealed class FirefoxCookieReader : BaseCookieReader
 
 		cmd.Parameters.AddWithValue("$host", host);
 
-		await foreach (var c in ReadToEndAsync(cmd, r => new FirefoxCookie(r))) {
+		Func<SqliteDataReader, ICookie> func = static r => new FirefoxCookie(r);
+
+		await foreach (var c in ReadToEndAsync(cmd, func)) {
 			list.Add(c);
 		}
 
@@ -84,7 +86,7 @@ public sealed class FirefoxCookieReader : BaseCookieReader
 
 	}
 
-	public override Task<IList<IBrowserCookie>> ReadCookiesAsync()
+	public override Task<IList<ICookie>> ReadCookiesAsync()
 	{
 		return ReadCookiesAsync("%");
 	}

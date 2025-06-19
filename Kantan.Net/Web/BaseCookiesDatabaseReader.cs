@@ -10,14 +10,14 @@ using Microsoft.Data.Sqlite;
 
 namespace Kantan.Net.Web;
 
-public abstract class BaseCookieReader : IDisposable
+public abstract class BaseCookiesDatabaseReader : IDisposable
 {
 
 	public SqliteConnection Connection { get; }
 
 	public FileInfo File { get; }
 
-	public BaseCookieReader([NN] string c, bool ds = true)
+	public BaseCookiesDatabaseReader([NN] string c, bool ds = true)
 	{
 		ArgumentException.ThrowIfNullOrWhiteSpace(c);
 
@@ -32,16 +32,16 @@ public abstract class BaseCookieReader : IDisposable
 	}
 	*/
 
-	public abstract Task<IList<IBrowserCookie>> ReadCookiesAsync();
+	public abstract Task<IList<ICookie>> ReadCookiesAsync();
 
 	public void Dispose()
 	{
 		Connection?.Dispose();
 	}
 
+	
 
-	public static async IAsyncEnumerable<IBrowserCookie> ReadToEndAsync(
-		SqliteCommand cmd, Func<SqliteDataReader, IBrowserCookie> list)
+	public static async IAsyncEnumerable<ICookie> ReadToEndAsync(SqliteCommand cmd, Func<SqliteDataReader, ICookie> list)
 	{
 		//todo
 
