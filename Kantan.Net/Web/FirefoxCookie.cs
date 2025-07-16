@@ -6,6 +6,7 @@ using System.Data;
 using System.Net;
 using Flurl.Http;
 using JetBrains.Annotations;
+
 // ReSharper disable UnassignedGetOnlyAutoProperty
 
 namespace Kantan.Net.Web;
@@ -69,17 +70,25 @@ public class FirefoxCookie : ICookie
  */
 	public FirefoxCookie(IDataRecord reader)
 	{
-		Id           = reader.GetInt64(0);
-		Attribute1   = reader.GetString(1);
-		Name         = reader.GetString(2);
-		Value        = reader.GetString(3);
-		Host         = reader.GetString(4);
-		Path         = reader.GetString(5);
-		Expiry       = (DateTime.UnixEpoch + TimeSpan.FromSeconds(reader.GetInt64(6)));
-		LastAccess   = (DateTime.UnixEpoch + TimeSpan.FromMicroseconds(reader.GetInt64(7)));
-		CreationTime = DateTime.UnixEpoch + TimeSpan.FromMicroseconds(reader.GetInt64(8));
-		IsSecure     = reader.GetBoolean(9);
-		IsHttpOnly   = reader.GetBoolean(10);
+		Id         = reader.GetInt64(0);
+		Attribute1 = reader.GetString(1);
+		Name       = reader.GetString(2);
+		Value      = reader.GetString(3);
+		Host       = reader.GetString(4);
+		Path       = reader.GetString(5);
+
+		var expirySec = reader.GetInt64(6);
+		Expiry = (DateTimeOffset.FromUnixTimeMilliseconds(expirySec));
+		var lastAccessSec = reader.GetInt64(7);
+
+		// LastAccess = (DateTimeOffset.FromUnixTimeMilliseconds(lastAccessSec).DateTime);
+		LastAccess = DateTime.UnixEpoch.AddMicroseconds(lastAccessSec);
+
+		var creationTimeSec = reader.GetInt64(8);
+		CreationTime = DateTime.UnixEpoch.AddMicroseconds(creationTimeSec);
+
+		IsSecure   = reader.GetBoolean(9);
+		IsHttpOnly = reader.GetBoolean(10);
 
 		InBrowserElement = reader.GetBoolean(11);
 		SameSite         = (SameSite) reader.GetInt32(12);
@@ -89,6 +98,12 @@ public class FirefoxCookie : ICookie
 		// RawSameSite               = reader.GetBoolean(13);
 		SchemeMap                 = reader.GetInt32(13);
 		IsPartitionedAttributeSet = reader.GetBoolean(14);
+	}
+
+	public static DateTime UnixTimeStampToDateTime(double unixTimeStamp)
+	{
+		var dateTime = DateTime.UnixEpoch.AddSeconds(unixTimeStamp).ToLocalTime();
+		return dateTime;
 	}
 
 	public Cookie AsCookie()
