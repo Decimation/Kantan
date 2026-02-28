@@ -4,9 +4,11 @@ namespace Kantan.Text;
 
 public static partial class Strings
 {
+
 	public static class Constants
 	{
-		#region Join
+
+#region Join
 
 		/// <summary>
 		///     Scope resolution operator
@@ -16,18 +18,18 @@ public static partial class Strings
 		public const string JOIN_SPACE = " ";
 		public const string JOIN_COMMA = ", ";
 
-		#endregion
+#endregion
 
-		#region Punctuation
+#region Punctuation
 
 		public const char EXCLAMATION = '!';
 		public const char SPACE       = ' ';
 		public const char ASTERISK    = '*';
 		public const char PERIOD      = '.';
 
-		#endregion
+#endregion
 
-		#region Arrow
+#region Arrow
 
 		public const char ARROW_LEFT_RIGHT = '\u2194';
 		public const char ARROW_RIGHT      = '\u2192';
@@ -36,14 +38,14 @@ public static partial class Strings
 		public const char ARROW_UP         = '\u2191';
 		public const char ARROW_UP_DOWN    = '\u2195';
 
-		#endregion
+#endregion
 
-		#region Control
+#region Control
 
 		public const char NULL_CHAR = '\0';
 		public const char NEW_LINE  = '\n';
 
-		#endregion
+#endregion
 
 		public const char BALLOT_X         = '\u2717';
 		public const char HEAVY_CHECK_MARK = '\u2714';
@@ -66,7 +68,7 @@ public static partial class Strings
 
 		public const string Alphanumeric = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-		#region Box
+#region Box
 
 		public const string UpperLeftCorner       = "\u250c";
 		public const string BottomLeftCorner      = "\u2514";
@@ -74,12 +76,14 @@ public static partial class Strings
 		public const string Vertical              = "\u2502";
 		public const string Horizontal            = "\u2500";
 
-		#endregion
+#endregion
 
 		public static string ClearLine => new('\r', System.Console.BufferWidth);
 
 		public static string Separator { get; set; } = new('-', 20);
 
 		public static string Indentation { get; set; } = new(' ', 5);
+
 	}
+
 }

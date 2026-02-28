@@ -19,7 +19,7 @@ public static class FormatHelper
 		int    magnitude    = (int) Math.Floor(Math.Log(bytes, 1024));
 		double adjustedSize = bytes / Math.Pow(1024, magnitude);
 
-		return string.Format("{0:n2} {1}", adjustedSize, Suffixes[magnitude]);
+		return $"{adjustedSize:n2} {Suffixes[magnitude]}";
 	}
 
 	private static HexFormatter Hex { get; } = new();

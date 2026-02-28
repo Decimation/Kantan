@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Kantan.Utilities;
 using Terminal.Gui;
+using Terminal.Gui.Views;
 
 namespace Kantan.Console;
 

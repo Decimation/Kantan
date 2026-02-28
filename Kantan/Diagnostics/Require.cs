@@ -26,6 +26,7 @@ global using MNN = System.Diagnostics.CodeAnalysis.MemberNotNullAttribute;
 global using MNNW = System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute;
 global using MNW = System.Diagnostics.CodeAnalysis.MaybeNullWhenAttribute;
 global using NN = JetBrains.Annotations.NotNullAttribute;
+global using NN2 = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 global using CBN = JetBrains.Annotations.CanBeNullAttribute;
 global using ICBN = JetBrains.Annotations.ItemCanBeNullAttribute;
 global using AN = System.Diagnostics.CodeAnalysis.AllowNullAttribute;

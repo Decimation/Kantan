@@ -48,6 +48,47 @@ public static class MathHelper
 		}
 	}*/
 
+	extension<T>(T i) where T : INumber<T>
+	{
+
+		public bool IsInRange(T hi)
+		{
+			return i >= T.Zero && i < hi;
+		}
+
+		public T Wrap(T n)
+		{
+			return ((i % n) + n) % n;
+		}
+
+		public T[] SimplifyRadical()
+		{
+			T outside_root = T.One;
+
+			T d = T.One + T.One;
+
+			while (d * d <= i) {
+				if (i % (d * d) == T.Zero) {
+					i            /= (d * d);
+					outside_root *= d;
+				}
+
+				else {
+					d++;
+				}
+			}
+
+			var radical = new T[2];
+
+			radical[0] = outside_root;
+			radical[1] = i;
+
+			return radical;
+		}
+
+	}
+
+
 	public static bool IsInRange(this Range range, int value)
 	{
 		int start = range.Start.GetOffset(0);
@@ -56,15 +97,6 @@ public static class MathHelper
 		return value >= start && value < end;
 	}
 
-	public static bool IsInRange<T>(T i, T hi) where T : INumber<T>
-	{
-		return i >= T.Zero && i < hi;
-	}
-
-	public static T Wrap<T>(T i, T n) where T : INumber<T>
-	{
-		return ((i % n) + n) % n;
-	}
 
 	public static bool ToleranceEqual<T>(T a, T b)
 		where T : IFloatingPoint<T>, IFloatingPointConstants<T>, IFloatingPointIeee754<T>
@@ -92,30 +124,6 @@ public static class MathHelper
 		return ret;
 	}
 
-	public static T[] SimplifyRadical<T>(T insideRoot) where T : INumber<T>
-	{
-		T outside_root = T.One;
-
-		T d = T.One + T.One;
-
-		while (d * d <= insideRoot) {
-			if (insideRoot % (d * d) == T.Zero) {
-				insideRoot   /= (d * d);
-				outside_root *= d;
-			}
-
-			else {
-				d++;
-			}
-		}
-
-		var radical = new T[2];
-
-		radical[0] = outside_root;
-		radical[1] = insideRoot;
-
-		return radical;
-	}
 
 	public static T GCD2<T>(T a, T b) where T : INumber<T>, IBitwiseOperators<T, T, T>
 	{
@@ -182,7 +190,7 @@ public static class MathHelper
 		return GCD((positiveNumber2 - positiveNumber1) >> 1, positiveNumber1);
 	}
 
-	#region Units
+#region Units
 
 	/// <summary>
 	/// SI
@@ -193,6 +201,12 @@ public static class MathHelper
 	/// ISO/IEC 80000
 	/// </summary>
 	public const double MAGNITUDE2 = 1024D;
+
+	private static readonly string[] BytePrefixes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+
+	private static readonly char[] IncPrefixes = ['k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
+
+	private static readonly char[] DecPrefixes = ['m', '\u03bc', 'n', 'p', 'f', 'a', 'z', 'y'];
 
 	public static string GetSIUnit(double d, string format = null)
 	{
@@ -210,22 +224,30 @@ public static class MathHelper
 		return scaled.ToString(format) + prefix;
 	}
 
-	public static string GetByteUnit(double len)
+	public static string FormatByteUnit(double val)
 	{
 		//https://stackoverflow.com/questions/281640/how-do-i-get-a-human-readable-file-size-in-bytes-abbreviation-using-net
 
 		int order = 0;
 
-		while (len >= MAGNITUDE && order < BytePrefixes.Length - 1) {
+		while (val >= MAGNITUDE && order < BytePrefixes.Length - 1) {
 			order++;
-			len /= MAGNITUDE;
+			val /= MAGNITUDE;
 		}
 
 		// Adjust the format string to your preferences. For example "{0:0.#}{1}" would
 		// show a single decimal place, and no space.
-		string result = $"{len:0.##} {BytePrefixes[order]}";
+		string result = $"{val:0.##} {BytePrefixes[order]}";
 
 		return result;
+	}
+
+	public static double ParseByteUnit(double cvVal, string prefix)
+	{
+		var order = Array.IndexOf(BytePrefixes, prefix);
+		var nv = cvVal * (order * MAGNITUDE);
+
+		return nv;
 	}
 
 	/// <summary>
@@ -245,13 +267,7 @@ public static class MathHelper
 		return v;
 	}
 
-	private static readonly string[] BytePrefixes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-
-	private static readonly char[] IncPrefixes = ['k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
-
-	private static readonly char[] DecPrefixes = ['m', '\u03bc', 'n', 'p', 'f', 'a', 'z', 'y'];
-
-	#endregion
+#endregion
 
 	public static bool IsPrime<T>(T number)
 		where T : INumber<T>, IRootFunctions<T>, IBinaryNumber<T>, IFloatingPoint<T>

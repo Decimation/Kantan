@@ -37,49 +37,132 @@ namespace Kantan.Text;
 public static partial class Strings
 {
 
-	public static string RemoveNewLines(this string s)
-		=> s.Aggregate(LineControlCharacters, (current, t) => current.Remove(t));
+	extension(string s)
+	{
 
-	public static string Aggregate<T>(this string s, IEnumerable<T> rg, Func<string, T, string> func)
-		=> rg.Aggregate(s, func);
+		public string RemoveNewLines()
+			=> s.Aggregate(LineControlCharacters, (current, t) => current.Remove(t));
+
+		public string Aggregate<T>(IEnumerable<T> rg, Func<string, T, string> func)
+			=> rg.Aggregate(s, func);
+
+		public string Remove(string s2)
+			=> s.Replace(s2, string.Empty);
+
+		public string Remove(char s2)
+			=> s.Remove(s2.ToString());
+
+		public string SelectOnlyDigits()
+			=> s.WhereAggregate(Char.IsDigit);
+
+		public string StripControl()
+			=> s.WhereAggregate(c => !Char.IsControl(c));
+
+		/// <remarks>Select only</remarks>
+		public string WhereAggregate(Func<char, bool> fn)
+			=> s.Where(fn).Aggregate(String.Empty, static (current, t) => current + t);
+
+		public string CleanString()
+			=> s.Trim('\"');
+
+		/// <summary>Convert a word that is formatted in pascal case to have splits (by space) at each upper case letter.</summary>
+		public string[] SplitPascalCase()
+		{
+			/*
+			return Regex.Replace(_rgx1().Replace(convert, "$1 $2"),
+			                     @"(\p{Ll})(\P{Ll})", "$1 $2");
+			*/
+
+			return _rgxPascalCase().Split(s);
+		}
+
+		public IEnumerable<int> IndexOfAll(string search, StringComparison c = StringComparison.Ordinal)
+			=> EnumerableHelper.IndexOfAll((ss, i) => s.IndexOf(ss, i, c),
+			                               search.Length, search);
+
+		public string RemoveLastOccurrence(string s2, StringComparison c = StringComparison.Ordinal)
+			=> s.Remove(s.LastIndexOf(s2, c));
+
+#region Substring
+
+		/// <summary>
+		///     Simulates Java substring function
+		/// </summary>
+		public string JSubstring(int beginIndex)
+			=> s[beginIndex..];
+
+		/// <summary>
+		///     Simulates Java substring function
+		/// </summary>
+		public string JSubstring(int beginIndex, int endIndex)
+			=> s.Substring(beginIndex, endIndex - beginIndex + 1);
+
+		/// <summary>
+		///     Simulates Java substring function
+		/// </summary>
+		public string JSubstring(Range r)
+			=> s.JSubstring(r.Start.Value, r.End.Value);
+
+		/// <summary>
+		///     Simulates Java substring function
+		/// </summary>
+		public string JSubstring(Index i)
+			=> s.JSubstring(i.Value);
+
+		/// <summary>
+		///     <returns>String value after [last] <paramref name="a" /></returns>
+		/// </summary>
+		public string SubstringAfter(string a)
+		{
+			int posA = s.LastIndexOf(a, StringComparison.Ordinal);
+
+			if (posA == KI.INVALID) {
+				return String.Empty;
+			}
+
+			int adjustedPosA = posA + a.Length;
+			return adjustedPosA >= s.Length ? String.Empty : s[adjustedPosA..];
+		}
+
+		/// <summary>
+		///     <returns>String value after [first] <paramref name="a" /></returns>
+		/// </summary>
+		public string SubstringBefore(string a)
+		{
+			int posA = s.IndexOf(a, StringComparison.Ordinal);
+			return posA == KI.INVALID ? String.Empty : s[..posA];
+		}
+
+		/// <summary>
+		///     <returns>String value between [first] <paramref name="a" /> and [last] <paramref name="b" /></returns>
+		/// </summary>
+		public string SubstringBetween(string a, string b)
+		{
+			int posA = s.IndexOf(a, StringComparison.Ordinal);
+			int posB = s.LastIndexOf(b, StringComparison.Ordinal);
+
+			if (posA == KI.INVALID || posB == KI.INVALID) {
+				return String.Empty;
+			}
+
+			int adjustedPosA = posA + a.Length;
+			return adjustedPosA >= posB ? String.Empty : s[adjustedPosA..posB];
+		}
+
+#endregion
+
+	}
+
 
 	// public static string Remove(this string s, char[] rg)   => rg.Aggregate(s, (current, t) => current.Remove(t));
 
+
 	// public static string Remove(this string s, string[] rg) => rg.Aggregate(s, (current, t) => current.Remove(t));
 
-	public static string Remove(this string s, string s2)
-		=> s.Replace(s2, string.Empty);
-
-	public static string Remove(this string s, char s2)
-		=> s.Remove(s2.ToString());
-
-	public static string SelectOnlyDigits(this string s)
-		=> s.WhereAggregate(Char.IsDigit);
-
-	public static string StripControl(this string s)
-		=> s.WhereAggregate(c => !Char.IsControl(c));
-
-	/// <remarks>Select only</remarks>
-	public static string WhereAggregate(this string s, Func<char, bool> fn)
-		=> s.Where(fn).Aggregate(String.Empty, static (current, t) => current + t);
-
-	public static string CleanString(this string s)
-		=> s.Trim('\"');
 
 	[CBN]
 	public static string NormalizeNull([CBN] string str)
 		=> String.IsNullOrWhiteSpace(str) ? null : str;
-
-	/// <summary>Convert a word that is formatted in pascal case to have splits (by space) at each upper case letter.</summary>
-	public static string[] SplitPascalCase(this string convert)
-	{
-		/*
-		return Regex.Replace(_rgx1().Replace(convert, "$1 $2"),
-		                     @"(\p{Ll})(\P{Ll})", "$1 $2");
-		*/
-
-		return _rgxPascalCase().Split(convert);
-	}
 
 
 	public static string CreateRandom(int length)
@@ -88,14 +171,6 @@ public static partial class Strings
 			           .Select(s => s[Random.Shared.Next(s.Length)])
 			           .ToArray());
 	}
-
-	public static IEnumerable<int> IndexOfAll(this string str, string search,
-	                                          StringComparison c = StringComparison.Ordinal)
-		=> EnumerableHelper.IndexOfAll((s, i) => str.IndexOf(s, i, c),
-		                               search.Length, search);
-
-	public static string RemoveLastOccurrence(this string s, string s2, StringComparison c = StringComparison.Ordinal)
-		=> s.Remove(s.LastIndexOf(s2, c));
 
 	/// <summary>
 	///     Compute the Levenshtein distance (approximate string matching) between <paramref name="s"/> and <paramref name="t"/>
@@ -136,74 +211,6 @@ public static partial class Strings
 		return d[n, m];
 	}
 
-	#region Substring
-
-	/// <summary>
-	///     Simulates Java substring function
-	/// </summary>
-	public static string JSubstring(this string s, int beginIndex)
-		=> s[beginIndex..];
-
-	/// <summary>
-	///     Simulates Java substring function
-	/// </summary>
-	public static string JSubstring(this string s, int beginIndex, int endIndex)
-		=> s.Substring(beginIndex, endIndex - beginIndex + 1);
-
-	/// <summary>
-	///     Simulates Java substring function
-	/// </summary>
-	public static string JSubstring(this string s, Range r)
-		=> s.JSubstring(r.Start.Value, r.End.Value);
-
-	/// <summary>
-	///     Simulates Java substring function
-	/// </summary>
-	public static string JSubstring(this string s, Index i)
-		=> s.JSubstring(i.Value);
-
-	/// <summary>
-	///     <returns>String value after [last] <paramref name="a" /></returns>
-	/// </summary>
-	public static string SubstringAfter(this string value, string a)
-	{
-		int posA = value.LastIndexOf(a, StringComparison.Ordinal);
-
-		if (posA == KI.INVALID) {
-			return String.Empty;
-		}
-
-		int adjustedPosA = posA + a.Length;
-		return adjustedPosA >= value.Length ? String.Empty : value[adjustedPosA..];
-	}
-
-	/// <summary>
-	///     <returns>String value after [first] <paramref name="a" /></returns>
-	/// </summary>
-	public static string SubstringBefore(this string value, string a)
-	{
-		int posA = value.IndexOf(a, StringComparison.Ordinal);
-		return posA == KI.INVALID ? String.Empty : value[..posA];
-	}
-
-	/// <summary>
-	///     <returns>String value between [first] <paramref name="a" /> and [last] <paramref name="b" /></returns>
-	/// </summary>
-	public static string SubstringBetween(this string value, string a, string b)
-	{
-		int posA = value.IndexOf(a, StringComparison.Ordinal);
-		int posB = value.LastIndexOf(b, StringComparison.Ordinal);
-
-		if (posA == KI.INVALID || posB == KI.INVALID) {
-			return String.Empty;
-		}
-
-		int adjustedPosA = posA + a.Length;
-		return adjustedPosA >= posB ? String.Empty : value[adjustedPosA..posB];
-	}
-
-	#endregion
-
 
 	public static string Truncate(string value, int maxLength)
 	{
@@ -214,7 +221,7 @@ public static partial class Strings
 		return value.Length <= maxLength ? value : value[..maxLength];
 	}
 
-	#region Formatting
+#region Formatting
 
 	public static string Center(string str, int width)
 	{
@@ -226,7 +233,7 @@ public static partial class Strings
 
 	}
 
-	#region Outline
+#region Outline
 
 	public static string Indent(string s)
 		=> Indent(s, Constants.Indentation);
@@ -240,7 +247,7 @@ public static partial class Strings
 		return indent + j;
 	}
 
-	#endregion
+#endregion
 
 	/// <param name="paragraph">The value to write.</param>
 	/// <param name="tabSize">The value that indicates the column width of tab characters.</param>
@@ -298,47 +305,57 @@ public static partial class Strings
 		}
 	}
 
-	#endregion
+#endregion
 
 
-	#region Join
+#region Join
 
 	public static string FormatJoin<T>(this IEnumerable<T> values, string format, IFormatProvider provider = null,
 	                                   string delim = Constants.JOIN_COMMA) where T : IFormattable
 		=> values.Select(v => v.ToString(format, provider)).QuickJoin(delim);
 
-	/// <summary>
-	///     Concatenates the strings returned by <paramref name="toString" />
-	///     using the specified separator between each element or member.
-	/// </summary>
 	/// <param name="values">Collection of values</param>
-	/// <param name="toString">
-	///     Function which returns a <see cref="string" /> given a member of <paramref name="values" />
-	/// </param>
-	/// <param name="delim">Delimiter</param>
 	/// <typeparam name="T">Element type</typeparam>
-	public static string FuncJoin<T>(this IEnumerable<T> values, Func<T, string> toString,
-	                                 string delim = Constants.JOIN_COMMA)
-		=> values.Select(toString).QuickJoin(delim);
+	extension<T>(IEnumerable<T> values)
+	{
 
-	public static string QuickJoin<T>(this IEnumerable<T> enumerable, string delim = Constants.JOIN_COMMA)
-		=> String.Join(delim, enumerable);
+		/// <summary>
+		///     Concatenates the strings returned by <paramref name="toString" />
+		///     using the specified separator between each element or member.
+		/// </summary>
+		/// <param name="toString">
+		///     Function which returns a <see cref="string" /> given a member of <paramref name="values" />
+		/// </param>
+		/// <param name="delim">Delimiter</param>
+		public string FuncJoin(Func<T, string> toString,
+		                       string delim = Constants.JOIN_COMMA)
+			=> values.Select(toString).QuickJoin(delim);
+
+		public string QuickJoin(string delim = Constants.JOIN_COMMA)
+			=> String.Join(delim, values);
+
+	}
 
 	public static string QuickJoin(this IEnumerable enumerable, string delim = Constants.JOIN_COMMA)
 		=> String.Join(delim, enumerable);
 
-	#endregion
+#endregion
 
 	private static readonly char[] LineControlCharacters = Environment.NewLine.ToCharArray();
 
 	private static readonly Encoding EncodingOEM =
 		CodePagesEncodingProvider.Instance.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
 
-	public static string ConvertString(this Encoding src, Encoding dest, string str)
-		=> dest.GetString(Encoding.Convert(src, dest, src.GetBytes(str)));
+	extension(Encoding src)
+	{
 
-	public static string ConvertString(this Encoding src, string str)
-		=> src.ConvertString(EncodingOEM, str);
+		public string ConvertString(Encoding dest, string str)
+			=> dest.GetString(Encoding.Convert(src, dest, src.GetBytes(str)));
+
+		public string ConvertString(string str)
+			=> src.ConvertString(EncodingOEM, str);
+
+	}
 
 	public static bool IsCharInRange(ushort c, UnicodeRange r)
 		=> c < r.FirstCodePoint + r.Length && c >= r.FirstCodePoint;

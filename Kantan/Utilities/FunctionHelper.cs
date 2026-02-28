@@ -1,19 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace Kantan.Utilities;
 
 public static class FunctionHelper
 {
+
 	public static T[] Generate<T>(Func<T, T> f, int n)
 	{
 		var rg = new T[n];
 
-		for (int i = 0; i < n; i++)
-		{
+		for (int i = 0; i < n; i++) {
 			T t = i == 0 ? default : rg[i - 1];
 			rg[i] = f(t);
 		}
@@ -60,4 +62,19 @@ public static class FunctionHelper
 
 		return throws;
 	}
+
+	[CBN]
+	[LinqTunnel]
+	public static T2 ApplyFunctorInnerPredicate<T, T2>(Func<Func<T2, bool>, T2> functor, Func<T, bool> predicate)
+		=> functor(f => f is T e && predicate(e));
+
+	[LinqTunnel]
+	[NN]
+	public static IEnumerable<T> ApplyFunctorInnerEnumerable<T>(Func<Func<T, bool>, IEnumerable<T>> where, Func<T, bool> predicate)
+		=> where(predicate);
+
+	/*[CBN]
+internal static INode ElemFunctor(Func<Func<INode, bool>, INode> functor, Predicate<IElement> elemPredicate)
+	=> ApplyFunctorInnerPredicate(functor, elemPredicate);*/
+
 }

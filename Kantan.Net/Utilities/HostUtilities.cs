@@ -32,8 +32,7 @@ public static class HostUtilities
 
 	[CBN]
 	public static IPAddress GetHostAddress(string hostOrIP)
-		=> Dns.GetHostAddresses(hostOrIP)
-			.FirstOrDefault();
+		=> Dns.GetHostAddresses(hostOrIP).FirstOrDefault();
 
 	[CBN]
 	public static Task<IPAddress[]> GetHostAddressAsync(string hostOrIP)

@@ -77,6 +77,7 @@ public static class EnumHelper
 
 	// TODO: .NET 7
 
+
 	public static TEnum Or<TEnum>(TEnum t, TEnum t2) where TEnum : struct, Enum
 	{
 		if (Enum.GetUnderlyingType(typeof(TEnum)) != typeof(int)) {

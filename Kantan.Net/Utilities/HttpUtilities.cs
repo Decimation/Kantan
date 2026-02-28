@@ -48,8 +48,7 @@ namespace Kantan.Net.Utilities;
 public static class HttpUtilities
 {
 
-	public static readonly string UserAgent
-		= Resources.UserAgent;
+	// public static readonly string UserAgent { get; set; } = Resources.UserAgent;
 
 	static HttpUtilities()
 	{
@@ -61,8 +60,7 @@ public static class HttpUtilities
 
 		ServicePointManager.DefaultConnectionLimit = int.MaxValue;
 
-		ServicePointManager.SecurityProtocol =
-			SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+		ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
 
 		const string fieldName = "_sendStatus";
 
@@ -72,84 +70,93 @@ public static class HttpUtilities
 
 	}
 
-	#region
+#region Listener
 
-	public static async Task<bool> WriteResponseDataAsync(this HttpListenerResponse response, byte[] responseBytes,
-														  bool autoClose = false,
-	                                                      CancellationToken ct = default)
+	extension(HttpListenerResponse response)
 	{
+
+		public async Task<bool> WriteResponseDataAsync(byte[] responseBytes, bool autoClose = false,
+		                                               CancellationToken ct = default)
+		{
 			response.ContentType     = MediaTypeNames.Text.Plain;
 			response.StatusCode      = (int) HttpStatusCode.OK;
 			response.ContentLength64 = responseBytes.Length;
 			await response.OutputStream.WriteAsync(responseBytes, 0, responseBytes.Length, ct);
 
-			if(autoClose ) {
+			if (autoClose) {
 				response.OutputStream.Close();
+
 				// state.Dispose();
 				response.Close();
 
 			}
+
 			return true;
-		
 
+
+		}
+
+		public Task<bool> WriteResponseStringAsync(string s, CancellationToken ct = default)
+		{
+			var encoding = response.ContentEncoding ?? DefaultEncoding;
+			var bytes    = encoding.GetBytes(s);
+			return response.WriteResponseDataAsync(bytes, ct: ct);
+		}
+
+		public Task<bool> WriteResponseJsonAsync<T>(T t, CancellationToken ct = default)
+		{
+			var bytes = JsonSerializer.Serialize(t, Options);
+			return response.WriteResponseStringAsync(bytes, ct: ct);
+		}
 
 	}
 
-	public static Task<bool> WriteResponseStringAsync(this HttpListenerResponse req, string s,
-	                                                  CancellationToken ct = default)
+	extension(HttpListenerRequest req)
 	{
-		var encoding = req.ContentEncoding ?? DefaultEncoding;
-		var bytes    = encoding.GetBytes(s);
-		return req.WriteResponseDataAsync(bytes, ct: ct);
-	}
 
-	public static Task<bool> WriteResponseJsonAsync<T>(this HttpListenerResponse req, T t,
-	                                                   CancellationToken ct = default)
-	{
-		var bytes = JsonSerializer.Serialize(t, Options);
-		return req.WriteResponseStringAsync(bytes, ct: ct);
-	}
+		public async Task<byte[]> ReadRequestDataAsync(CancellationToken ct = default)
+		{
+			var len = req.ContentLength64;
 
-	public static async Task<byte[]> ReadRequestDataAsync(this HttpListenerRequest req, CancellationToken ct = default)
-	{
-		var len = req.ContentLength64;
+			if (len == KantanInit.INVALID) {
+				if (!req.InputStream.CanSeek) {
+					return [];
+				}
 
-		if (len == KantanInit.INVALID) {
-			if (!req.InputStream.CanSeek) {
-				return [];
+				len = req.InputStream.Length;
 			}
 
-			len = req.InputStream.Length;
+			var responseData = new byte[len];
+			var cb           = await req.InputStream.ReadAsync(responseData, 0, (int) len, ct);
+
+			if (cb < len) {
+				Debugger.Break();
+			}
+
+			return responseData;
 		}
 
-		var responseData = new byte[len];
-		var cb           = await req.InputStream.ReadAsync(responseData, 0, (int) len, ct);
+		public async Task<string> ReadRequestStringAsync(CancellationToken ct = default)
+		{
+			var data = await req.ReadRequestDataAsync(ct: ct);
+			var s    = req.ContentEncoding.GetString(data);
 
-		if (cb < len) {
-			Debugger.Break();
+			return s;
 		}
 
-		return responseData;
+		public async Task<T> ReadRequestJsonAsync<T>(CancellationToken ct = default)
+		{
+			var data = await req.ReadRequestDataAsync(ct);
+			var obj  = JsonSerializer.Deserialize<T>(data, Options);
+
+			return obj;
+		}
+
 	}
 
-	public static async Task<string> ReadRequestStringAsync(this HttpListenerRequest req,
-	                                                        CancellationToken ct = default)
-	{
-		var data = await req.ReadRequestDataAsync(ct: ct);
-		var s    = req.ContentEncoding.GetString(data);
+#endregion
 
-		return s;
-	}
-
-	public static async Task<T> ReadRequestJsonAsync<T>(this HttpListenerRequest req, CancellationToken ct = default)
-	{
-		var data = await req.ReadRequestDataAsync(ct);
-		var obj  = JsonSerializer.Deserialize<T>(data, Options);
-
-		return obj;
-	}
-
-	#endregion
+	#region 
 
 	public static async Task<Url> GetFinalRedirectAsync(Url url)
 	{
@@ -226,105 +233,6 @@ public static class HttpUtilities
 	}
 
 	/*[CBN]
-	[MURV]
-	public static async Task<IFlurlResponse> GetHttpResponseAsync(string url, int? ms = null,
-	                                                              [CBN] HttpMethod method = null,
-	                                                              bool allowAutoRedirect = true,
-	                                                              int? maxAutoRedirects = null,
-	                                                              CancellationToken? token = null)
-	{
-
-		method ??= HttpMethod.Get;
-		token  ??= CancellationToken.None;
-		ms     ??= Timeout;
-
-		var f = new FlurlRequest(url)
-		{
-			Client = Client,
-			Settings =
-			{
-				Timeout = TimeSpan.FromMilliseconds(ms.Value),
-				Redirects =
-				{
-					MaxAutoRedirects = maxAutoRedirects ?? MaxAutoRedirects,
-					Enabled          = allowAutoRedirect
-				}
-			},
-			Verb = method
-		};
-
-		f = f.AllowAnyHttpStatus();
-
-		/*using var request = new HttpRequestMessage
-		{
-			RequestUri = new Uri(url),
-			Method     = method ?? HttpMethod.Get
-		};
-
-		using var clientHandler = new HttpClientHandler
-		{
-			AllowAutoRedirect        = allowAutoRedirect,
-			MaxAutomaticRedirections = maxAutoRedirects ?? MaxAutoRedirects
-		};
-
-		using var client = new HttpClient(clientHandler)
-		{
-			Timeout = TimeSpan.FromMilliseconds(ms ?? Timeout)
-		};#1#
-
-		IFlurlResponse response = null;
-
-		try {
-			// var response = await client.SendAsync(request, c);
-			response = await f.SendAsync(method, cancellationToken: token.Value);
-		}
-		catch (Exception x) {
-			Debug.WriteLine($"{x}", nameof(GetHttpResponseAsync));
-
-		}
-
-		return response;
-
-	}
-
-	[CBN]
-	[MURV]
-	public static IFlurlResponse GetHttpResponse(string url, int? ms = null,
-	                                             [CBN] HttpMethod method = null,
-	                                             bool allowAutoRedirect = true,
-	                                             int? maxAutoRedirects = null,
-	                                             CancellationToken? token = null)
-	{
-
-		token ??= CancellationToken.None;
-		var v = GetHttpResponseAsync(url, ms, method, allowAutoRedirect, maxAutoRedirects, token);
-		// v.Wait(c.Token);
-
-		v?.Wait(token.Value);
-
-		return v?.Result;
-	}
-
-	public static async Task<IFlurlResponse> TryGetResponseAsync(string u)
-	{
-		//todo: wtf
-		IFlurlResponse response = null;
-
-		try {
-			response = await u.WithClient(Client)
-			                  .AllowAnyHttpStatus()
-			                  .WithTimeout(Timeout)
-			                  .GetAsync();
-		}
-		catch (Exception e) {
-			Debug.WriteLine($"{e.Message}", nameof(HttpUtilities));
-		}
-
-		return response;
-	}
-	*/
-
-	/*[CBN]
 	public static string Download(Uri src, string path)
 	{
 		string    filename = UriUtilities.NormalizeFilename(src);
@@ -343,7 +251,7 @@ public static class HttpUtilities
 		}
 	}*/
 
-	public static bool TryOpenUrl([CBN] string u, out Process p)
+	public static bool TryOpenUrl([CBN] Url u, out Process p)
 	{
 		bool b;
 		p = null;
@@ -362,7 +270,7 @@ public static class HttpUtilities
 		return b;
 	}
 
-	public static void OpenUrl(string url, out Process p)
+	public static void OpenUrl(Url url, out Process p)
 	{
 		//todo
 		// https://stackoverflow.com/questions/4580263/how-to-open-in-default-browser-in-c-sharp
@@ -374,7 +282,7 @@ public static class HttpUtilities
 		catch {
 			// hack because of this: https://github.com/dotnet/corefx/issues/10361
 			if (OperatingSystem.IsWindows()) {
-				url = url.Replace("&", "^&");
+				url = url.ToString().Replace("&", "^&");
 
 				p = Process.Start(new ProcessStartInfo("cmd", $"/c start {url}")
 				{
@@ -387,32 +295,39 @@ public static class HttpUtilities
 		}
 	}
 
-	#region Message
+	#endregion
 
-	public static bool IsSent(this HttpRequestMessage m)
-	{
-		return m.GetStatus() == ALREADY_SENT;
-	}
+#region Message
 
-	public static int GetStatus(this HttpRequestMessage m)
+	extension(HttpRequestMessage m)
 	{
-		var value = RequestStatusField.GetValue(m);
-		Require.NotNull(value);
-		return (int) value;
-	}
 
-	public static void ResetStatus(this HttpRequestMessage m)
-	{
-		RequestStatusField.SetValue(m, NOT_YET_SENT);
+		public bool IsSent()
+		{
+			return m.GetStatus() == REQ_ALREADY_SENT;
+		}
+
+		public int GetStatus()
+		{
+			var value = RequestStatusField.GetValue(m);
+			Require.NotNull(value);
+			return (int) value;
+		}
+
+		public void ResetStatus()
+		{
+			RequestStatusField.SetValue(m, REQ_NOT_YET_SENT);
+		}
+
 	}
 
 	private static readonly FieldInfo RequestStatusField;
 
-	private const int NOT_YET_SENT = 0;
-	private const int ALREADY_SENT = 1;
-	private const int IS_REDIRECT  = 2;
+	private const int REQ_NOT_YET_SENT = 0;
+	private const int REQ_ALREADY_SENT = 1;
+	private const int REQ_IS_REDIRECT  = 2;
 
-	#endregion
+#endregion
 
 	/*public static async Task<IEnumerable<FileType>> GetResolvedMediaType(this IFlurlResponse r, IFileTypeResolver resolver = null)
 	{
@@ -437,7 +352,7 @@ public static class HttpUtilities
 	public static readonly Encoding DefaultEncoding = Encoding.UTF8;
 
 	public static HttpMessageHandler GetMostInnerHandler(this HttpMessageHandler self)
-	{	
+	{
 		return self is DelegatingHandler handler
 			       ? handler.InnerHandler.GetMostInnerHandler()
 			       : self;
@@ -447,9 +362,9 @@ public static class HttpUtilities
 	{
 		return req.WithHeaders(new
 		{
-			sec_ch_ua = "\"Chromium\";v=\"104\", \" Not A;Brand\";v=\"99\", \"Google Chrome\";v=\"104\"",
-			sec_ch_ua_mobile = "?0",
-			sec_ch_ua_platform = "Windows",
+			sec_ch_ua                 = "\"Chromium\";v=\"104\", \" Not A;Brand\";v=\"99\", \"Google Chrome\";v=\"104\"",
+			sec_ch_ua_mobile          = "?0",
+			sec_ch_ua_platform        = "Windows",
 			Upgrade_Insecure_Requests = "1",
 			User_Agent =
 				"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36",
@@ -463,4 +378,5 @@ public static class HttpUtilities
 			Accept_Language = "en-US,en;q=0.9"
 		});
 	}
+
 }

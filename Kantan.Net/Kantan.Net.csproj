@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <!-- <EnablePreviewFeatures>true</EnablePreviewFeatures> -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -9,6 +9,7 @@
     <LangVersion>latest</LangVersion>
     <Authors>Read Stanton (Decimation)</Authors>
     <Company>Read Stanton (Decimation)</Company>
+    <!--
     <NoWarn>
       HAA0601,
       HAA0601,
@@ -25,8 +26,9 @@
       HAA0302,
       HAA0303,
       HAA0101,
-      CS1591
     </NoWarn>
+    -->
+    <NoWarn>CS1591</NoWarn>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Configurations>Debug;Release;TestDebug</Configurations>
     <Version>$(VersionPrefix)</Version>
@@ -39,17 +41,17 @@
   </PropertyGroup>
  
   <ItemGroup>
-    <PackageReference Include="AngleSharp" Version="1.1.2" />
+    <PackageReference Include="AngleSharp" Version="1.4.0" />
     <PackageReference Include="AngleSharp.Io" Version="1.0.0" />
     <PackageReference Include="AngleSharp.Js" Version="0.15.0" />
-    <PackageReference Include="AngleSharp.XPath" Version="2.0.4" />
+    <PackageReference Include="AngleSharp.XPath" Version="2.0.5" />
     <PackageReference Include="Flurl.Http" Version="4.0.2" />
-    <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
-    <PackageReference Include="Microsoft.VisualStudio.Validation" Version="17.8.8" />
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.1" />
+    <PackageReference Include="Microsoft.VisualStudio.Validation" Version="17.13.22" />
   </ItemGroup>
 
   <ItemGroup>

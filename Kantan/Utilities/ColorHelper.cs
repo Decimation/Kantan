@@ -18,42 +18,67 @@ public static class ColorHelper
 	public static readonly Color AbsoluteGreen = Color.FromArgb(Byte.MaxValue, 0, Byte.MaxValue, 0);
 	public static readonly Color AbsoluteBlue  = Color.FromArgb(Byte.MaxValue, 0, 0, Byte.MaxValue);
 
-	public static Color Invert(this Color c)
+	/// <param name="c">Color to correct.</param>
+	extension(Color c)
 	{
-		return Color.FromArgb(byte.MaxValue - c.R, byte.MaxValue - c.G, byte.MaxValue - c.B);
-	}
 
-	/// <summary>
-	/// Creates color with corrected brightness.
-	/// </summary>
-	/// <param name="color">Color to correct.</param>
-	/// <param name="factor">The brightness correction factor. Must be between -1 and 1. 
-	/// Negative values produce darker colors.</param>
-	/// <returns>
-	/// Corrected <see cref="Color"/> structure.
-	/// </returns>
-	public static Color ChangeBrightness(this Color color, float factor)
-	{
-		// Adapted from https://gist.github.com/zihotki/09fc41d52981fb6f93a81ebf20b35cd5
-
-		float red   = color.R;
-		float green = color.G;
-		float blue  = color.B;
-
-		if (factor < 0) {
-			factor = 1 + factor;
-
-			red   *= factor;
-			green *= factor;
-			blue  *= factor;
-		}
-		else {
-			red   = (Byte.MaxValue - red) * factor + red;
-			green = (Byte.MaxValue - green) * factor + green;
-			blue  = (Byte.MaxValue - blue) * factor + blue;
+		public Color Invert()
+		{
+			return Color.FromArgb(byte.MaxValue - c.R, byte.MaxValue - c.G, byte.MaxValue - c.B);
 		}
 
-		return Color.FromArgb(color.A, (int) red, (int) green, (int) blue);
+		/// <summary>
+		/// Creates color with corrected brightness.
+		/// </summary>
+		/// <param name="factor">The brightness correction factor. Must be between -1 and 1. 
+		/// Negative values produce darker colors.</param>
+		/// <returns>
+		/// Corrected <see cref="Color"/> structure.
+		/// </returns>
+		public Color ChangeBrightness(float factor)
+		{
+			// Adapted from https://gist.github.com/zihotki/09fc41d52981fb6f93a81ebf20b35cd5
+
+			float red   = c.R;
+			float green = c.G;
+			float blue  = c.B;
+
+			if (factor < 0) {
+				factor = 1 + factor;
+
+				red   *= factor;
+				green *= factor;
+				blue  *= factor;
+			}
+			else {
+				red   = (Byte.MaxValue - red)   * factor + red;
+				green = (Byte.MaxValue - green) * factor + green;
+				blue  = (Byte.MaxValue - blue)  * factor + blue;
+			}
+
+			return Color.FromArgb(c.A, (int) red, (int) green, (int) blue);
+		}
+
+		public IEnumerable<Color> GetGradients(Color end, int steps)
+		{
+			// https://stackoverflow.com/questions/2011832/generate-color-gradient-in-c-sharp
+
+			int stepA = ((end.A - c.A) / (steps - 1));
+			int stepR = ((end.R - c.R) / (steps - 1));
+			int stepG = ((end.G - c.G) / (steps - 1));
+			int stepB = ((end.B - c.B) / (steps - 1));
+
+			for (int i = 0; i < steps; i++) {
+
+				int startA = c.A + (stepA * i);
+				int startR = c.R + (stepR * i);
+				int startG = c.G + (stepG * i);
+				int startB = c.B + (stepB * i);
+
+				yield return Color.FromArgb(startA, startR, startG, startB);
+			}
+		}
+
 	}
 
 	public static Color ToColor(this ConsoleColor c)
@@ -68,23 +93,4 @@ public static class ColorHelper
 		return Color.FromArgb(r, g, b);
 	}
 
-	public static IEnumerable<Color> GetGradients(Color start, Color end, int steps)
-	{
-		// https://stackoverflow.com/questions/2011832/generate-color-gradient-in-c-sharp
-
-		int stepA = ((end.A - start.A) / (steps - 1));
-		int stepR = ((end.R - start.R) / (steps - 1));
-		int stepG = ((end.G - start.G) / (steps - 1));
-		int stepB = ((end.B - start.B) / (steps - 1));
-
-		for (int i = 0; i < steps; i++) {
-
-			int startA = start.A + (stepA * i);
-			int startR = start.R + (stepR * i);
-			int startG = start.G + (stepG * i);
-			int startB = start.B + (stepB * i);
-
-			yield return Color.FromArgb(startA, startR, startG, startB);
-		}
-	}
 }

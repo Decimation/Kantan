@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Web;
 using Flurl;
+using Jint.Parser.Ast;
 
 // ReSharper disable InconsistentNaming
 
@@ -21,57 +22,131 @@ namespace Kantan.Net.Utilities;
 /// </summary>
 public static class UriUtilities
 {
+
 	/*
 	 * Adapted from
 	 * https://stackoverflow.com/questions/1188096/truncating-query-string-returning-clean-url-c-sharp-asp-net
 	 * https://stackoverflow.com/questions/1222610/check-if-2-urls-are-equal
 	 */
 
-	public static Uri Normalize(this Uri u) => new(NormalizeUri(u));
-
-	/// <summary>
-	/// Determines whether <paramref name="url1"/> is equal to <paramref name="url2"/>
-	/// when both are normalized.
-	/// </summary>
-	public static bool UriEqual(string url1, string url2)
+	extension(Uri u)
 	{
-		url1 = NormalizeUri(url1);
-		url2 = NormalizeUri(url2);
-		return url1.Equals(url2);
+
+		public Uri NormalizeToUri() => new(u.Normalize());
+
+		public string Normalize()
+		{
+			var url = u.ToLower();
+			url = LimitProtocols(url);
+			url = RemoveDefaultDirectoryIndexes(url);
+			url = RemoveFragment(url);
+			url = RemoveDuplicateSlashes(url);
+			url = AddWWW(url);
+			url = RemoveFeedburnerPart(url);
+			url = u.RemoveUriQueries();
+			url = RemoveTrailingSlashAndEmptyQuery(url);
+			return url;
+		}
+
+
+		/// <summary>
+		/// Determines whether <paramref name="u"/> is equal to <paramref name="url2"/>
+		/// when both are normalized.
+		/// </summary>
+		public bool UriEqual(Uri url2)
+		{
+			var uri1 = u.Normalize();
+			var uri2 = url2.Normalize();
+			return uri1.Equals(uri2);
+		}
+
+		/// <summary>
+		/// Compares <paramref name="u"/> to <paramref name="url2"/>
+		/// when both are normalized.
+		/// </summary>
+		public int UriCompare(Uri url2)
+		{
+			var uri1 = u.Normalize();
+			var uri2 = url2.Normalize();
+			return String.Compare(uri1, uri2, StringComparison.Ordinal);
+		}
+
+
+		public string RemoveUriQueries()
+		{
+			return u.GetLeftPart(UriPartial.Path);
+		}
+
+		public string ToLower() => HttpUtility.UrlDecode(u.AbsoluteUri.ToLowerInvariant());
+
+		public Uri GetHostUri()
+		{
+			return new UriBuilder(u.Host).Uri;
+		}
+
+		public string GetHostComponent() => u.GetComponents(UriComponents.NormalizedHost, UriFormat.Unescaped);
+
+		public string StripScheme() => u.Host + u.PathAndQuery + u.Fragment;
+
+		public Uri AddQuery(string name, string value)
+		{
+			var collection = HttpUtility.ParseQueryString(u.Query);
+
+			collection.Remove(name);
+			collection.Add(name, value);
+
+			var ub = new UriBuilder(u);
+
+			// this code block is taken from httpValueCollection.ToString() method
+			// and modified so it encodes strings with HttpUtility.UrlEncode
+			if (collection.Count == 0) {
+				ub.Query = String.Empty;
+			}
+			else {
+				var sb = new StringBuilder();
+
+				for (int i = 0; i < collection.Count; i++) {
+					string text = collection.GetKey(i);
+
+					text = HttpUtility.UrlEncode(text);
+
+					string   val    = (text != null) ? (text + "=") : string.Empty;
+					string[] values = collection.GetValues(i);
+
+					if (sb.Length > 0)
+						sb.Append('&');
+
+					if (values == null || values.Length == 0)
+						sb.Append(val);
+					else {
+						if (values.Length == 1) {
+							sb.Append(val);
+							sb.Append(HttpUtility.UrlEncode(values[0]));
+						}
+						else {
+							for (int j = 0; j < values.Length; j++) {
+								if (j > 0)
+									sb.Append('&');
+
+								sb.Append(val);
+								sb.Append(HttpUtility.UrlEncode(values[j]));
+							}
+						}
+					}
+				}
+
+				ub.Query = sb.ToString();
+			}
+
+			return ub.Uri;
+		}
+
 	}
 
-	/// <summary>
-	/// Compares <paramref name="url1"/> to <paramref name="url2"/>
-	/// when both are normalized.
-	/// </summary>
-	public static int UriCompare(string url1, string url2)
-	{
-		url1 = NormalizeUri(url1);
-		url2 = NormalizeUri(url2);
-		return String.Compare(url1, url2, StringComparison.Ordinal);
-	}
+	public static string NormalizeUri(string url) => new Uri(url).Normalize();
 
-	/// <summary>
-	/// Compares <paramref name="url1"/> to <paramref name="url2"/>
-	/// when both are normalized.
-	/// </summary>
-	public static int UriCompare(Uri url1, Uri url2)
-	{
-		return UriCompare(url1.ToString(), url2.ToString());
-	}
 
-	/// <summary>
-	/// Determines whether <paramref name="uri1"/> is equal to <paramref name="uri2"/>
-	/// when both are normalized.
-	/// </summary>
-	public static bool UriEqual(Uri uri1, Uri uri2)
-	{
-		var url1 = NormalizeUri(uri1);
-		var url2 = NormalizeUri(uri2);
-		return url1.Equals(url2);
-	}
-
-	public static readonly List<string> DefaultDirectoryIndexes =new()
+	public static readonly List<string> DefaultDirectoryIndexes = new()
 	{
 		"default.asp",
 		"default.aspx",
@@ -79,28 +154,6 @@ public static class UriUtilities
 		"index.html",
 		"index.php"
 	};
-
-	public static string RemoveUriQueries(string url)
-	{
-		var uri = new Uri(url);
-		return uri.GetLeftPart(UriPartial.Path);
-	}
-
-	public static string NormalizeUri(Uri uri)
-	{
-		var url = UriToLower(uri);
-		url = LimitProtocols(url);
-		url = RemoveDefaultDirectoryIndexes(url);
-		url = RemoveFragment(url);
-		url = RemoveDuplicateSlashes(url);
-		url = AddWWW(url);
-		url = RemoveFeedburnerPart(url);
-		url = RemoveUriQueries(url);
-		url = RemoveTrailingSlashAndEmptyQuery(url);
-		return url;
-	}
-
-	public static string NormalizeUri(string url) => NormalizeUri(new Uri(url));
 
 	public static string RemoveFeedburnerPart(string url)
 	{
@@ -134,8 +187,6 @@ public static class UriUtilities
 		return String.IsNullOrWhiteSpace(fragment) ? url : url.Replace(fragment, String.Empty);
 	}
 
-	public static string UriToLower(Uri uri) => HttpUtility.UrlDecode(uri.AbsoluteUri.ToLowerInvariant());
-
 	public static string RemoveTrailingSlashAndEmptyQuery(string url)
 	{
 		return url.TrimEnd(new[] { '?' }).TrimEnd(new[] { '/' });
@@ -153,7 +204,7 @@ public static class UriUtilities
 		return url;
 	}
 
-	public static string NormalizeFilename(Uri src)
+	public static string NormalizeFilename(this Uri src)
 	{
 		string filename = Path.GetFileName(src.AbsolutePath);
 
@@ -194,74 +245,14 @@ public static class UriUtilities
 		return result;
 	}
 
-	public static Uri GetHostUri(this Uri u)
-	{
-		return new UriBuilder(u.Host).Uri;
-	}
-
-	public static string GetHostComponent(this Uri u) => u.GetComponents(UriComponents.NormalizedHost, UriFormat.Unescaped);
-
-	public static string StripScheme(this Uri uri) => uri.Host + uri.PathAndQuery + uri.Fragment;
-
-	public static Uri AddQuery(this Uri uri, string name, string value)
-	{
-		var collection = HttpUtility.ParseQueryString(uri.Query);
-
-		collection.Remove(name);
-		collection.Add(name, value);
-
-		var ub = new UriBuilder(uri);
-
-		// this code block is taken from httpValueCollection.ToString() method
-		// and modified so it encodes strings with HttpUtility.UrlEncode
-		if (collection.Count == 0) {
-			ub.Query = String.Empty;
-		}
-		else {
-			var sb = new StringBuilder();
-
-			for (int i = 0; i < collection.Count; i++) {
-				string text = collection.GetKey(i);
-
-				text = HttpUtility.UrlEncode(text);
-
-				string   val    = (text != null) ? (text + "=") : string.Empty;
-				string[] values = collection.GetValues(i);
-
-				if (sb.Length > 0)
-					sb.Append('&');
-
-				if (values == null || values.Length == 0)
-					sb.Append(val);
-				else {
-					if (values.Length == 1) {
-						sb.Append(val);
-						sb.Append(HttpUtility.UrlEncode(values[0]));
-					}
-					else {
-						for (int j = 0; j < values.Length; j++) {
-							if (j > 0)
-								sb.Append('&');
-
-							sb.Append(val);
-							sb.Append(HttpUtility.UrlEncode(values[j]));
-						}
-					}
-				}
-			}
-
-			ub.Query = sb.ToString();
-		}
-
-		return ub.Uri;
-	}
-
 	public static string ToQueryString(this NameValueCollection nvc)
 	{
-		var array = (from key in nvc.AllKeys
-		             from value in nvc.GetValues(key)
-		             select $"{HttpUtility.UrlEncode(key)}={HttpUtility.UrlEncode(value)}"
+		var array = (
+			            from key in nvc.AllKeys
+			            from value in nvc.GetValues(key)
+			            select $"{HttpUtility.UrlEncode(key)}={HttpUtility.UrlEncode(value)}"
 		            ).ToArray();
 		return '?' + String.Join('&', array);
 	}
+
 }
