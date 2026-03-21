@@ -26,6 +26,7 @@ public static partial class Strings
 		public const char SPACE       = ' ';
 		public const char ASTERISK    = '*';
 		public const char PERIOD      = '.';
+		public const char DASH        = '-';
 
 #endregion
 
@@ -80,9 +81,9 @@ public static partial class Strings
 
 		public static string ClearLine => new('\r', System.Console.BufferWidth);
 
-		public static string Separator { get; set; } = new('-', 20);
+		public static string Separator { get; set; } = new(DASH, 20);
 
-		public static string Indentation { get; set; } = new(' ', 5);
+		public static string Indentation { get; set; } = new(SPACE, 5);
 
 	}
 

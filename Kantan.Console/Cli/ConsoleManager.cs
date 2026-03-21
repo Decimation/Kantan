@@ -1,4 +1,4 @@
-﻿
+﻿#if KANTAN_CLI
 global using SConsole = global::System.Console;
 using System;
 using System.Runtime.CompilerServices;
@@ -53,7 +53,6 @@ namespace Kantan.Console.Cli;
 ///         </description>
 ///     </item>
 /// </list>
-[Obsolete]
 public static partial class ConsoleManager
 {
 	public static Color ColorHeader  { get; set; } = Color.Red;
@@ -356,3 +355,5 @@ public static partial class ConsoleManager
 		return s.Length >= SConsole.WindowWidth;
 	}
 }
+
+#endif

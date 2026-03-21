@@ -1,91 +1,153 @@
-﻿#if SPECTRE
+﻿global using SText = Spectre.Console.Text;
+using Spectre.Console;
+using Spectre.Console.Rendering;
 
-global using Text = global::Spectre.Console.Text;
+// // global using Text = global::Spectre.Console.Text;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Spectre.Console;
+using System.Xml.Linq;
+using Kantan.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using String = System.String;
 
 namespace Kantan.Console;
 
 public static class WidgetHelper
 {
-	public static Spectre.Console.Text T(this string s, Style st = null)
-	{
-		return new Spectre.Console.Text(s, st);
-	}
 
-	public static bool IsColumnEmpty(this Table t, int i)
+	extension(Table t)
 	{
-		var re1 = t.Rows.All((r) =>
+
+		public bool IsColumnEmpty(int i)
 		{
-			return r[i] switch
+			var re1 = t.Rows.All((r) =>
 			{
-				Markup m => m.Length == 0,
+				return r[i] switch
+				{
+					Markup m => m.Length == 0,
+					SText t  => t.Length == 0,
+					_        => false
+				};
+			});
 
-				Spectre.Console.Text t => t.Length == 0,
-				_                      => false
+			return re1;
+		}
+
+		public Table RemoveEmpty()
+		{
+			for (int i = 0; i < t.Columns.Count; i++) {
+				if (t.IsColumnEmpty(i)) {
+					t = t.RemoveColumn(i);
+				}
+			}
+
+			return t;
+		}
+
+		public Table RemoveColumn(int i)
+		{
+			Table t2 = t.Copy();
+
+			for (int j = 0; j < t.Columns.Count; j++) {
+				if (j == i) {
+					continue;
+				}
+
+				t2.AddColumn(t.Columns[j]);
+			}
+
+			using var re = t.Rows.GetEnumerator();
+
+			while (re.MoveNext()) {
+				var r  = re.Current;
+				var rr = r.ToList();
+				rr.RemoveAt(i);
+
+				// var re2=r.GetEnumerator();
+				t2.AddRow(rr);
+			}
+
+			return t2;
+		}
+
+		public Table Copy()
+		{
+			var t2 = new Table()
+			{
+				Title             = t.Title,
+				Alignment         = t.Alignment,
+				Border            = t.Border,
+				BorderStyle       = t.BorderStyle,
+				Caption           = t.Caption,
+				Expand            = t.Expand,
+				ShowFooters       = t.ShowFooters,
+				ShowHeaders       = t.ShowHeaders,
+				UseSafeBorder     = t.UseSafeBorder,
+				Width             = t.Width,
+				ShowRowSeparators = t.ShowRowSeparators
 			};
-		});
 
-		return re1;
+			return t2;
+		}
+
 	}
 
-	public static Table RemoveEmpty(this Table t)
+	public static Table ToSpcTable(this DataTable dt)
 	{
-		for (int i = 0; i < t.Columns.Count; i++) {
-			if (t.IsColumnEmpty(i)) {
-				t = t.RemoveColumn(i);
-			}
+		var t = new Table();
+
+		foreach (DataColumn row in dt.Columns) {
+			t.AddColumn(new TableColumn(row.ColumnName));
+		}
+
+		Func<object, IRenderable> selector = RenderableUtility.AsRenderable;
+
+		foreach (DataRow row in dt.Rows) {
+			var obj = row.ItemArray.Select(selector);
+
+			t.AddRow(obj);
 		}
 
 		return t;
 	}
-	public static Table RemoveColumn(this Table t, int i)
+
+	internal static Grid AddRowsByChunk(this Grid g, int cnt, params IEnumerable<IRenderable> items)
 	{
-		Table t2 = t.Copy();
+		var chunks = items.Chunk(cnt);
 
-		for (int j = 0; j < t.Columns.Count; j++) {
-			if (j == i) {
-				continue;
-			}
-
-			t2.AddColumn(t.Columns[j]);
+		foreach (IRenderable[] chunk in chunks) {
+			g.AddRow(chunk);
 		}
 
-		using var re = t.Rows.GetEnumerator();
-
-		while (re.MoveNext()) {
-			var r  = re.Current;
-			var rr = r.ToList();
-			rr.RemoveAt(i);
-
-			// var re2=r.GetEnumerator();
-			t2.AddRow(rr);
-		}
-
-		return t2;
+		return g;
 	}
 
-	public static Table Copy(this Table t)
+	internal static Grid MapToGrid<TKey, TValue>(IDictionary<TKey, TValue>       dictionary,
+	                                             [CBN] Func<TKey, IRenderable>   keyFunc = null,
+	                                             [CBN] Func<TValue, IRenderable> valFunc = null)
 	{
-		var t2 = new Table()
+		var grd = new Grid();
+		grd.AddColumns(2);
+
+		keyFunc ??= static k =>
 		{
-			Title         = t.Title,
-			Alignment     = t.Alignment,
-			Border        = t.Border,
-			BorderStyle   = t.BorderStyle,
-			Caption       = t.Caption,
-			Expand        = t.Expand,
-			ShowFooters   = t.ShowFooters,
-			ShowHeaders   = t.ShowHeaders,
-			UseSafeBorder = t.UseSafeBorder,
-			Width         = t.Width,
+			//
+			var s = k.ToString();
+			ArgumentNullException.ThrowIfNull(s);
+			return new SText(s);
 		};
 
-		return t2;
+		valFunc ??= RenderableUtility.AsRenderable;
+
+		foreach (var (k, v) in dictionary) {
+			grd.AddRow(keyFunc(k), valFunc(v));
+		}
+
+		return grd;
 	}
+
 }
-#endif

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if KANTAN_CLI
+using System;
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Drawing;
@@ -414,3 +415,4 @@ public static partial class ConsoleManager
 	}
 
 }
+#endif

@@ -1,4 +1,5 @@
-﻿global using MA = System.Runtime.InteropServices.MarshalAsAttribute;
+﻿#if KANTAN_CLI
+global using MA = System.Runtime.InteropServices.MarshalAsAttribute;
 global using UT = System.Runtime.InteropServices.UnmanagedType;
 using System.Diagnostics;
 using System.Drawing;
@@ -1748,3 +1749,4 @@ public struct MouseEventRecord
 		       $"\t{nameof(dwEventFlags)}: {dwEventFlags}\n";
 	}
 }
+#endif

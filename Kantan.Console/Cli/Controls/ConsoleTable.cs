@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿#if KANTAN_CLI
+using System.Text;
 using System.Text.RegularExpressions;
 
 // ReSharper disable PossibleMultipleEnumeration
@@ -307,3 +308,4 @@ public enum ConsoleTableAlignment
 	Left,
 	Right
 }
+#endif

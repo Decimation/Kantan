@@ -1,4 +1,5 @@
-﻿
+﻿#if KANTAN_CLI
+
 // ReSharper disable InconsistentNaming
 
 // ReSharper disable UnusedMember.Global
@@ -11,7 +12,6 @@ namespace Kantan.Console.Cli;
 
 public static partial class ConsoleManager
 {
-	[Obsolete]
 	public static class UI
 	{
 		/*
@@ -594,3 +594,4 @@ public static partial class ConsoleManager
 
 	public static string Center(string str) => Strings.Center(str, SConsole.BufferWidth);
 }
+#endif

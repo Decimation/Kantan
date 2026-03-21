@@ -1,9 +1,9 @@
-﻿#nullable enable
+﻿#if KANTAN_CLI
+#nullable enable
 using Kantan.Text;
 
 namespace Kantan.Console.Cli;
 
-[Obsolete]
 public sealed class ConsoleOutputResult
 {
 	public HashSet<object> Output { get; internal set; }
@@ -34,3 +34,4 @@ internal sealed class ConsoleInputStatus
 {
 	internal bool SkipNext { get; set; }
 }
+#endif

@@ -29,7 +29,7 @@
       CS1591,
       CA1069,
     </NoWarn>-->
-    <NoWarn>CS1591</NoWarn>
+    <NoWarn>CS1591;CS8981</NoWarn>
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Configurations>Debug;Release;TestDebug</Configurations>

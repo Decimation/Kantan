@@ -1,4 +1,5 @@
-﻿#nullable disable
+﻿#if KANTAN_CLI
+#nullable disable
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using JetBrains.Annotations;
@@ -20,7 +21,6 @@ public delegate object ConsoleOptionFunction();
 /// <summary>
 ///     Represents an interactive console/shell option
 /// </summary>
-[Obsolete]
 public class ConsoleOption
 {
 	public ConsoleOption() { }
@@ -184,3 +184,4 @@ public class ConsoleOption
 
 	#endregion
 }
+#endif

@@ -1,4 +1,5 @@
-﻿global using SC = Kantan.Text.Strings.Constants;
+﻿#if KANTAN_CLI
+global using SC = Kantan.Text.Strings.Constants;
 using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.CompilerServices;
@@ -50,7 +51,6 @@ namespace Kantan.Console.Cli.Controls;
 ///         </item>
 ///     </list>
 /// </summary>
-[Obsolete]
 public class ConsoleDialog
 {
 	public ConsoleDialog() { }
@@ -534,3 +534,4 @@ public class ConsoleDialog
 		return hashCode.ToHashCode();
 	}
 }
+#endif
